@@ -17,6 +17,7 @@ from fastapi import (
     Depends,
     FastAPI,
     File,
+    Form,
     HTTPException,
     UploadFile,
 )
@@ -318,18 +319,18 @@ async def create_surgeon(
 
 @api_router.post("/surgeons/join", response_model=SurgeonCreateResponse)
 async def join_as_surgeon(
-    name: str = Field(...),
-    qualifications: str = Field(...),
-    registration_number: str = Field(...),
-    subspecialties: str = Field(default=""),  # comma separated
-    about: str = Field(default=""),
-    conditions_treated: str = Field(default=""),  # comma separated
-    procedures_performed: str = Field(default=""),  # comma separated
-    clinic_address: str = Field(...),
-    clinic_city: str = Field(default=""),
-    clinic_pincode: str = Field(...),
-    clinic_opd_timings: str = Field(default=""),
-    clinic_phone: str = Field(default=""),
+    name: str = Form(...),
+    qualifications: str = Form(...),
+    registration_number: str = Form(...),
+    subspecialties: str = Form(default=""),  # comma separated
+    about: str = Form(default=""),
+    conditions_treated: str = Form(default=""),  # comma separated
+    procedures_performed: str = Form(default=""),  # comma separated
+    clinic_address: str = Form(...),
+    clinic_city: str = Form(default=""),
+    clinic_pincode: str = Form(...),
+    clinic_opd_timings: str = Form(default=""),
+    clinic_phone: str = Form(default=""),
     profile_photo: Optional[UploadFile] = File(default=None),
 ):
     # Basic validation
@@ -400,7 +401,7 @@ async def join_as_surgeon(
 async def upload_surgeon_documents(
     surgeon_id: str,
     upload_token: str = Header(default="", alias="X-Upload-Token"),
-    doc_type: str = Field(default="other"),
+    doc_type: str = Form(default="other"),
     files: List[UploadFile] = File(...),
 ):
     surgeon = await db.surgeons.find_one({"id": surgeon_id})
@@ -659,7 +660,18 @@ async def admin_update_surgeon(
 
 
 @api_router.get("/admin/documents/{doc_id}/download")
-async def admin_download_document(doc_id: str, _: Dict[str, Any] = Depends(admin_dep)):
+async def admin_download_document(
+    doc_id: str,
+    token: Optional[str] = None,
+    authorization: Optional[str] = Header(default=None),
+):
+    # Allow either Authorization: Bearer <token> OR token query param (MVP convenience)
+    if authorization:
+        _ = require_admin(authorization)
+    elif token:
+        _ = decode_admin_token(token)
+    else:
+        raise HTTPException(status_code=401, detail="Missing admin token")
     surgeon = await db.surgeons.find_one({"documents.id": doc_id}, {"_id": 0})
     if not surgeon:
         raise HTTPException(status_code=404, detail="Document not found")

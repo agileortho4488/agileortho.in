@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import SearchConsole from "@/components/search/SearchConsole";
 import ResultsList from "@/components/search/ResultsList";
 import ResultsMap from "@/components/search/ResultsMap";
@@ -8,12 +9,25 @@ import { SUBSPECIALTIES } from "@/lib/constants";
 
 export default function Home() {
   const api = useMemo(() => apiClient(), []);
+  const [searchParams] = useSearchParams();
   const [query, setQuery] = useState({ location: "", subspecialty: "" });
   const [radiusKm, setRadiusKm] = useState(10);
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState([]);
   const [error, setError] = useState("");
   const [activeSlug, setActiveSlug] = useState(null);
+
+  useEffect(() => {
+    const loc = searchParams.get("location") || "";
+    const sub = searchParams.get("sub") || "";
+    if (loc.trim()) {
+      runSearch({ location: loc, subspecialty: sub });
+    } else if (sub.trim()) {
+      setQuery((q) => ({ ...q, subspecialty: sub }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
 
   async function runSearch(next) {
     setLoading(true);

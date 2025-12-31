@@ -96,7 +96,10 @@ export default function AdminDashboard() {
 
   function downloadLink(docId) {
     const backend = process.env.REACT_APP_BACKEND_URL;
-    return `${backend}/api/admin/documents/${docId}/download`;
+    const token = getToken();
+    return `${backend}/api/admin/documents/${docId}/download?token=${encodeURIComponent(
+      token,
+    )}`;
   }
 
   return (
@@ -343,16 +346,8 @@ export default function AdminDashboard() {
                                   target="_blank"
                                   rel="noreferrer"
                                   className="rounded-full bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800 transition-colors"
-                                  onClick={(e) => {
-                                    // ensure auth header by opening with token appended? cannot set headers for anchor.
-                                    // For MVP, admins can copy/paste into a tool; but we also provide a one-click fetch via new window with token param later.
-                                    // Keep as-is; backend requires Authorization header, so this will 401.
-                                    e.preventDefault();
-                                    navigator.clipboard.writeText(downloadLink(d.id));
-                                    alert("Download link copied. Use an API tool with Authorization header for now.");
-                                  }}
                                 >
-                                  Copy download link
+                                  Download
                                 </a>
                               </div>
                             ))
