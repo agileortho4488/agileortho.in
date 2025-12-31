@@ -90,7 +90,7 @@ export default function ConditionCategory() {
           data-testid="condition-category-search-hint"
           className="mt-10 rounded-2xl border border-slate-200 bg-slate-50 p-5 text-sm text-slate-600"
         >
-          You can return to the Home page and type: “{cat.title.toLowerCase()} specialist near <your pincode>”.
+          You can return to the Home page and type: “{cat.title.toLowerCase()} specialist near &lt;your pincode&gt;”.
         </div>
       </section>
     </main>
