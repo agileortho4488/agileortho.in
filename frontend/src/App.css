@@ -1,34 +1,16 @@
-.App-logo {
-    height: 40vmin;
-    pointer-events: none;
+/* Keep App.css minimal; Tailwind handles most styling */
+
+:root {
+  color-scheme: light;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-    .App-logo {
-        animation: App-logo-spin infinite 20s linear;
-    }
+/* Avoid center-aligning the entire app; preserve natural reading flow */
+
+.leaflet-container {
+  font-family: inherit;
 }
 
-.App-header {
-    background-color: #0f0f10;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-size: calc(10px + 2vmin);
-    color: white;
-}
-
-.App-link {
-    color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
+/* Better popup look */
+.leaflet-popup-content-wrapper {
+  border-radius: 16px;
 }
