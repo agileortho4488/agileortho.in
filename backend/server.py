@@ -245,6 +245,15 @@ class SurgeonLoginRequest(BaseModel):
     password: str
 
 
+class OtpRequest(BaseModel):
+    mobile: str
+
+
+class OtpVerify(BaseModel):
+    mobile: str
+    code: str
+
+
 class SurgeonAuthResponse(BaseModel):
     token: str
 
@@ -252,7 +261,7 @@ class SurgeonAuthResponse(BaseModel):
 class SurgeonMeResponse(BaseModel):
     id: str
     name: str
-    email: str
+    email: Optional[str] = None
     mobile: str
 
 
