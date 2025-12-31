@@ -88,17 +88,17 @@ class OrthoConnectAPITester:
             return False
 
     def test_create_surgeon_profile(self):
-        """Test surgeon profile creation"""
+        """Test surgeon profile creation using legacy endpoint"""
         try:
-            # Create a test surgeon profile
-            payload = {
+            # Create a test surgeon profile using the legacy endpoint
+            form_data = {
                 "name": "Dr. Test Surgeon",
                 "qualifications": "MS Ortho, DNB",
                 "registration_number": "TEST123456",
-                "subspecialties": ["Knee", "Hip"],
+                "subspecialties": "Knee,Hip",
                 "about": "Test surgeon for API testing",
-                "conditions_treated": ["knee arthritis", "hip replacement"],
-                "procedures_performed": ["arthroscopy", "joint replacement"],
+                "conditions_treated": "knee arthritis,hip replacement",
+                "procedures_performed": "arthroscopy,joint replacement",
                 "clinic_address": "Test Hospital, Test Street",
                 "clinic_city": "Mumbai",
                 "clinic_pincode": "400001",
@@ -106,7 +106,7 @@ class OrthoConnectAPITester:
                 "clinic_phone": "022-12345678"
             }
             
-            response = requests.post(f"{self.base_url}/api/surgeons", json=payload, timeout=15)
+            response = requests.post(f"{self.base_url}/api/surgeons/join", data=form_data, timeout=15)
             success = response.status_code == 200
             details = f"Status: {response.status_code}"
             
