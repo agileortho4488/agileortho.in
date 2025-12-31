@@ -8,6 +8,7 @@ import SiteFooter from "@/components/layout/SiteFooter";
 
 import Home from "@/pages/Home";
 import Conditions from "@/pages/Conditions";
+import ConditionCategory from "@/pages/ConditionCategory";
 import ConditionDetail from "@/pages/ConditionDetail";
 import DoctorProfile from "@/pages/DoctorProfile";
 import JoinSurgeon from "@/pages/JoinSurgeon";
