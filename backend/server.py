@@ -510,7 +510,12 @@ async def surgeon_me(payload: Dict[str, Any] = Depends(surgeon_dep)):
     user = await db.users.find_one({"id": user_id}, {"_id": 0, "password_hash": 0})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    return SurgeonMeResponse(id=user["id"], name=user["name"], email=user["email"], mobile=user.get("mobile", ""))
+    return SurgeonMeResponse(
+        id=user["id"],
+        name=user.get("name", ""),
+        email=user.get("email"),
+        mobile=user.get("mobile", ""),
+    )
 
 
 # -----------------------------
