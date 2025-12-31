@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
-import SearchConsole from "@/components/search/SearchConsole";
-import { CONDITION_PAGES } from "@/lib/constants";
+import SmartSearchBar from "@/components/search/SmartSearchBar";
+import { CONDITIONS_BY_CATEGORY } from "@/lib/conditions";
 
 function Section({ title, children, testId }) {
   return (
