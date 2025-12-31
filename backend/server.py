@@ -328,6 +328,92 @@ async def geocode_location(query: str) -> Optional[Dict[str, float]]:
             timeout=10,
             headers={"User-Agent": "OrthoConnect/1.0 (patient-first discovery platform)"},
         )
+
+# -----------------------------
+# Mocked OTP auth (MVP)
+# -----------------------------
+
+OTP_TTL_MINUTES = int(os.environ.get("OTP_TTL_MINUTES", "5"))
+
+
+def normalize_mobile(mobile: str) -> str:
+    m = re.sub(r"\D", "", mobile or "")
+    # keep last 10 digits for India-style mobile
+    if len(m) > 10:
+        m = m[-10:]
+    return m
+
+
+def generate_otp() -> str:
+    return f"{uuid.uuid4().int % 1000000:06d}"
+
+
+@api_router.post("/auth/otp/request")
+async def otp_request(payload: OtpRequest):
+    mobile = normalize_mobile(payload.mobile)
+    if len(mobile) < 10:
+        raise HTTPException(status_code=400, detail="Valid mobile number is required")
+
+    code = generate_otp()
+    doc = {
+        "id": str(uuid.uuid4()),
+        "mobile": mobile,
+        "code": code,
+        "created_at": now_iso(),
+        "expires_at": (datetime.now(timezone.utc) + timedelta(minutes=OTP_TTL_MINUTES)).isoformat(),
+        "used": False,
+    }
+    await db.otp_codes.insert_one(doc)
+
+    # MVP: return OTP in response (MOCKED)
+    return {"ok": True, "mobile": mobile, "mocked_otp": code, "ttl_minutes": OTP_TTL_MINUTES}
+
+
+@api_router.post("/auth/otp/verify", response_model=SurgeonAuthResponse)
+async def otp_verify(payload: OtpVerify):
+    mobile = normalize_mobile(payload.mobile)
+    code = (payload.code or "").strip()
+    if len(mobile) < 10 or not re.fullmatch(r"\d{6}", code):
+        raise HTTPException(status_code=400, detail="Invalid mobile or OTP")
+
+    rec = await db.otp_codes.find_one(
+        {"mobile": mobile, "code": code, "used": False},
+        sort=[("created_at", -1)],
+        projection={"_id": 0},
+    )
+    if not rec:
+        raise HTTPException(status_code=401, detail="Incorrect OTP")
+
+    try:
+        exp = datetime.fromisoformat(rec["expires_at"])
+        if exp < datetime.now(timezone.utc):
+            raise HTTPException(status_code=401, detail="OTP expired")
+    except HTTPException:
+        raise
+    except Exception:
+        # if parsing fails, treat as expired
+        raise HTTPException(status_code=401, detail="OTP expired")
+
+    await db.otp_codes.update_one({"id": rec["id"]}, {"$set": {"used": True}})
+
+    # Create or load surgeon user
+    user = await db.users.find_one({"mobile": mobile, "role": "surgeon"}, {"_id": 0})
+    if not user:
+        user_id = str(uuid.uuid4())
+        user = {
+            "id": user_id,
+            "role": "surgeon",
+            "name": "",
+            "email": None,
+            "mobile": mobile,
+            "password_hash": None,
+            "created_at": now_iso(),
+            "updated_at": now_iso(),
+        }
+        await db.users.insert_one(user)
+
+    return SurgeonAuthResponse(token=encode_token(sub=user["id"], role="surgeon"))
+
         if resp.status_code != 200:
             return None
         data = resp.json()
