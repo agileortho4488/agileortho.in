@@ -25,6 +25,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/conditions" element={<Conditions />} />
+          <Route path="/conditions/category/:categoryKey" element={<ConditionCategory />} />
           <Route path="/conditions/:slug" element={<ConditionDetail />} />
           <Route path="/doctor/:slug" element={<DoctorProfile />} />
           <Route path="/join" element={<JoinSurgeon />} />
