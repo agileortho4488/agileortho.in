@@ -1,0 +1,74 @@
+{
+  "total_tests": 11,
+  "passed_tests": 10,
+  "failed_tests": 1,
+  "success_rate": 90.9090909090909,
+  "test_results": [
+    {
+      "name": "API Health Check",
+      "success": true,
+      "details": "Status: 200, Message: OrthoConnect API",
+      "timestamp": "2025-12-31T06:24:45.949519"
+    },
+    {
+      "name": "Get Subspecialties",
+      "success": true,
+      "details": "Status: 200, Count: 7 (All expected subspecialties found)",
+      "timestamp": "2025-12-31T06:24:45.988929"
+    },
+    {
+      "name": "Admin Login",
+      "success": true,
+      "details": "Status: 200 (Token received)",
+      "timestamp": "2025-12-31T06:24:46.028640"
+    },
+    {
+      "name": "Admin List Surgeons",
+      "success": true,
+      "details": "Status: 200 (Found: 0 pending profiles)",
+      "timestamp": "2025-12-31T06:24:46.068749"
+    },
+    {
+      "name": "Create Surgeon Profile",
+      "success": true,
+      "details": "Status: 200 (ID: 4eb6370c...)",
+      "timestamp": "2025-12-31T06:24:46.105371"
+    },
+    {
+      "name": "Upload Document",
+      "success": true,
+      "details": "Status: 200 (Uploaded: 1)",
+      "timestamp": "2025-12-31T06:24:46.144146"
+    },
+    {
+      "name": "Admin Approve Surgeon",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2025-12-31T06:24:46.178324"
+    },
+    {
+      "name": "Search Surgeons",
+      "success": true,
+      "details": "Status: 200 (Found: 2 surgeons) (Test surgeon found in results)",
+      "timestamp": "2025-12-31T06:24:48.214151"
+    },
+    {
+      "name": "Get Surgeon by Slug",
+      "success": true,
+      "details": "Status: 200, Slug: dr-test-surgeon-knee-mumbai-724b (Name: Dr. Test Surgeon)",
+      "timestamp": "2025-12-31T06:24:48.285884"
+    },
+    {
+      "name": "Invalid Search Handling",
+      "success": false,
+      "details": "Invalid search status: 422",
+      "timestamp": "2025-12-31T06:24:48.322714"
+    },
+    {
+      "name": "Invalid Slug Handling",
+      "success": true,
+      "details": "Invalid slug status: 404",
+      "timestamp": "2025-12-31T06:24:48.359988"
+    }
+  ]
+}
