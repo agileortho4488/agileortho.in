@@ -1197,6 +1197,9 @@ async def admin_update_surgeon(
     if payload.procedures_performed is not None:
         update["procedures_performed"] = payload.procedures_performed
 
+    if payload.photo_visibility is not None:
+        update["photo_visibility"] = payload.photo_visibility
+
     await db.surgeons.update_one({"id": surgeon_id}, {"$set": update})
     return {"ok": True}
 
