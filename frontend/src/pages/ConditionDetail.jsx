@@ -97,16 +97,11 @@ export default function ConditionDetail() {
             Find a surgeon near you
           </div>
           <div className="mt-3">
-            <SearchConsole
-              initialLocation={location}
-              initialSubspecialty={page.category === "Spine" ? "" : page.category}
-              onSearch={({ location: loc, subspecialty }) => {
-                // redirect back to home with params
-                window.location.href = `/?location=${encodeURIComponent(loc)}&sub=${encodeURIComponent(
-                  subspecialty || "",
-                )}`;
+            <SmartSearchBar
+              initialQuery={location ? `${page.title} near ${location}` : `${page.title} near `}
+              onSearch={({ q }) => {
+                window.location.href = `/?q=${encodeURIComponent(q)}`;
               }}
-              compact
             />
           </div>
         </div>
