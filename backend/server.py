@@ -468,13 +468,6 @@ def normalize_email(email: str) -> str:
     return (email or "").strip().lower()
 
 
-def normalize_mobile(mobile: str) -> str:
-    m = re.sub(r"\D", "", mobile or "")
-    if len(m) > 10:
-        m = m[-10:]
-    return m
-
-
 @api_router.post("/auth/surgeon/signup", response_model=SurgeonAuthResponse)
 async def surgeon_signup(payload: SurgeonSignupRequest):
     email = normalize_email(payload.email)
