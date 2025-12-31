@@ -7,7 +7,7 @@ function getToken() {
   return localStorage.getItem("oc_surgeon_token") || "";
 }
 
-export default function ProfilePhotoBlock({ onUploaded }) {
+export default function ProfilePhotoBlock({ onUploaded, disabled = false, disabledReason = "" }) {
   const api = useMemo(() => apiClient(), []);
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -15,6 +15,7 @@ export default function ProfilePhotoBlock({ onUploaded }) {
   const [success, setSuccess] = useState("");
 
   async function upload() {
+    if (disabled) return;
     if (!file) return;
     setLoading(true);
     setError("");
@@ -75,17 +76,27 @@ export default function ProfilePhotoBlock({ onUploaded }) {
         </div>
       ) : null}
 
+      {disabled ? (
+        <div
+          data-testid="surgeon-photo-disabled-note"
+          className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900"
+        >
+          {disabledReason || "Please submit your profile details first, then upload a photo."}
+        </div>
+      ) : null}
+
       <div className="mt-4 grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
         <Input
           data-testid="surgeon-photo-input"
           type="file"
           accept="image/png,image/jpeg,image/webp"
+          disabled={disabled}
           onChange={(e) => setFile(e.target.files?.[0] || null)}
         />
         <Button
           data-testid="surgeon-photo-upload-button"
           onClick={upload}
-          disabled={!file || loading}
+          disabled={disabled || !file || loading}
           className="h-11 rounded-xl bg-slate-900 px-6 text-white hover:bg-slate-800 disabled:opacity-50"
         >
           {loading ? "Uploading…" : "Upload"}

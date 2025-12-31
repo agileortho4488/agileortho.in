@@ -37,6 +37,7 @@ export default function JoinSurgeon() {
   const [error, setError] = useState("");
 
   const [status, setStatus] = useState(null);
+  const [profileExists, setProfileExists] = useState(false);
 
   const [subspecialtySet, setSubspecialtySet] = useState(new Set());
   const [profile, setProfile] = useState({
@@ -87,6 +88,7 @@ export default function JoinSurgeon() {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.data?.exists) {
+        setProfileExists(true);
         setStatus(res.data.status);
         setProfile({
           qualifications: res.data.qualifications || "",
@@ -99,6 +101,8 @@ export default function JoinSurgeon() {
         setLocations(
           (res.data.locations || []).length ? res.data.locations : [emptyLocation()],
         );
+      } else {
+        setProfileExists(false);
       }
     } catch {
       // ignore
@@ -555,7 +559,11 @@ export default function JoinSurgeon() {
               </div>
             </div>
 
-            <ProfilePhotoBlock onUploaded={loadExistingProfile} />
+            <ProfilePhotoBlock
+              onUploaded={loadExistingProfile}
+              disabled={!profileExists}
+              disabledReason="Submit your profile details once (Qualification/Registration/Locations), then upload a photo."
+            />
 
             <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
               <div className="text-sm font-semibold text-slate-900">Documents</div>
