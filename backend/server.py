@@ -476,8 +476,8 @@ async def search_profiles(location: Optional[str], radius_km: float, subspecialt
             locs = d.get("locations") or []
             # compute min distance to any location
             dist_km: Optional[float] = None
-            for l in locs:
-                pt = (l or {}).get("geo")
+            for loc_item in locs:
+                pt = (loc_item or {}).get("geo")
                 if pt and pt.get("type") == "Point":
                     lng, lat = pt.get("coordinates", [None, None])
                     if lng is None or lat is None:
