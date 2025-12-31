@@ -100,19 +100,37 @@ export default function DoctorProfile() {
         <div className="grid gap-6 lg:grid-cols-[1.3fr_0.7fr] lg:items-start">
           <div>
             <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <h1
-                    data-testid="doctor-profile-name"
-                    className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl"
-                  >
-                    {data.name}
-                  </h1>
-                  <div
-                    data-testid="doctor-profile-qualifications"
-                    className="mt-2 text-sm text-slate-600"
-                  >
-                    {data.qualifications}
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="flex items-start gap-4">
+                  {data.public_photo_url ? (
+                    <img
+                      data-testid="doctor-profile-photo"
+                      src={`${process.env.REACT_APP_BACKEND_URL}${data.public_photo_url}`}
+                      alt=""
+                      className="h-16 w-16 rounded-2xl border border-slate-200 object-cover"
+                    />
+                  ) : (
+                    <div
+                      data-testid="doctor-profile-photo-placeholder"
+                      className="flex h-16 w-16 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-sm font-semibold text-slate-600"
+                    >
+                      {(data.name || "").trim().slice(0, 2).toUpperCase() || "DR"}
+                    </div>
+                  )}
+
+                  <div>
+                    <h1
+                      data-testid="doctor-profile-name"
+                      className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl"
+                    >
+                      {data.name}
+                    </h1>
+                    <div
+                      data-testid="doctor-profile-qualifications"
+                      className="mt-2 text-sm text-slate-600"
+                    >
+                      {data.qualifications}
+                    </div>
                   </div>
                 </div>
 
