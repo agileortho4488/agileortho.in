@@ -713,6 +713,9 @@ async def get_profile_by_slug(slug: str):
         raise HTTPException(status_code=404, detail="Surgeon not found")
 
     locs = _ensure_locations(doc)
+    photo = doc.get("profile_photo") or None
+    visibility = doc.get("photo_visibility") or "admin_only"
+
     return SurgeonPublic(
         id=doc["id"],
         slug=doc["slug"],
@@ -724,6 +727,9 @@ async def get_profile_by_slug(slug: str):
         about=doc.get("about", ""),
         conditions_treated=doc.get("conditions_treated", []),
         procedures_performed=doc.get("procedures_performed", []),
+        has_profile_photo=bool(photo),
+        photo_visibility=visibility,
+        public_photo_url=_public_photo_url(doc["slug"]) if (photo and visibility == "public") else None,
         clinic=_clinic_from_locations(locs),
         locations=[Location(**x) for x in locs],
     )
