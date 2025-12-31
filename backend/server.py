@@ -414,23 +414,6 @@ async def otp_verify(payload: OtpVerify):
 
     return SurgeonAuthResponse(token=encode_token(sub=user["id"], role="surgeon"))
 
-        if resp.status_code != 200:
-            return None
-        data = resp.json()
-        if not data:
-            return None
-        lat = float(data[0]["lat"])
-        lng = float(data[0]["lon"])
-        await db.geo_cache.update_one(
-            {"query": q},
-            {"$set": {"query": q, "lat": lat, "lng": lng, "updated_at": now_iso()}},
-            upsert=True,
-        )
-        return {"lat": lat, "lng": lng}
-    except Exception as e:
-        logger.warning("Geocoding failed for %s: %s", q, e)
-        return None
-
 
 # -----------------------------
 # Smart search parsing
