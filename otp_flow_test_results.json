@@ -1,0 +1,65 @@
+{
+  "flow_type": "OTP Login + Profile Submission + Admin Approval",
+  "total_tests": 9,
+  "passed_tests": 9,
+  "failed_tests": 0,
+  "success_rate": 100.0,
+  "test_results": [
+    {
+      "name": "OTP Request",
+      "success": true,
+      "details": "Status: 200 (OTP: 739331)",
+      "timestamp": "2025-12-31T17:49:14.845500"
+    },
+    {
+      "name": "OTP Verify",
+      "success": true,
+      "details": "Status: 200 (Token received)",
+      "timestamp": "2025-12-31T17:49:14.888289"
+    },
+    {
+      "name": "Surgeon Me",
+      "success": true,
+      "details": "Status: 200 (Mobile: 9876543210)",
+      "timestamp": "2025-12-31T17:49:14.925840"
+    },
+    {
+      "name": "Get Surgeon Profile",
+      "success": true,
+      "details": "Status: 200 (Profile exists: True)",
+      "timestamp": "2025-12-31T17:49:14.972013"
+    },
+    {
+      "name": "Create Surgeon Profile",
+      "success": true,
+      "details": "Status: 200 (Profile ID: 96557bf0...)",
+      "timestamp": "2025-12-31T17:49:15.035238"
+    },
+    {
+      "name": "Admin Login",
+      "success": true,
+      "details": "Status: 200 (Admin token received)",
+      "timestamp": "2025-12-31T17:49:15.076731"
+    },
+    {
+      "name": "Admin List Pending",
+      "success": true,
+      "details": "Status: 200 (Pending profiles: 1) (Test profile found: True)",
+      "timestamp": "2025-12-31T17:49:15.113679"
+    },
+    {
+      "name": "Admin Approve",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2025-12-31T17:49:15.156562"
+    },
+    {
+      "name": "Public Profile Access",
+      "success": true,
+      "details": "Status: 200 (Found: 5 surgeons) (Test surgeon found in public search)",
+      "timestamp": "2025-12-31T17:49:17.201536"
+    }
+  ],
+  "test_mobile": "9876543210",
+  "surgeon_profile_id": "96557bf0-199b-415c-9a2b-ed1d4e53170c"
+}
