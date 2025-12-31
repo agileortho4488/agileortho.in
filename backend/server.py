@@ -428,9 +428,8 @@ async def otp_verify(payload: OtpVerify):
             "id": user_id,
             "role": "surgeon",
             "name": "",
-            "email": None,
+            # IMPORTANT: omit email field entirely so unique+sparse index doesn't treat nulls as duplicates
             "mobile": mobile,
-            "password_hash": None,
             "created_at": now_iso(),
             "updated_at": now_iso(),
         }
@@ -971,6 +970,10 @@ async def surgeon_upload_documents(
         doc_id = str(uuid.uuid4())
         dest_dir = UPLOADS_DIR / surgeon_id
         dest_dir.mkdir(parents=True, exist_ok=True)
+
+        # Migration safety: if older docs stored email as null, remove the field so unique+sparse works.
+        await db.users.update_many({"email": None}, {"$unset": {"email": ""}})
+
         dest_path = dest_dir / f"{doc_id}_{safe_name}"
         content = await f.read()
         dest_path.write_bytes(content)
