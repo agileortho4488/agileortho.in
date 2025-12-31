@@ -436,6 +436,30 @@ def _clinic_from_locations(locs: List[Dict[str, Any]]) -> Optional[Clinic]:
     )
 
 
+def _ensure_locations(doc: Dict[str, Any]) -> List[Dict[str, Any]]:
+    # New schema stores locations[]. Legacy docs may have clinic.{...} or even clinic.geo.
+    locs = doc.get("locations") or []
+    if locs:
+        return locs
+
+    clinic = (doc.get("clinic") or {})
+    if clinic:
+        return [
+            {
+                "id": str(uuid.uuid4()),
+                "facility_name": "",
+                "address": clinic.get("address", ""),
+                "city": clinic.get("city", ""),
+                "pincode": clinic.get("pincode", ""),
+                "opd_timings": clinic.get("opd_timings", ""),
+                "phone": clinic.get("phone", ""),
+                "geo": clinic.get("geo"),
+            }
+        ]
+
+    return []
+
+
 def haversine_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
     r = 6371.0
     phi1 = math.radians(lat1)
@@ -466,14 +490,29 @@ async def search_profiles(location: Optional[str], radius_km: float, subspecialt
         # Search across any location geo
         query_geo = {
             **query,
-            "locations.geo": {"$geoWithin": {"$centerSphere": [[geo["lng"], geo["lat"]], radius_radians]}},
+            "$or": [
+                {
+                    "locations.geo": {
+                        "$geoWithin": {
+                            "$centerSphere": [[geo["lng"], geo["lat"]], radius_radians]
+                        }
+                    }
+                },
+                {
+                    "clinic.geo": {
+                        "$geoWithin": {
+                            "$centerSphere": [[geo["lng"], geo["lat"]], radius_radians]
+                        }
+                    }
+                },
+            ],
         }
 
         docs = await db.surgeons.find(query_geo, {"_id": 0}).limit(200).to_list(200)
         results: List[SurgeonSearchResult] = []
 
         for d in docs:
-            locs = d.get("locations") or []
+            locs = _ensure_locations(d)
             # compute min distance to any location
             dist_km: Optional[float] = None
             for loc_item in locs:
@@ -512,19 +551,22 @@ async def search_profiles(location: Optional[str], radius_km: float, subspecialt
         ],
     }
     docs = await db.surgeons.find(query_text, {"_id": 0}).limit(200).to_list(200)
-    return [
-        SurgeonSearchResult(
-            id=d["id"],
-            slug=d["slug"],
-            name=d.get("name", ""),
-            qualifications=d.get("qualifications", ""),
-            subspecialties=d.get("subspecialties", []),
-            locations=[Location(**x) for x in (d.get("locations") or [])],
-            clinic=_clinic_from_locations(d.get("locations") or []),
-            distance_km=None,
+    out: List[SurgeonSearchResult] = []
+    for d in docs:
+        locs = _ensure_locations(d)
+        out.append(
+            SurgeonSearchResult(
+                id=d["id"],
+                slug=d["slug"],
+                name=d.get("name", ""),
+                qualifications=d.get("qualifications", ""),
+                subspecialties=d.get("subspecialties", []),
+                locations=[Location(**x) for x in locs],
+                clinic=_clinic_from_locations(locs),
+                distance_km=None,
+            )
         )
-        for d in docs
-    ]
+    return out
 
 
 @api_router.get("/profiles/search", response_model=List[SurgeonSearchResult])
@@ -996,6 +1038,7 @@ async def ensure_indexes():
         await db.surgeons.create_index("status")
         await db.surgeons.create_index("subspecialties")
         await db.surgeons.create_index([("locations.geo", "2dsphere")])
+        await db.surgeons.create_index([("clinic.geo", "2dsphere")])
         await db.surgeons.create_index("user_id")
     except Exception as e:
         logger.warning("Index creation warning: %s", e)
