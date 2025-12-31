@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card } from "@/components/ui/card";
+import ProfilePhotoBlock from "@/components/profile/ProfilePhotoBlock";
 
 function emptyLocation() {
   const id = globalThis.crypto?.randomUUID?.() || String(Date.now());
@@ -553,6 +554,8 @@ export default function JoinSurgeon() {
                 ))}
               </div>
             </div>
+
+            <ProfilePhotoBlock onUploaded={loadExistingProfile} />
 
             <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
               <div className="text-sm font-semibold text-slate-900">Documents</div>

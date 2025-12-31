@@ -103,6 +103,15 @@ export default function AdminDashboard() {
     )}`;
   }
 
+  function adminPhotoUrl(surgeonId) {
+    const backend = process.env.REACT_APP_BACKEND_URL;
+    const token = getToken();
+    return `${backend}/api/admin/surgeons/${surgeonId}/photo?token=${encodeURIComponent(
+      token,
+    )}`;
+  }
+
+
   return (
     <main data-testid="admin-dashboard-page" className="bg-white">
       <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
