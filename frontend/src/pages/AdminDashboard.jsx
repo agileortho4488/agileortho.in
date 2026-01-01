@@ -38,10 +38,20 @@ export default function AdminDashboard() {
   const [rejectionReason, setRejectionReason] = useState("");
   const [subspecialties, setSubspecialties] = useState("");
   const [photoVisibility, setPhotoVisibility] = useState("admin_only");
+  
+  // Edit mode states
+  const [editMode, setEditMode] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+  const [editQualifications, setEditQualifications] = useState("");
+  const [editRegNo, setEditRegNo] = useState("");
+  const [editWebsite, setEditWebsite] = useState("");
+  const [saving, setSaving] = useState(false);
 
   async function load(status) {
     setLoading(true);
     setError("");
+    setEditMode(false);
     try {
       const res = await api.get("/admin/surgeons", {
         params: { status },
@@ -70,7 +80,42 @@ export default function AdminDashboard() {
     setRejectionReason(selected?.rejection_reason || "");
     setSubspecialties((selected?.subspecialties || []).join(", "));
     setPhotoVisibility(selected?.photo_visibility || "admin_only");
+    // Reset edit fields when selection changes
+    setEditName(selected?.name || "");
+    setEditEmail(selected?.email || "");
+    setEditQualifications(selected?.qualifications || "");
+    setEditRegNo(selected?.registration_number || "");
+    setEditWebsite(selected?.website || "");
+    setEditMode(false);
   }, [selected]);
+  
+  async function saveEdits() {
+    if (!selected) return;
+    setSaving(true);
+    try {
+      await api.patch(
+        `/admin/surgeons/${selected.id}`,
+        {
+          name: editName.trim() || undefined,
+          email: editEmail.trim() || undefined,
+          qualifications: editQualifications.trim() || undefined,
+          registration_number: editRegNo.trim() || undefined,
+          website: editWebsite.trim() || undefined,
+          subspecialties: subspecialties
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean),
+        },
+        { headers: { Authorization: `Bearer ${getToken()}` } },
+      );
+      setEditMode(false);
+      load(tab);
+    } catch (e) {
+      alert("Failed to save: " + (e?.response?.data?.detail || e.message));
+    } finally {
+      setSaving(false);
+    }
+  }
 
   async function approve() {
     if (!selected) return;
