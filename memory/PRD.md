@@ -1,9 +1,9 @@
 # OrthoConnect - Product Requirements Document
 
 ## Overview
-OrthoConnect is an ethical, patient-first orthopaedic healthcare platform for India. The platform provides:
-- Patient education about orthopaedic conditions in simple language
-- Surgeon discovery (search by location/specialty)
+OrthoConnect is an ethical, patient-first orthopaedic healthcare platform for India. It provides:
+- Research-backed patient education about orthopaedic conditions
+- Surgeon discovery with intelligent search (no booking, no rankings)
 - Free professional profiles for surgeons
 
 ## Core Principles (Non-Negotiable)
@@ -13,98 +13,81 @@ OrthoConnect is an ethical, patient-first orthopaedic healthcare platform for In
 - **No advertisements** - Clean, ad-free experience
 - **No reviews/testimonials** - Can be gamed
 
-## Design System (Implemented - Premium Health-Tech)
-- **Style**: Modern health-tech with animations and glow effects
-- **Color Palette**: Monochrome + Teal Accent (Option A)
-  - Background: Pure white (#FFFFFF)
-  - Primary Text: Rich black (#0A0A0A)
-  - Secondary Text: Slate grey (#64748B)
-  - Accent: Medical teal (#0D9488)
-  - Category Gradients: Red, Blue, Violet, Emerald, Amber, Pink, etc.
+## Design System (Premium Health-Tech)
+- **Style**: Modern with animations, glow effects, scroll animations
+- **Color Palette**: Monochrome + Teal with category-specific gradients
 - **Typography**: Inter font family
-- **Components**: Shadcn/UI + Framer Motion animations
-- **Effects**: 
-  - Floating background orbs with blur
-  - Glow effects on hover (cards, buttons)
-  - Scroll-triggered animations (fade-in, scale, stagger)
-  - Gradient text and underlines
-  - Glassmorphism elements
+- **Components**: Shadcn/UI + Framer Motion
+- **Effects**: Floating orbs, glow cards, page transitions
 
 ## Tech Stack
 - **Frontend**: React + Tailwind CSS + Shadcn/UI + Framer Motion
 - **Backend**: FastAPI (Python)
 - **Database**: MongoDB
-- **Authentication**: JWT + Mocked OTP (for MVP)
+- **Authentication**: JWT + Mocked OTP
 
-## Key Features
+## Key Features Implemented
 
-### 1. Patient Education Hub (REDESIGNED)
-- Dark gradient hero with animated orbs
-- Category cards with unique color gradients and glow effects
-- Topic pages with animated accordions
-- Key Takeaways card with gradient styling
-- Urgent Care sidebar with red glow
-- Scroll-triggered entrance animations
+### 1. Intelligent Search System ✅
+- **Auto-suggest dropdown** with categories (Condition, Treatment, Symptom, Search)
+- **Hindi/Telugu keyword support** (घुटने का दर्द, कमर दर्द)
+- **Synonym matching** (knee = ghutna = ghutne = mokalu)
+- **Recent searches** stored in localStorage
+- **"Near me" button** with geolocation
+- **Radius controls** (5/10/25/50 km)
 
-### 2. Surgeon Discovery
-- Premium search bar with glow effect
-- "Near me" button with teal accent
-- Popular searches with emoji icons
-- Animated radius controls
-- Stats section with hover effects
+### 2. Research-Backed Education Content ✅
+- **Real medical content** for key conditions (ACL Tear, Meniscus, Herniated Disc, etc.)
+- **Sources cited**: AAOS, NHS, Mayo Clinic, Cleveland Clinic
+- **Structured format**: Key Takeaways, Symptoms, Causes, Risk Factors, Treatment, Recovery, Prevention
+- **"Research-backed content" badge** on complete topics
+- **700+ topic placeholders** ready for content
 
-### 3. Homepage (REDESIGNED)
-- Full-height hero with gradient text
-- "India's Ethical Platform" badge
-- Trust bar with colored icons
-- Know Your Condition section (dark theme, glowing cards)
-- Red Flags section with animated cards
-- Non-Surgical Care section
-- Surgeon CTA with gradient button
+### 3. Trust Badges on Profiles ✅
+- **Admin Verified** badge (blue)
+- **Registration Submitted** badge (amber)
+- **Photo Verified** badge (violet)
+- Animated entrance with hover effects
 
-### 4. Doctor Profiles
-- Premium header with photo
-- Subspecialty badges
-- Locations accordion
-- Contact card with CTAs
+### 4. Premium UI/UX ✅
+- **Animated backgrounds** with floating gradient orbs
+- **Glow effects** on card hover (category-specific colors)
+- **Scroll animations** (fade-in, scale, stagger)
+- **Dark gradient headers** on education pages
+- **Glassmorphism** elements
 
-### 5. Admin Dashboard
-- Review pending profiles
-- Approve/Reject with notes
-- Photo visibility control
+### 5. Surgeon Profiles ✅
+- Premium header with photo and trust badges
+- Contact card (click-to-call, website)
+- Locations accordion with Google Maps links
+- Platform disclaimer
 
-## Pages Implemented
-- `/` - Homepage (animated, premium design)
-- `/education` - Education Hub (dark hero, glowing cards)
-- `/education/:category` - Category (dark header, topic grid)
-- `/education/:category/:topic` - Topic (gradient Key Takeaways)
-- `/doctor/:slug` - Doctor profile
+## Pages
+- `/` - Homepage with intelligent search
+- `/education` - Education Hub with category cards
+- `/education/:category` - Category with topic grid
+- `/education/:category/:topic` - Topic with real content
+- `/doctor/:slug` - Doctor profile with trust badges
 - `/join` - Surgeon registration
-- `/admin` - Admin dashboard
-- `/about`, `/contact` - Info pages
+- `/admin/dashboard` - Admin review
 
-## What's Implemented ✅
-- [x] Complete UI overhaul with Framer Motion animations
-- [x] Floating animated background orbs
-- [x] Glow effects on card hover
-- [x] Gradient text and underlines
-- [x] Scroll-triggered animations
-- [x] Category-specific color gradients
-- [x] Dark/gradient headers
-- [x] Stats section with counters
-- [x] Popular searches with emojis
-- [x] Premium search bar design
-- [x] Mobile responsive design
+## Content Completed
+- ACL Tear (Anterior Cruciate Ligament Injury)
+- Meniscal Tears (Meniscus Injury)
+- Herniated Disc (Slipped Disc)
+- Rotator Cuff Tear
+- Hip Osteoarthritis
 
-## Upcoming Tasks (P1)
-- [ ] Search Intelligence (synonyms, Hindi/Telugu keywords)
-- [ ] Auto-suggest while typing
-- [ ] Surgeon dashboard improvements
+## Search Synonyms Implemented
+- Hindi: ghutne, kamar, kandha, kalai, haddi, jodon, dard
+- Telugu: mokalu, noppi, vennunoppi
+- Medical: ACL, PCL, MCL, meniscus, sciatica, arthritis
+- Common: fracture, sprain, tear, replacement
 
-## Future Tasks (P2)
-- [ ] Trust signals (verification badges)
-- [ ] City landing pages
-- [ ] Multi-language support
+## Upcoming Tasks
+🟡 **Add more topic content** - Expand research-backed content to more conditions
+🟡 **Surgeon Dashboard** - Structured tags for conditions/procedures
+🟢 **City landing pages** - SEO-focused location pages
 
 ## Test Credentials
 - Admin password: `admin`
