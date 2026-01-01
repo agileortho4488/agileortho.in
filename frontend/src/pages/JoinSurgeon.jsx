@@ -216,8 +216,15 @@ export default function JoinSurgeon() {
 
       setStatus("pending");
       setProfileExists(true); // Enable photo upload after profile submission
+      toast.success("Profile submitted successfully!", {
+        description: "Your profile is now under review. We'll notify you once approved.",
+      });
     } catch (e) {
-      setError(e?.response?.data?.detail || "Submission failed");
+      const errorMsg = e?.response?.data?.detail || "Submission failed";
+      setError(errorMsg);
+      toast.error("Submission failed", {
+        description: errorMsg,
+      });
     } finally {
       setLoading(false);
     }
