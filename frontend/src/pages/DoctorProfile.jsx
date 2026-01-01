@@ -470,7 +470,7 @@ export default function DoctorProfile() {
                         if (phone.length === 10) phone = "91" + phone;
                         // If it starts with 91 and is 12 digits, it's correct
                         // Build the WhatsApp URL
-                        const message = encodeURIComponent(`Hi Dr. ${data.name}, I found your profile on OrthoConnect and would like to consult regarding my orthopaedic concern.`);
+                        const message = encodeURIComponent(`Hi ${data.name}, I found your profile on OrthoConnect and would like to consult regarding my orthopaedic concern.`);
                         return `https://api.whatsapp.com/send?phone=${phone}&text=${message}`;
                       })()}
                       target="_blank"
