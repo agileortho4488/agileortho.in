@@ -3104,14 +3104,23 @@ async def bulk_sync_to_zoho(
         if mobile and len(mobile) == 10:
             mobile = "91" + mobile
         
+        # Validate email
+        email = contact.get("email", "")
+        if email and ("@" not in email or "." not in email.split("@")[-1]):
+            email = None  # Invalid email, skip it
+        
         zoho_data = {
             "firstName": first_name,
             "lastName": last_name,
-            "email": contact.get("email") or None,
             "phone": mobile or None,
             "mobile": mobile or None,
             "city": contact.get("city", ""),
         }
+        
+        # Only add email if valid
+        if email:
+            zoho_data["email"] = email
+            
         zoho_data = {k: v for k, v in zoho_data.items() if v}
         
         result = await zoho_desk_request("POST", "/contacts", zoho_data)
