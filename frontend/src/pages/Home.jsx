@@ -648,7 +648,7 @@ export default function Home() {
                 <p className="mt-1 text-sm text-slate-600">Visit our partner store for quality orthopaedic equipment.</p>
               </div>
               <a
-                href="https://agileortho.shop"
+                href="https://www.agileortho.shop"
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-2 rounded-full bg-white border border-slate-200 px-6 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all hover:shadow-md hover:border-slate-300"
