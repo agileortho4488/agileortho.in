@@ -97,7 +97,7 @@ class TestSearchFunctionality:
     def test_smart_search_with_english(self):
         """Test smart search with English keywords"""
         response = requests.get(f"{BASE_URL}/api/profiles/smart-search", params={
-            "q": "knee pain near hyderabad"
+            "q": "knee specialist in 500096"  # Using pincode for location
         })
         assert response.status_code == 200
         data = response.json()
