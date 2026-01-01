@@ -1,7 +1,7 @@
 import { useMemo, useRef } from "react";
 import { Link, useParams } from "react-router-dom";
 import { motion, useInView } from "framer-motion";
-import { AlertTriangle, BookOpen, ChevronRight, Stethoscope, Activity, Heart, Clock, ArrowLeft, Sparkles, Zap, Shield } from "lucide-react";
+import { AlertTriangle, BookOpen, ChevronRight, Stethoscope, Activity, Heart, Clock, ArrowLeft, Sparkles, Zap, Shield, FileText, CheckCircle2, AlertCircle } from "lucide-react";
 import SmartSearchBar from "@/components/search/SmartSearchBar";
 import {
   Accordion,
@@ -14,6 +14,7 @@ import {
   categoryKeyToTitle,
   topicToSlug,
 } from "@/lib/educationTopics";
+import { getTopicContent } from "@/lib/educationContent";
 
 const CATEGORY_STYLES = {
   "trauma-injury-care": { gradient: "from-red-500 to-rose-600", light: "from-red-50 to-rose-50" },
@@ -56,22 +57,17 @@ function AnimatedSection({ children, className = "" }) {
   );
 }
 
-const ACCORDION_SECTIONS = [
-  { id: "what-it-is", title: "What is it?", icon: Stethoscope, content: "Content will be added by the medical team. This section will explain the condition in simple, patient-friendly language." },
-  { id: "symptoms", title: "Common Symptoms", icon: Activity, content: "Content will be added by the medical team. This section will list common symptoms patients may experience." },
-  { id: "causes", title: "Causes & Risk Factors", icon: BookOpen, content: "Content will be added by the medical team. This section will explain what causes the condition and who is at risk." },
-  { id: "treatment", title: "Treatment Options", icon: Heart, content: "Content will be added by the medical team. This section will describe treatment options from non-surgical to surgical approaches." },
-  { id: "recovery", title: "Recovery & Rehabilitation", icon: Clock, content: "Content will be added by the medical team. This section will explain what to expect during recovery and rehabilitation." },
-];
-
 export default function EducationTopic() {
-  const { categoryKey, topicSlug } = useParams();
+  const { categoryKey, topicSlug: slug } = useParams();
   const style = CATEGORY_STYLES[categoryKey] || { gradient: "from-teal-500 to-emerald-600", light: "from-teal-50 to-emerald-50" };
 
   const topic = useMemo(() => {
     const list = EDUCATION_TOPICS_BY_CATEGORY[categoryKey] || [];
-    return list.find((t) => topicToSlug(t) === topicSlug) || null;
-  }, [categoryKey, topicSlug]);
+    return list.find((t) => topicToSlug(t) === slug) || null;
+  }, [categoryKey, slug]);
+
+  // Get real content if available
+  const content = useMemo(() => getTopicContent(slug), [slug]);
 
   if (!topic) {
     return (
@@ -101,6 +97,7 @@ export default function EducationTopic() {
   }
 
   const categoryTitle = categoryKeyToTitle(categoryKey);
+  const hasRealContent = !!content;
 
   return (
     <main data-testid="education-topic-page" className="min-h-screen bg-slate-50 overflow-hidden">
@@ -128,7 +125,7 @@ export default function EducationTopic() {
             <ChevronRight className="h-4 w-4" />
             <Link to={`/education/${categoryKey}`} className="hover:text-white transition-colors">{categoryTitle}</Link>
             <ChevronRight className="h-4 w-4" />
-            <span className="text-white font-medium">{topic}</span>
+            <span className="text-white font-medium">{content?.title || topic}</span>
           </motion.nav>
 
           <motion.div
@@ -136,6 +133,18 @@ export default function EducationTopic() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
+            {hasRealContent && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.2 }}
+                className="inline-flex items-center gap-2 rounded-full bg-emerald-500/20 border border-emerald-400/30 px-3 py-1 mb-4"
+              >
+                <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                <span className="text-xs font-medium text-emerald-300">Research-backed content</span>
+              </motion.div>
+            )}
+
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
@@ -149,10 +158,12 @@ export default function EducationTopic() {
               data-testid="education-topic-title"
               className="text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl"
             >
-              {topic}
+              {content?.title || topic}
             </h1>
             <p data-testid="education-topic-intro" className="mt-3 max-w-3xl text-slate-400">
-              A comprehensive patient education guide prepared by orthopaedic specialists.
+              {hasRealContent 
+                ? "A comprehensive, research-backed patient education guide."
+                : "A patient education guide prepared by orthopaedic specialists."}
             </p>
           </motion.div>
         </div>
@@ -179,11 +190,11 @@ export default function EducationTopic() {
                   <h2 className="text-xl font-bold text-slate-900">Key Takeaways</h2>
                 </div>
                 <ul className="space-y-3">
-                  {[
+                  {(content?.keyTakeaways || [
                     "Early diagnosis improves treatment outcomes",
                     "Many conditions can be managed without surgery",
                     "Consult a specialist if symptoms persist beyond 2 weeks",
-                  ].map((item, idx) => (
+                  ]).map((item, idx) => (
                     <motion.li
                       key={idx}
                       initial={{ opacity: 0, x: -20 }}
@@ -203,33 +214,242 @@ export default function EducationTopic() {
 
             {/* Accordion Content */}
             <Accordion type="multiple" defaultValue={["what-it-is", "symptoms"]} className="space-y-4">
-              {ACCORDION_SECTIONS.map((section, idx) => (
-                <motion.div key={section.id} variants={fadeInUp}>
+              {/* What Is It */}
+              <motion.div variants={fadeInUp}>
+                <AccordionItem
+                  value="what-it-is"
+                  className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <AccordionTrigger className="px-6 py-5 text-left hover:no-underline group [&[data-state=open]]:bg-slate-50">
+                    <div className="flex items-center gap-4">
+                      <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${style.light} group-hover:scale-110 transition-transform`}>
+                        <Stethoscope className="h-6 w-6 text-slate-600" />
+                      </div>
+                      <span className="text-lg font-bold text-slate-900">What is {topic}?</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="border-t border-slate-100 bg-slate-50/50 px-6 pb-6 pt-4">
+                    <div className="prose prose-slate max-w-none">
+                      {content?.whatIsIt ? (
+                        content.whatIsIt.split('\n\n').map((para, idx) => (
+                          <p key={idx} className="text-slate-600 leading-relaxed mb-4">{para}</p>
+                        ))
+                      ) : (
+                        <p className="text-slate-600 leading-relaxed">Content will be added by the medical team.</p>
+                      )}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </motion.div>
+
+              {/* Symptoms */}
+              <motion.div variants={fadeInUp}>
+                <AccordionItem
+                  value="symptoms"
+                  className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <AccordionTrigger className="px-6 py-5 text-left hover:no-underline group [&[data-state=open]]:bg-slate-50">
+                    <div className="flex items-center gap-4">
+                      <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${style.light} group-hover:scale-110 transition-transform`}>
+                        <Activity className="h-6 w-6 text-slate-600" />
+                      </div>
+                      <span className="text-lg font-bold text-slate-900">Common Symptoms</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="border-t border-slate-100 bg-slate-50/50 px-6 pb-6 pt-4">
+                    {content?.symptoms ? (
+                      <ul className="space-y-2">
+                        {content.symptoms.map((symptom, idx) => (
+                          <li key={idx} className="flex items-start gap-3 text-slate-600">
+                            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" />
+                            {symptom}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-slate-600">Content will be added by the medical team.</p>
+                    )}
+                  </AccordionContent>
+                </AccordionItem>
+              </motion.div>
+
+              {/* Causes & Risk Factors */}
+              <motion.div variants={fadeInUp}>
+                <AccordionItem
+                  value="causes"
+                  className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <AccordionTrigger className="px-6 py-5 text-left hover:no-underline group [&[data-state=open]]:bg-slate-50">
+                    <div className="flex items-center gap-4">
+                      <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${style.light} group-hover:scale-110 transition-transform`}>
+                        <BookOpen className="h-6 w-6 text-slate-600" />
+                      </div>
+                      <span className="text-lg font-bold text-slate-900">Causes & Risk Factors</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="border-t border-slate-100 bg-slate-50/50 px-6 pb-6 pt-4">
+                    {content?.causes ? (
+                      <div className="space-y-6">
+                        <div>
+                          <h4 className="font-semibold text-slate-900 mb-3">Common Causes</h4>
+                          <ul className="space-y-2">
+                            {content.causes.map((cause, idx) => (
+                              <li key={idx} className="flex items-start gap-3 text-slate-600">
+                                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
+                                {cause}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                        {content.riskFactors && (
+                          <div>
+                            <h4 className="font-semibold text-slate-900 mb-3">Risk Factors</h4>
+                            <ul className="space-y-2">
+                              {content.riskFactors.map((factor, idx) => (
+                                <li key={idx} className="flex items-start gap-3 text-slate-600">
+                                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-orange-500" />
+                                  {factor}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-slate-600">Content will be added by the medical team.</p>
+                    )}
+                  </AccordionContent>
+                </AccordionItem>
+              </motion.div>
+
+              {/* Treatment Options */}
+              <motion.div variants={fadeInUp}>
+                <AccordionItem
+                  value="treatment"
+                  className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <AccordionTrigger className="px-6 py-5 text-left hover:no-underline group [&[data-state=open]]:bg-slate-50">
+                    <div className="flex items-center gap-4">
+                      <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${style.light} group-hover:scale-110 transition-transform`}>
+                        <Heart className="h-6 w-6 text-slate-600" />
+                      </div>
+                      <span className="text-lg font-bold text-slate-900">Treatment Options</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="border-t border-slate-100 bg-slate-50/50 px-6 pb-6 pt-4">
+                    {content?.treatment ? (
+                      <div className="space-y-6">
+                        <div className="p-4 rounded-xl bg-green-50 border border-green-100">
+                          <h4 className="font-semibold text-green-900 mb-3 flex items-center gap-2">
+                            <CheckCircle2 className="h-5 w-5" />
+                            Non-Surgical Treatment
+                          </h4>
+                          <ul className="space-y-2">
+                            {content.treatment.nonSurgical.map((item, idx) => (
+                              <li key={idx} className="flex items-start gap-3 text-green-800">
+                                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-green-500" />
+                                {item}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                        <div className="p-4 rounded-xl bg-blue-50 border border-blue-100">
+                          <h4 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                            <Stethoscope className="h-5 w-5" />
+                            Surgical Treatment
+                          </h4>
+                          <ul className="space-y-2">
+                            {content.treatment.surgical.map((item, idx) => (
+                              <li key={idx} className="flex items-start gap-3 text-blue-800">
+                                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
+                                {item}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-slate-600">Content will be added by the medical team.</p>
+                    )}
+                  </AccordionContent>
+                </AccordionItem>
+              </motion.div>
+
+              {/* Recovery */}
+              <motion.div variants={fadeInUp}>
+                <AccordionItem
+                  value="recovery"
+                  className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <AccordionTrigger className="px-6 py-5 text-left hover:no-underline group [&[data-state=open]]:bg-slate-50">
+                    <div className="flex items-center gap-4">
+                      <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${style.light} group-hover:scale-110 transition-transform`}>
+                        <Clock className="h-6 w-6 text-slate-600" />
+                      </div>
+                      <span className="text-lg font-bold text-slate-900">Recovery & Rehabilitation</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="border-t border-slate-100 bg-slate-50/50 px-6 pb-6 pt-4">
+                    {content?.recovery ? (
+                      <div className="prose prose-slate max-w-none">
+                        {content.recovery.split('\n\n').map((para, idx) => (
+                          <p key={idx} className="text-slate-600 leading-relaxed mb-4 whitespace-pre-line">{para}</p>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-slate-600">Content will be added by the medical team.</p>
+                    )}
+                  </AccordionContent>
+                </AccordionItem>
+              </motion.div>
+
+              {/* Prevention (if available) */}
+              {content?.prevention && (
+                <motion.div variants={fadeInUp}>
                   <AccordionItem
-                    value={section.id}
+                    value="prevention"
                     className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition-shadow"
                   >
-                    <AccordionTrigger
-                      data-testid={`education-topic-${section.id}-trigger`}
-                      className="px-6 py-5 text-left hover:no-underline group [&[data-state=open]]:bg-slate-50"
-                    >
+                    <AccordionTrigger className="px-6 py-5 text-left hover:no-underline group [&[data-state=open]]:bg-slate-50">
                       <div className="flex items-center gap-4">
                         <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${style.light} group-hover:scale-110 transition-transform`}>
-                          <section.icon className="h-6 w-6 text-slate-600" />
+                          <Shield className="h-6 w-6 text-slate-600" />
                         </div>
-                        <span className="text-lg font-bold text-slate-900">{section.title}</span>
+                        <span className="text-lg font-bold text-slate-900">Prevention</span>
                       </div>
                     </AccordionTrigger>
-                    <AccordionContent
-                      data-testid={`education-topic-${section.id}-content`}
-                      className="border-t border-slate-100 bg-slate-50/50 px-6 pb-6 pt-4"
-                    >
-                      <p className="text-slate-600 leading-relaxed">{section.content}</p>
+                    <AccordionContent className="border-t border-slate-100 bg-slate-50/50 px-6 pb-6 pt-4">
+                      <ul className="space-y-2">
+                        {content.prevention.map((item, idx) => (
+                          <li key={idx} className="flex items-start gap-3 text-slate-600">
+                            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
                     </AccordionContent>
                   </AccordionItem>
                 </motion.div>
-              ))}
+              )}
             </Accordion>
+
+            {/* References (if available) */}
+            {content?.references && (
+              <motion.div variants={fadeInUp} className="rounded-2xl border border-slate-200 bg-white p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <FileText className="h-5 w-5 text-slate-500" />
+                  <h3 className="font-semibold text-slate-900">References & Sources</h3>
+                </div>
+                <ul className="space-y-2 text-sm text-slate-600">
+                  {content.references.map((ref, idx) => (
+                    <li key={idx} className="flex items-start gap-2">
+                      <span className="text-slate-400">[{idx + 1}]</span>
+                      {ref}
+                    </li>
+                  ))}
+                </ul>
+              </motion.div>
+            )}
           </AnimatedSection>
 
           {/* Sidebar */}
@@ -295,22 +515,18 @@ export default function EducationTopic() {
               className="rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 p-5"
             >
               <div className="flex items-start gap-3">
-                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+                <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
                 <div>
                   <h3 className="text-sm font-bold text-amber-900">Medical Disclaimer</h3>
                   <p className="mt-1 text-xs leading-relaxed text-amber-800">
-                    This information is for educational purposes only. Always consult a qualified orthopaedic surgeon for diagnosis and treatment.
+                    This information is for educational purposes only and does not replace professional medical consultation. Always consult a qualified orthopaedic surgeon for diagnosis and treatment.
                   </p>
                 </div>
               </div>
             </motion.div>
 
             {/* Back Link */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.6 }}
-            >
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}>
               <Link
                 to={`/education/${categoryKey}`}
                 className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-3 text-sm font-medium text-slate-600 transition-all hover:bg-slate-50 hover:text-slate-900 hover:shadow-md group"
