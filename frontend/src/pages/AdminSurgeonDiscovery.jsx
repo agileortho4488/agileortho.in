@@ -489,7 +489,7 @@ export default function AdminSurgeonDiscovery() {
                 <Globe className="w-12 h-12 text-slate-300 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-slate-700">No Results Yet</h3>
                 <p className="text-sm text-slate-500 mt-2">
-                  Select a city and click "Search Surgeons" to discover orthopaedic surgeons from multiple sources.
+                  Select a city and click &quot;Search Surgeons&quot; to discover orthopaedic surgeons from multiple sources.
                 </p>
               </div>
             ) : (
