@@ -3519,16 +3519,19 @@ class BroadcastMessage(BaseModel):
 async def get_crm_contacts(
     status: Optional[str] = None,
     tag: Optional[str] = None,
+    limit: int = 500,
     auth: Dict[str, Any] = Depends(admin_dep)
 ):
-    """Get all CRM contacts with filters"""
+    """Get CRM contacts with filters and pagination"""
     query = {}
     if status:
         query["crm_status"] = status
     if tag:
         query["tags"] = tag
     
-    docs = await db.crm_contacts.find(query, {"_id": 0}).sort("updated_at", -1).to_list(10000)
+    # Limit results for performance
+    max_limit = min(limit, 1000)
+    docs = await db.crm_contacts.find(query, {"_id": 0}).sort("updated_at", -1).to_list(max_limit)
     return docs
 
 
