@@ -151,13 +151,23 @@ function SurgeonCard({ surgeon, index }) {
           </div>
         )}
 
-        {/* Location */}
-        {city && (
-          <div className="flex items-center gap-1.5 mt-4 text-sm text-slate-500">
-            <MapPin className="w-3.5 h-3.5" />
-            <span>{city}</span>
-          </div>
-        )}
+        {/* Location & Distance */}
+        <div className="flex items-center justify-between mt-4">
+          {city && (
+            <div className="flex items-center gap-1.5 text-sm text-slate-500">
+              <MapPin className="w-3.5 h-3.5" />
+              <span>{city}</span>
+            </div>
+          )}
+          {surgeon.distance != null && (
+            <div className="text-xs font-medium text-teal-600 bg-teal-50 px-2 py-1 rounded-full">
+              {surgeon.distance < 1 
+                ? `${Math.round(surgeon.distance * 1000)}m away`
+                : `${surgeon.distance.toFixed(1)} km away`
+              }
+            </div>
+          )}
+        </div>
 
         {/* CTA */}
         <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
