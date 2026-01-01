@@ -324,12 +324,21 @@ class AdminSurgeonUpdate(BaseModel):
     status: Optional[SurgeonStatus] = None
     rejection_reason: Optional[str] = None
 
+    # Editable fields by admin
+    name: Optional[str] = None
+    email: Optional[str] = None
+    qualifications: Optional[str] = None
+    registration_number: Optional[str] = None
+    website: Optional[str] = None
     subspecialties: Optional[List[str]] = None
     about: Optional[str] = None
     conditions_treated: Optional[List[str]] = None
     procedures_performed: Optional[List[str]] = None
 
     photo_visibility: Optional[Literal["admin_only", "public"]] = None
+    
+    # Location edits (optional)
+    locations: Optional[List[Location]] = None
 
 
 class SurgeonSignupRequest(BaseModel):
