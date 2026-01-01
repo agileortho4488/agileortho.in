@@ -4540,17 +4540,6 @@ async def search_justdial(city: str, query: str) -> List[Dict[str, Any]]:
                         })
         except Exception as e:
             logger.error("JustDial fallback search failed: %s", e)
-            
-            for match in matches[:20]:
-                name = match.strip()
-                if name and len(name) > 5:
-                    results.append({
-                        "name": name,
-                        "source": "justdial",
-                        "city": city,
-                    })
-    except Exception as e:
-        logger.error("JustDial search failed: %s", e)
     
     return results
 
