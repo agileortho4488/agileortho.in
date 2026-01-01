@@ -647,7 +647,6 @@ def get_email_template(template_type: str, contact: Dict[str, Any], tracking_id:
     name = contact.get("name", "Doctor")
     first_name = name.split()[0] if name else "Doctor"
     city = contact.get("city", "")
-    subspecialty = contact.get("subspecialty", "")
     
     base_url = "https://orthoconnect.agileortho.in"
     join_url = f"{base_url}/join?ref=email&tid={tracking_id}"
