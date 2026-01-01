@@ -2843,7 +2843,7 @@ async def send_bulk_whatsapp_via_zoho(
                     "activities": {
                         "type": "whatsapp_link_generated",
                         "timestamp": now_iso(),
-                        "details": f"WhatsApp link generated for bulk send",
+                        "details": "WhatsApp link generated for bulk send",
                     }
                 },
                 "$set": {"updated_at": now_iso()}
