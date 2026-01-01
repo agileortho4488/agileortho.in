@@ -8,7 +8,7 @@ from datetime import datetime
 from pathlib import Path
 
 class OrthoConnectAPITester:
-    def __init__(self, base_url="https://jointsmart.preview.emergentagent.com"):
+    def __init__(self, base_url="https://orthocare-4.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.test_surgeon_id = None
