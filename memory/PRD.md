@@ -185,6 +185,17 @@ Email: Zoho Mail SMTP (info@agileortho.in)
   - Track opens, clicks, conversions
   - WhatsApp integration with pre-filled messages
   - Export contacts as CSV
+- ✅ **Full Surgeon CRM** (`/admin/crm`)
+  - Contact management with status tracking (Lead → Active)
+  - Import registered surgeons
+  - Tags and filtering
+  - Activity logging
+  - **Zoho Desk Integration** (Org: 60012631084)
+    - Sync contacts to Zoho Desk
+    - Create support tickets
+    - WhatsApp channel detected (Sandbox)
+  - Broadcast messaging (Email + WhatsApp)
+  - Bulk WhatsApp link generation
 
 ## Upcoming Tasks
 - Loading Skeletons for better UX
