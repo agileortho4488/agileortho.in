@@ -33,7 +33,7 @@ export default function EducationTopic() {
             <div className="text-4xl mb-4">📖</div>
             <h1 className="text-xl font-semibold text-slate-900">Topic not found</h1>
             <p className="mt-2 text-sm text-slate-600">
-              The topic you're looking for doesn't exist or has been moved.
+              The topic you&apos;re looking for doesn&apos;t exist or has been moved.
             </p>
             <Link
               to="/education"
