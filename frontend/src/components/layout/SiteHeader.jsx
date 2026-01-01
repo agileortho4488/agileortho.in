@@ -75,6 +75,15 @@ export default function SiteHeader() {
           <NavItem testId="nav-contact-link" to="/contact">
             Contact
           </NavItem>
+          <a
+            data-testid="nav-shop-link"
+            href="https://www.agileortho.shop"
+            target="_blank"
+            rel="noreferrer"
+            className="text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
+          >
+            Shop
+          </a>
         </nav>
 
         {/* CTA + Mobile Menu Toggle */}
