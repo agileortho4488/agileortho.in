@@ -17,17 +17,17 @@ import {
 import { getTopicContent } from "@/lib/educationContent";
 
 const CATEGORY_STYLES = {
-  "trauma-injury-care": { gradient: "from-red-500 to-rose-600", light: "from-red-50 to-rose-50" },
-  "spine": { gradient: "from-blue-500 to-indigo-600", light: "from-blue-50 to-indigo-50" },
-  "shoulder-elbow": { gradient: "from-violet-500 to-purple-600", light: "from-violet-50 to-purple-50" },
-  "knee-sports": { gradient: "from-emerald-500 to-teal-600", light: "from-emerald-50 to-teal-50" },
-  "pediatric-orthopaedics": { gradient: "from-cyan-500 to-sky-600", light: "from-cyan-50 to-sky-50" },
-  "recon-arthroplasty": { gradient: "from-amber-500 to-orange-600", light: "from-amber-50 to-orange-50" },
-  "hand-wrist": { gradient: "from-pink-500 to-rose-600", light: "from-pink-50 to-rose-50" },
-  "foot-ankle": { gradient: "from-lime-500 to-green-600", light: "from-lime-50 to-green-50" },
-  "pathology-orthopaedic-oncology": { gradient: "from-slate-500 to-gray-600", light: "from-slate-50 to-gray-50" },
-  "basic-science-patient-knowledge": { gradient: "from-indigo-500 to-blue-600", light: "from-indigo-50 to-blue-50" },
-  "anatomy-patient-reference": { gradient: "from-fuchsia-500 to-pink-600", light: "from-fuchsia-50 to-pink-50" },
+  "trauma-injury-care": { gradient: "from-rose-400 to-red-500", light: "from-rose-50 to-red-50" },
+  "spine": { gradient: "from-sky-400 to-blue-500", light: "from-sky-50 to-blue-50" },
+  "shoulder-elbow": { gradient: "from-indigo-400 to-violet-500", light: "from-indigo-50 to-violet-50" },
+  "knee-sports": { gradient: "from-teal-400 to-emerald-500", light: "from-teal-50 to-emerald-50" },
+  "pediatric-orthopaedics": { gradient: "from-cyan-400 to-teal-500", light: "from-cyan-50 to-teal-50" },
+  "recon-arthroplasty": { gradient: "from-amber-400 to-orange-500", light: "from-amber-50 to-orange-50" },
+  "hand-wrist": { gradient: "from-pink-400 to-rose-500", light: "from-pink-50 to-rose-50" },
+  "foot-ankle": { gradient: "from-emerald-400 to-green-500", light: "from-emerald-50 to-green-50" },
+  "pathology-orthopaedic-oncology": { gradient: "from-slate-400 to-slate-500", light: "from-slate-50 to-gray-50" },
+  "basic-science-patient-knowledge": { gradient: "from-blue-400 to-indigo-500", light: "from-blue-50 to-indigo-50" },
+  "anatomy-patient-reference": { gradient: "from-purple-400 to-fuchsia-500", light: "from-purple-50 to-fuchsia-50" },
 };
 
 const fadeInUp = {
