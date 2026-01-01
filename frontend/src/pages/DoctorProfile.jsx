@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Phone, Globe, MapPin, Clock, ChevronRight, Shield, AlertCircle } from "lucide-react";
+import { motion } from "framer-motion";
+import { Phone, Globe, MapPin, Clock, ChevronRight, Shield, AlertCircle, CheckCircle2, BadgeCheck, FileCheck, UserCheck } from "lucide-react";
 import { apiClient } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -9,6 +10,31 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+
+// Trust badge component
+function TrustBadge({ type, label, verified = true }) {
+  const styles = {
+    verified: { bg: "bg-emerald-50", border: "border-emerald-200", text: "text-emerald-700", icon: BadgeCheck },
+    approved: { bg: "bg-blue-50", border: "border-blue-200", text: "text-blue-700", icon: CheckCircle2 },
+    documents: { bg: "bg-amber-50", border: "border-amber-200", text: "text-amber-700", icon: FileCheck },
+    profile: { bg: "bg-violet-50", border: "border-violet-200", text: "text-violet-700", icon: UserCheck },
+  };
+  
+  const style = styles[type] || styles.verified;
+  const Icon = style.icon;
+  
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
+      whileHover={{ scale: 1.05 }}
+      className={`inline-flex items-center gap-1.5 rounded-full ${style.bg} ${style.border} border px-3 py-1`}
+    >
+      <Icon className={`h-3.5 w-3.5 ${style.text}`} />
+      <span className={`text-xs font-medium ${style.text}`}>{label}</span>
+    </motion.div>
+  );
+}
 
 export default function DoctorProfile() {
   const { slug } = useParams();
@@ -60,14 +86,14 @@ export default function DoctorProfile() {
 
   if (loading) {
     return (
-      <main
-        data-testid="doctor-profile-loading"
-        className="min-h-screen bg-slate-50"
-      >
-        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-          <div className="flex items-center justify-center gap-3 text-slate-500">
-            <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-teal-600" />
-            <span>Loading profile...</span>
+      <main data-testid="doctor-profile-loading" className="min-h-screen bg-slate-50">
+        <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+          <div className="flex flex-col items-center justify-center gap-4">
+            <div className="relative">
+              <div className="h-16 w-16 rounded-full border-4 border-teal-100" />
+              <div className="absolute top-0 left-0 h-16 w-16 rounded-full border-4 border-teal-500 border-t-transparent animate-spin" />
+            </div>
+            <span className="text-slate-600 font-medium">Loading profile...</span>
           </div>
         </div>
       </main>
@@ -76,21 +102,22 @@ export default function DoctorProfile() {
 
   if (error) {
     return (
-      <main
-        data-testid="doctor-profile-error"
-        className="min-h-screen bg-slate-50"
-      >
+      <main data-testid="doctor-profile-error" className="min-h-screen bg-slate-50">
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-          <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center">
-            <AlertCircle className="mx-auto h-8 w-8 text-red-500" />
-            <div className="mt-3 text-sm font-medium text-red-800">{error}</div>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="rounded-2xl border border-red-200 bg-red-50 p-8 text-center"
+          >
+            <AlertCircle className="mx-auto h-12 w-12 text-red-500" />
+            <div className="mt-4 text-lg font-semibold text-red-800">{error}</div>
             <Link
               to="/"
-              className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-red-700 hover:text-red-800"
+              className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-red-700 hover:text-red-800"
             >
               ← Back to search
             </Link>
-          </div>
+          </motion.div>
         </div>
       </main>
     );
@@ -102,7 +129,7 @@ export default function DoctorProfile() {
   const hasWebsite = data.website && data.website.trim();
 
   return (
-    <main data-testid="doctor-profile-page" className="min-h-screen bg-slate-50">
+    <main data-testid="doctor-profile-page" className="min-h-screen bg-slate-50 overflow-hidden">
       {jsonLd && (
         <script
           data-testid="doctor-profile-jsonld"
@@ -111,107 +138,155 @@ export default function DoctorProfile() {
         />
       )}
 
+      {/* Animated Background */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-20 right-10 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl animate-float" />
+        <div className="absolute bottom-40 left-10 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl animate-float-delayed" />
+      </div>
+
       {/* Header Card */}
-      <section className="border-b border-slate-200 bg-white">
-        <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
-          <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
+      <section className="relative border-b border-slate-200 bg-gradient-to-br from-slate-900 via-slate-800 to-teal-900 overflow-hidden">
+        <div className="absolute inset-0">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-teal-500/20 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-1/4 w-80 h-80 bg-blue-500/15 rounded-full blur-3xl" />
+        </div>
+
+        <div className="relative mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="flex flex-col gap-6 sm:flex-row sm:items-start"
+          >
             {/* Photo */}
-            <div className="shrink-0">
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.2, type: "spring" }}
+              className="shrink-0"
+            >
               {data.public_photo_url ? (
-                <img
-                  data-testid="doctor-profile-photo"
-                  src={`${process.env.REACT_APP_BACKEND_URL}${data.public_photo_url}`}
-                  alt={data.name}
-                  className="h-28 w-28 rounded-2xl border-2 border-slate-100 object-cover shadow-sm sm:h-32 sm:w-32"
-                />
+                <div className="relative group">
+                  <div className="absolute -inset-1 bg-gradient-to-r from-teal-400 to-emerald-400 rounded-2xl blur-md opacity-50 group-hover:opacity-75 transition-opacity" />
+                  <img
+                    data-testid="doctor-profile-photo"
+                    src={`${process.env.REACT_APP_BACKEND_URL}${data.public_photo_url}`}
+                    alt={data.name}
+                    className="relative h-32 w-32 rounded-2xl border-2 border-white/20 object-cover shadow-xl sm:h-36 sm:w-36"
+                  />
+                </div>
               ) : (
                 <div
                   data-testid="doctor-profile-photo-placeholder"
-                  className="flex h-28 w-28 items-center justify-center rounded-2xl border-2 border-slate-100 bg-slate-100 text-2xl font-bold text-slate-400 sm:h-32 sm:w-32"
+                  className="flex h-32 w-32 items-center justify-center rounded-2xl bg-gradient-to-br from-slate-700 to-slate-800 border-2 border-white/10 text-3xl font-bold text-white/70 sm:h-36 sm:w-36"
                 >
                   {(data.name || "DR").trim().slice(0, 2).toUpperCase()}
                 </div>
               )}
-            </div>
+            </motion.div>
 
             {/* Info */}
             <div className="flex-1">
+              {/* Trust Badges */}
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="flex flex-wrap gap-2 mb-4"
+              >
+                <TrustBadge type="approved" label="Admin Verified" />
+                {data.registration_number && <TrustBadge type="documents" label="Registration Submitted" />}
+                {data.public_photo_url && <TrustBadge type="profile" label="Photo Verified" />}
+              </motion.div>
+
               <h1
                 data-testid="doctor-profile-name"
-                className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl lg:text-4xl"
+                className="text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl"
               >
                 {data.name}
               </h1>
               <p
                 data-testid="doctor-profile-qualifications"
-                className="mt-2 text-sm text-slate-600 sm:text-base"
+                className="mt-2 text-base text-slate-300 sm:text-lg"
               >
                 {data.qualifications}
               </p>
 
               {/* Subspecialties */}
               {data.subspecialties?.length > 0 && (
-                <div className="mt-4 flex flex-wrap gap-2">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.4 }}
+                  className="mt-4 flex flex-wrap gap-2"
+                >
                   {data.subspecialties.map((s) => (
                     <Badge
                       data-testid={`doctor-profile-subspecialty-${s.toLowerCase().replace(/\s+/g, "-")}`}
                       key={s}
-                      className="rounded-full border-0 bg-teal-50 px-3 py-1 text-sm font-medium text-teal-700 hover:bg-teal-100"
+                      className="rounded-full border-0 bg-teal-500/20 backdrop-blur px-3 py-1.5 text-sm font-medium text-teal-200 hover:bg-teal-500/30"
                     >
                       {s}
                     </Badge>
                   ))}
-                </div>
+                </motion.div>
               )}
 
               {/* Registration Badge */}
-              <div className="mt-5 inline-flex items-center gap-2 rounded-lg bg-slate-100 px-4 py-2.5">
-                <Shield className="h-4 w-4 text-slate-500" />
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="mt-6 inline-flex items-center gap-3 rounded-xl bg-white/10 backdrop-blur border border-white/10 px-4 py-3"
+              >
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10">
+                  <Shield className="h-5 w-5 text-teal-400" />
+                </div>
                 <div>
-                  <div className="text-xs font-medium text-slate-500">Medical Registration</div>
+                  <div className="text-xs font-medium text-slate-400">Medical Registration</div>
                   <div
                     data-testid="doctor-profile-reg-number"
-                    className="text-sm font-semibold text-slate-900"
+                    className="text-sm font-bold text-white"
                   >
                     {data.registration_number}
                   </div>
                 </div>
-              </div>
+              </motion.div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* Content */}
-      <section className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
+      <section className="relative mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
         <div className="grid gap-6 lg:grid-cols-[1fr_380px] lg:items-start">
           {/* Main Content */}
           <div className="space-y-6">
             {/* About */}
             {data.about && (
-              <div className="rounded-2xl border border-slate-200 bg-white p-6">
-                <h2
-                  data-testid="doctor-profile-about-title"
-                  className="text-lg font-semibold text-slate-900"
-                >
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+              >
+                <h2 data-testid="doctor-profile-about-title" className="text-lg font-bold text-slate-900">
                   About
                 </h2>
-                <p
-                  data-testid="doctor-profile-about-body"
-                  className="mt-3 text-sm leading-relaxed text-slate-600"
-                >
+                <p data-testid="doctor-profile-about-body" className="mt-3 text-sm leading-relaxed text-slate-600">
                   {data.about}
                 </p>
-              </div>
+              </motion.div>
             )}
 
             {/* Conditions & Procedures */}
             <div className="grid gap-6 sm:grid-cols-2">
-              <div className="rounded-2xl border border-slate-200 bg-white p-6">
-                <h2
-                  data-testid="doctor-profile-conditions-title"
-                  className="text-lg font-semibold text-slate-900"
-                >
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+              >
+                <h2 data-testid="doctor-profile-conditions-title" className="text-lg font-bold text-slate-900">
                   Conditions Treated
                 </h2>
                 {data.conditions_treated?.length > 0 ? (
@@ -230,13 +305,15 @@ export default function DoctorProfile() {
                 ) : (
                   <p className="mt-4 text-sm text-slate-400">Not specified</p>
                 )}
-              </div>
+              </motion.div>
 
-              <div className="rounded-2xl border border-slate-200 bg-white p-6">
-                <h2
-                  data-testid="doctor-profile-procedures-title"
-                  className="text-lg font-semibold text-slate-900"
-                >
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+              >
+                <h2 data-testid="doctor-profile-procedures-title" className="text-lg font-bold text-slate-900">
                   Procedures Performed
                 </h2>
                 {data.procedures_performed?.length > 0 ? (
@@ -247,7 +324,7 @@ export default function DoctorProfile() {
                         key={`${p}-${idx}`}
                         className="flex items-start gap-2 text-sm text-slate-600"
                       >
-                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400" />
+                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
                         {p}
                       </li>
                     ))}
@@ -255,15 +332,17 @@ export default function DoctorProfile() {
                 ) : (
                   <p className="mt-4 text-sm text-slate-400">Not specified</p>
                 )}
-              </div>
+              </motion.div>
             </div>
 
             {/* Locations */}
-            <div className="rounded-2xl border border-slate-200 bg-white p-6">
-              <h2
-                data-testid="doctor-profile-locations-title"
-                className="text-lg font-semibold text-slate-900"
-              >
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+            >
+              <h2 data-testid="doctor-profile-locations-title" className="text-lg font-bold text-slate-900">
                 Clinic / Hospital Locations
               </h2>
 
@@ -295,8 +374,8 @@ export default function DoctorProfile() {
                           className="px-4 py-3 text-left hover:no-underline [&[data-state=open]]:bg-slate-50"
                         >
                           <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100">
-                              <MapPin className="h-5 w-5 text-slate-500" />
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-teal-50 to-emerald-50">
+                              <MapPin className="h-5 w-5 text-teal-600" />
                             </div>
                             <div>
                               <div className="font-semibold text-slate-900">
@@ -353,20 +432,25 @@ export default function DoctorProfile() {
                   })}
                 </Accordion>
               )}
-            </div>
+            </motion.div>
           </div>
 
           {/* Sidebar */}
           <div className="space-y-4 lg:sticky lg:top-24">
             {/* Contact Card */}
-            <div className="rounded-2xl border border-slate-200 bg-white p-6">
-              <h2 className="text-lg font-semibold text-slate-900">Contact</h2>
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+              className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+            >
+              <h2 className="text-lg font-bold text-slate-900">Contact</h2>
               <div className="mt-4 space-y-3">
                 {locations[0]?.phone && (
                   <a
                     href={`tel:${locations[0].phone}`}
                     data-testid="doctor-profile-phone-cta"
-                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-teal-600 py-3 text-sm font-medium text-white transition-colors hover:bg-teal-700"
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 py-3.5 text-sm font-semibold text-white shadow-lg shadow-teal-500/25 transition-all hover:shadow-teal-500/40 hover:scale-[1.02]"
                   >
                     <Phone className="h-4 w-4" />
                     Call Clinic
@@ -379,36 +463,39 @@ export default function DoctorProfile() {
                     target="_blank"
                     rel="noreferrer"
                     data-testid="doctor-profile-website-cta"
-                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-3 text-sm font-medium text-slate-700 transition-all hover:bg-slate-50 hover:shadow-md"
                   >
                     <Globe className="h-4 w-4" />
                     Visit Website
                   </a>
                 )}
               </div>
-            </div>
+            </motion.div>
 
             {/* Disclaimer */}
-            <div
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4 }}
               data-testid="doctor-profile-disclaimer"
-              className="rounded-2xl border border-amber-200 bg-amber-50 p-5"
+              className="rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 p-5"
             >
               <div className="flex items-start gap-3">
                 <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
                 <div>
-                  <div className="text-sm font-medium text-amber-900">Platform Notice</div>
+                  <div className="text-sm font-semibold text-amber-900">Platform Notice</div>
                   <p className="mt-1 text-xs leading-relaxed text-amber-800">
-                    This profile information is self-declared by the surgeon and shown after admin review.
-                    OrthoConnect does not recommend, rank, or endorse any doctor.
+                    This profile is self-declared by the surgeon and reviewed by OrthoConnect admin.
+                    We do not recommend, rank, or endorse any doctor.
                   </p>
                 </div>
               </div>
-            </div>
+            </motion.div>
 
             {/* Back to Search */}
             <Link
               to="/"
-              className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
+              className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-3 text-sm font-medium text-slate-600 transition-all hover:bg-slate-50 hover:text-slate-900 hover:shadow-md"
             >
               ← Back to Search
             </Link>
