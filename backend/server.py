@@ -2697,6 +2697,163 @@ async def add_crm_activity(
     return {"ok": True}
 
 
+@api_router.get("/admin/crm/zoho/channels")
+async def get_zoho_channels(auth: Dict[str, Any] = Depends(admin_dep)):
+    """Get available Zoho Desk channels including WhatsApp"""
+    result = await zoho_desk_request("GET", "/channels")
+    if "error" in result:
+        return {"ok": False, "error": result.get("error")}
+    
+    channels = result.get("data", [])
+    whatsapp_channels = [c for c in channels if c.get("mappedIntegration") == "WHATSAPP"]
+    
+    return {
+        "ok": True,
+        "all_channels": channels,
+        "whatsapp_channels": whatsapp_channels,
+    }
+
+
+@api_router.post("/admin/crm/zoho/send-whatsapp")
+async def send_whatsapp_via_zoho(
+    contact_id: str,
+    message: str,
+    auth: Dict[str, Any] = Depends(admin_dep)
+):
+    """Send WhatsApp message via Zoho Desk"""
+    contact = await db.crm_contacts.find_one({"id": contact_id}, {"_id": 0})
+    if not contact:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    
+    mobile = contact.get("mobile", "")
+    if not mobile:
+        raise HTTPException(status_code=400, detail="Contact has no mobile number")
+    
+    # Ensure country code
+    mobile_clean = re.sub(r"\D", "", mobile)
+    if len(mobile_clean) == 10:
+        mobile_clean = "91" + mobile_clean
+    
+    # Personalize message
+    name = contact.get("name", "Doctor")
+    if name.lower().startswith("dr."):
+        name = name[3:].strip()
+    personalized_message = message.replace("{name}", name).replace("{doctor_name}", f"Dr. {name}")
+    
+    # First, ensure contact exists in Zoho Desk
+    zoho_contact_id = contact.get("zoho_contact_id")
+    if not zoho_contact_id:
+        # Create contact in Zoho
+        zoho_data = {
+            "lastName": contact["name"],
+            "email": contact.get("email"),
+            "phone": mobile_clean,
+        }
+        create_result = await zoho_desk_request("POST", "/contacts", zoho_data)
+        if "error" not in create_result:
+            zoho_contact_id = create_result.get("id")
+            await db.crm_contacts.update_one(
+                {"id": contact_id},
+                {"$set": {"zoho_contact_id": zoho_contact_id}}
+            )
+    
+    # Create a ticket with WhatsApp channel for outbound message
+    # Note: Zoho Desk WhatsApp requires the contact to have initiated conversation first
+    # For outbound, we'll create a ticket that can be followed up
+    ticket_data = {
+        "subject": f"WhatsApp Outreach: {contact['name']}",
+        "description": personalized_message,
+        "departmentId": "62982000000010772",  # agileorthopedicspvtltd
+        "contactId": zoho_contact_id,
+        "phone": mobile_clean,
+        "channel": "SANDBOX",  # WhatsApp channel code
+        "status": "Open",
+    }
+    
+    result = await zoho_desk_request("POST", "/tickets", ticket_data)
+    
+    if "error" in result:
+        # If ticket creation fails, return WhatsApp web link as fallback
+        encoded_msg = requests.utils.quote(personalized_message)
+        return {
+            "ok": False, 
+            "error": result.get("error"),
+            "fallback_url": f"https://api.whatsapp.com/send?phone={mobile_clean}&text={encoded_msg}"
+        }
+    
+    # Log activity
+    await db.crm_contacts.update_one(
+        {"id": contact_id},
+        {
+            "$push": {
+                "activities": {
+                    "type": "whatsapp_sent",
+                    "timestamp": now_iso(),
+                    "details": personalized_message[:100] + "..." if len(personalized_message) > 100 else personalized_message,
+                    "ticket_id": result.get("id"),
+                }
+            },
+            "$set": {"last_contacted": now_iso(), "updated_at": now_iso()}
+        }
+    )
+    
+    return {"ok": True, "ticket_id": result.get("id"), "ticket_number": result.get("ticketNumber")}
+
+
+@api_router.post("/admin/crm/zoho/bulk-whatsapp")
+async def send_bulk_whatsapp_via_zoho(
+    contact_ids: List[str],
+    message: str,
+    auth: Dict[str, Any] = Depends(admin_dep)
+):
+    """Send WhatsApp message to multiple contacts via Zoho Desk"""
+    results = {"sent": 0, "failed": 0, "fallback_links": []}
+    
+    for contact_id in contact_ids:
+        contact = await db.crm_contacts.find_one({"id": contact_id}, {"_id": 0})
+        if not contact or not contact.get("mobile"):
+            results["failed"] += 1
+            continue
+        
+        mobile = contact.get("mobile", "")
+        mobile_clean = re.sub(r"\D", "", mobile)
+        if len(mobile_clean) == 10:
+            mobile_clean = "91" + mobile_clean
+        
+        # Personalize
+        name = contact.get("name", "Doctor")
+        if name.lower().startswith("dr."):
+            name = name[3:].strip()
+        personalized = message.replace("{name}", name).replace("{doctor_name}", f"Dr. {name}")
+        
+        # Generate WhatsApp link (since Zoho WhatsApp requires prior conversation)
+        encoded = requests.utils.quote(personalized)
+        results["fallback_links"].append({
+            "contact_id": contact_id,
+            "name": contact.get("name"),
+            "mobile": mobile_clean,
+            "whatsapp_url": f"https://api.whatsapp.com/send?phone={mobile_clean}&text={encoded}"
+        })
+        
+        # Log activity
+        await db.crm_contacts.update_one(
+            {"id": contact_id},
+            {
+                "$push": {
+                    "activities": {
+                        "type": "whatsapp_link_generated",
+                        "timestamp": now_iso(),
+                        "details": f"WhatsApp link generated for bulk send",
+                    }
+                },
+                "$set": {"updated_at": now_iso()}
+            }
+        )
+        results["sent"] += 1
+    
+    return results
+
+
 @api_router.post("/admin/crm/import-surgeons")
 async def import_surgeons_to_crm(auth: Dict[str, Any] = Depends(admin_dep)):
     """Import all registered surgeons into CRM"""
