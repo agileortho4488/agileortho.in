@@ -38,6 +38,7 @@ export default function AdminCRM() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showBroadcastModal, setShowBroadcastModal] = useState(false);
   const [zohoConnected, setZohoConnected] = useState(null);
+  const [syncing, setSyncing] = useState(false);
   
   const [newContact, setNewContact] = useState({
     name: "", mobile: "", email: "", city: "", subspecialty: "", clinic_name: "", tags: "", notes: ""
