@@ -156,6 +156,9 @@ export default function JoinSurgeon() {
           (res.data.locations || []).length ? res.data.locations : [emptyLocation()],
         );
         
+        // Load existing documents
+        setExistingDocs(res.data.documents || []);
+        
         // Load referral data
         loadReferralData();
       } else {
