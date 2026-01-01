@@ -2,6 +2,7 @@ import "leaflet/dist/leaflet.css";
 import "@/App.css";
 
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Toaster } from "@/components/ui/sonner";
 
 import SiteHeader from "@/components/layout/SiteHeader";
 import SiteFooter from "@/components/layout/SiteFooter";
@@ -60,6 +61,7 @@ export default function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
         <SiteFooter />
+        <Toaster />
       </BrowserRouter>
     </div>
   );
