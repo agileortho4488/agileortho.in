@@ -884,8 +884,10 @@ def get_email_template(template_type: str, contact: Dict[str, Any], tracking_id:
 def get_whatsapp_message(contact: Dict[str, Any]) -> str:
     """Generate WhatsApp invitation message"""
     name = contact.get("name", "Doctor")
-    # Remove "Dr." prefix if already present to avoid "Dr. Dr."
-    if name.lower().startswith("dr."):
+    # Remove "Dr." or "DR." prefix if already present to avoid "Dr. Dr."
+    if name.upper().startswith("DR."):
+        name = name[3:].strip()
+    elif name.upper().startswith("DR "):
         name = name[3:].strip()
     return f"""Dear Dr. {name},
 
