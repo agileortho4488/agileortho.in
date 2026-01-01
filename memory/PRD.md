@@ -236,7 +236,17 @@ Email: Zoho Mail SMTP (info@agileortho.in)
   - Distance display on surgeon cards (e.g., "5.2 km away")
   - Radius filtering (10, 25, 50, 100 km)
 - ✅ **CRM Contact Import**: Imported 2,749 contacts from CSV and Excel files
-- ✅ **Email Bounce Handling**: Auto-removes invalid emails on 550/554 errors
+- ✅ **Zoho Campaigns Integration**:
+  - OAuth authentication with refresh token
+  - Synced 8,313 contacts from Zoho Campaigns to local CRM
+  - API endpoints for lists, subscribers, sync, add contacts
+  - Remove invalid emails functionality
+- ✅ **Bulk Import & Claim Profile System**:
+  - Admin bulk import page (/admin/bulk-import)
+  - Claim profile page (/claim) for surgeons
+  - "Unclaimed" profile status
+  - SMS and email notifications on import
+- ✅ **Long-term Roadmap Created**: 6-month growth plan in /app/memory/ROADMAP.md
 - ✅ **Testing**: All features verified via testing agent (iteration 11)
 
 ---
