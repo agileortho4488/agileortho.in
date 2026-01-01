@@ -4,6 +4,9 @@ export const SUBSPECIALTIES = [
   "Hand",
   "Hip",
   "Knee",
+  "Spine",
+  "Sports Medicine",
+  "Trauma",
   "Oncology",
   "Paediatrics",
 ];
