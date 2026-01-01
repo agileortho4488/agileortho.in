@@ -57,9 +57,13 @@ export default function AdminCRM() {
     setLoading(true);
     try {
       const tag = tagOverride !== null ? tagOverride : tagFilter;
-      const params = tag ? `?tag=${tag}` : '';
+      // Limit to 500 contacts for performance, filter by tag if provided
+      const params = new URLSearchParams();
+      if (tag) params.set('tag', tag);
+      params.set('limit', '500');
+      
       const [contactsRes, statsRes] = await Promise.all([
-        api.get(`/admin/crm/contacts${params}`, { headers: { Authorization: `Bearer ${token}` } }),
+        api.get(`/admin/crm/contacts?${params.toString()}`, { headers: { Authorization: `Bearer ${token}` } }),
         api.get("/admin/crm/stats", { headers: { Authorization: `Bearer ${token}` } }),
       ]);
       setContacts(contactsRes.data || []);
