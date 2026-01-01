@@ -138,17 +138,26 @@ export default function AdminDashboard() {
               Review profiles, verify documents, and approve/reject.
             </p>
           </div>
-          <Button
-            data-testid="admin-logout-button"
-            variant="secondary"
-            onClick={() => {
-              localStorage.removeItem("oc_admin_token");
-              navigate("/admin");
-            }}
-            className="h-10 rounded-full bg-slate-100 text-slate-800 hover:bg-slate-200"
-          >
-            Logout
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button
+              asChild
+              variant="outline"
+              className="h-10 rounded-full border-slate-200 text-slate-800 hover:bg-slate-100"
+            >
+              <Link to="/admin/analytics">📊 Analytics</Link>
+            </Button>
+            <Button
+              data-testid="admin-logout-button"
+              variant="secondary"
+              onClick={() => {
+                localStorage.removeItem("oc_admin_token");
+                navigate("/admin");
+              }}
+              className="h-10 rounded-full bg-slate-100 text-slate-800 hover:bg-slate-200"
+            >
+              Logout
+            </Button>
+          </div>
         </div>
 
         {error ? (
