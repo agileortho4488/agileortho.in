@@ -881,11 +881,32 @@ export default function JoinSurgeon() {
             />
 
             <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="text-sm font-semibold text-slate-900">Documents</div>
+              <div className="flex items-center gap-2">
+                <div className="text-sm font-semibold text-slate-900">Documents</div>
+                <span className="text-red-500 text-xs font-bold">* Required</span>
+              </div>
               <div className="mt-2 text-xs text-slate-500">
                 Upload registration proof/degree certificates. These are private
                 and used for admin verification.
               </div>
+
+              {/* Show existing documents */}
+              {existingDocs.length > 0 && (
+                <div className="mt-4 p-3 rounded-xl bg-emerald-50 border border-emerald-200">
+                  <div className="text-xs font-semibold text-emerald-700 mb-2">
+                    ✓ Uploaded Documents ({existingDocs.length})
+                  </div>
+                  <div className="space-y-1">
+                    {existingDocs.map((d) => (
+                      <div key={d.id} className="text-xs text-emerald-600 flex items-center gap-2">
+                        <span>📄</span>
+                        <span>{d.filename}</span>
+                        <span className="text-emerald-500 capitalize">({d.type})</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="mt-4 grid gap-3 md:grid-cols-2">
                 <div>
@@ -912,7 +933,9 @@ export default function JoinSurgeon() {
                 </div>
 
                 <div>
-                  <div className="text-xs font-semibold text-slate-700">Files</div>
+                  <div className="text-xs font-semibold text-slate-700">
+                    {existingDocs.length > 0 ? "Add More Files" : "Files"}
+                  </div>
                   <Input
                     data-testid="surgeon-docs-input"
                     className="mt-2"
@@ -924,7 +947,11 @@ export default function JoinSurgeon() {
                     data-testid="surgeon-docs-count"
                     className="mt-2 text-xs text-slate-500"
                   >
-                    Selected: {docFiles.length}
+                    {docFiles.length > 0 
+                      ? `New files selected: ${docFiles.length}` 
+                      : existingDocs.length === 0 
+                        ? "⚠️ Please select at least one document" 
+                        : "Optional: Add more documents"}
                   </div>
                 </div>
               </div>
