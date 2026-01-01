@@ -206,6 +206,20 @@ export default function AdminDashboard() {
               <Link to="/admin/crm">👥 CRM</Link>
             </Button>
             <Button
+              asChild
+              variant="outline"
+              className="h-10 rounded-full border-violet-300 text-violet-700 hover:bg-violet-50"
+            >
+              <Link to="/admin/discovery">🔍 Discovery</Link>
+            </Button>
+            <Button
+              asChild
+              variant="outline"
+              className="h-10 rounded-full border-amber-300 text-amber-700 hover:bg-amber-50"
+            >
+              <Link to="/admin/bulk-import">📥 Bulk Import</Link>
+            </Button>
+            <Button
               data-testid="admin-logout-button"
               variant="secondary"
               onClick={() => {
