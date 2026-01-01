@@ -6,7 +6,11 @@ import uuid
 import math
 import csv
 import io
+import ssl
+import smtplib
 import logging
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from pathlib import Path
 from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List, Literal, Optional, Tuple
