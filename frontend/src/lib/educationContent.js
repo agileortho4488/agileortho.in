@@ -216,7 +216,7 @@ The knee is one of the most commonly affected joints. OA typically affects peopl
   },
 
   // ========== SPINE ==========
-  "herniated-disc": {
+  "lumbar-disc-herniation": {
     title: "Herniated Disc (Slipped Disc)",
     keyTakeaways: [
       "A herniated disc occurs when the soft center pushes through the tough outer ring",
