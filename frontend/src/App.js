@@ -17,6 +17,7 @@ import ConditionCategory from "@/pages/ConditionCategory";
 import ConditionDetail from "@/pages/ConditionDetail";
 import DoctorProfile from "@/pages/DoctorProfile";
 import JoinSurgeon from "@/pages/JoinSurgeon";
+import Surgeons from "@/pages/Surgeons";
 import About from "@/pages/About";
 import Contact from "@/pages/Contact";
 import AdminLogin from "@/pages/AdminLogin";
@@ -43,6 +44,7 @@ export default function App() {
           <Route path="/conditions/:slug" element={<ConditionDetail />} />
           <Route path="/doctor/:slug" element={<DoctorProfile />} />
           <Route path="/join" element={<JoinSurgeon />} />
+          <Route path="/surgeons" element={<Surgeons />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/admin" element={<AdminLogin />} />
