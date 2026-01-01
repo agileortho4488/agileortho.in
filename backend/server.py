@@ -2311,7 +2311,7 @@ async def claim_verify_and_create_account(payload: ClaimProfileRequest):
     await db.otp_codes.delete_one({"mobile": mobile, "purpose": "claim"})
     
     # Generate auth token
-    token = create_token({"sub": user_id, "mobile": mobile, "role": "surgeon"})
+    token = encode_token(sub=user_id, role="surgeon")
     
     return {
         "ok": True,
