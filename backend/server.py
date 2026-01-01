@@ -2529,6 +2529,484 @@ async def export_outreach_contacts(auth: Dict[str, Any] = Depends(admin_dep)):
     )
 
 
+# -----------------------------
+# Surgeon CRM & Zoho Desk Integration
+# -----------------------------
+
+class CRMContact(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    
+    # Basic Info
+    name: str
+    email: str = ""
+    mobile: str
+    city: str = ""
+    subspecialty: str = ""
+    clinic_name: str = ""
+    
+    # CRM Status
+    crm_status: Literal["lead", "contacted", "interested", "registered", "active", "inactive"] = "lead"
+    
+    # Linking
+    surgeon_id: Optional[str] = None  # Linked to registered surgeon
+    zoho_contact_id: Optional[str] = None  # Zoho Desk contact ID
+    zoho_ticket_ids: List[str] = Field(default_factory=list)
+    
+    # Communication
+    last_contacted: Optional[str] = None
+    last_response: Optional[str] = None
+    preferred_channel: Literal["whatsapp", "email", "phone"] = "whatsapp"
+    
+    # Tags and Notes
+    tags: List[str] = Field(default_factory=list)
+    notes: str = ""
+    
+    # Activity Log
+    activities: List[Dict[str, Any]] = Field(default_factory=list)
+    
+    created_at: str = Field(default_factory=now_iso)
+    updated_at: str = Field(default_factory=now_iso)
+
+
+class BroadcastMessage(BaseModel):
+    contact_ids: List[str]
+    channel: Literal["whatsapp", "email", "both"] = "whatsapp"
+    message_type: Literal["promotion", "cme_update", "conference", "general"] = "general"
+    subject: str = ""  # For email
+    message: str
+
+
+@api_router.get("/admin/crm/contacts")
+async def get_crm_contacts(
+    status: Optional[str] = None,
+    tag: Optional[str] = None,
+    auth: Dict[str, Any] = Depends(admin_dep)
+):
+    """Get all CRM contacts with filters"""
+    query = {}
+    if status:
+        query["crm_status"] = status
+    if tag:
+        query["tags"] = tag
+    
+    docs = await db.crm_contacts.find(query, {"_id": 0}).sort("updated_at", -1).to_list(10000)
+    return docs
+
+
+@api_router.post("/admin/crm/contacts")
+async def create_crm_contact(
+    name: str,
+    mobile: str,
+    email: str = "",
+    city: str = "",
+    subspecialty: str = "",
+    clinic_name: str = "",
+    tags: str = "",
+    notes: str = "",
+    auth: Dict[str, Any] = Depends(admin_dep)
+):
+    """Create a new CRM contact"""
+    mobile_clean = re.sub(r"\D", "", mobile)[-10:]
+    
+    # Check if already exists
+    existing = await db.crm_contacts.find_one({"mobile": mobile_clean})
+    if existing:
+        raise HTTPException(status_code=400, detail="Contact with this mobile already exists")
+    
+    # Check if registered surgeon
+    surgeon = await db.surgeons.find_one({"mobile": mobile_clean}, {"_id": 0, "id": 1, "name": 1, "status": 1})
+    
+    contact = CRMContact(
+        name=name.strip(),
+        email=email.strip().lower() if email else "",
+        mobile=mobile_clean,
+        city=city.strip(),
+        subspecialty=subspecialty.strip(),
+        clinic_name=clinic_name.strip(),
+        tags=[t.strip() for t in tags.split(",") if t.strip()] if tags else [],
+        notes=notes.strip(),
+        surgeon_id=surgeon["id"] if surgeon else None,
+        crm_status="registered" if surgeon else "lead",
+    )
+    
+    # Add creation activity
+    contact.activities.append({
+        "type": "created",
+        "timestamp": now_iso(),
+        "details": "Contact added to CRM"
+    })
+    
+    await db.crm_contacts.insert_one(contact.model_dump())
+    
+    return {"ok": True, "id": contact.id, "linked_surgeon": surgeon is not None}
+
+
+@api_router.patch("/admin/crm/contacts/{contact_id}")
+async def update_crm_contact(
+    contact_id: str,
+    crm_status: Optional[str] = None,
+    tags: Optional[str] = None,
+    notes: Optional[str] = None,
+    auth: Dict[str, Any] = Depends(admin_dep)
+):
+    """Update CRM contact"""
+    update = {"updated_at": now_iso()}
+    
+    if crm_status:
+        update["crm_status"] = crm_status
+    if tags is not None:
+        update["tags"] = [t.strip() for t in tags.split(",") if t.strip()]
+    if notes is not None:
+        update["notes"] = notes
+    
+    result = await db.crm_contacts.update_one({"id": contact_id}, {"$set": update})
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    
+    return {"ok": True}
+
+
+@api_router.post("/admin/crm/contacts/{contact_id}/activity")
+async def add_crm_activity(
+    contact_id: str,
+    activity_type: str,
+    details: str,
+    auth: Dict[str, Any] = Depends(admin_dep)
+):
+    """Add activity to contact"""
+    activity = {
+        "type": activity_type,
+        "timestamp": now_iso(),
+        "details": details,
+    }
+    
+    result = await db.crm_contacts.update_one(
+        {"id": contact_id},
+        {
+            "$push": {"activities": activity},
+            "$set": {"updated_at": now_iso()}
+        }
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    
+    return {"ok": True}
+
+
+@api_router.post("/admin/crm/import-surgeons")
+async def import_surgeons_to_crm(auth: Dict[str, Any] = Depends(admin_dep)):
+    """Import all registered surgeons into CRM"""
+    surgeons = await db.surgeons.find({}, {"_id": 0}).to_list(10000)
+    
+    imported = 0
+    skipped = 0
+    
+    for s in surgeons:
+        mobile = s.get("mobile", "")
+        if not mobile:
+            skipped += 1
+            continue
+        
+        # Check if already in CRM
+        existing = await db.crm_contacts.find_one({"mobile": mobile})
+        if existing:
+            # Update link if needed
+            if not existing.get("surgeon_id"):
+                await db.crm_contacts.update_one(
+                    {"mobile": mobile},
+                    {"$set": {"surgeon_id": s["id"], "crm_status": "registered"}}
+                )
+            skipped += 1
+            continue
+        
+        # Get location info
+        locs = s.get("locations", [])
+        loc = locs[0] if locs else {}
+        
+        contact = CRMContact(
+            name=s.get("name", "Unknown"),
+            email=s.get("email", ""),
+            mobile=mobile,
+            city=loc.get("city", ""),
+            subspecialty=", ".join(s.get("subspecialties", [])),
+            clinic_name=loc.get("facility_name", ""),
+            surgeon_id=s["id"],
+            crm_status="active" if s.get("status") == "approved" else "registered",
+            tags=["imported", s.get("status", "")],
+        )
+        
+        contact.activities.append({
+            "type": "imported",
+            "timestamp": now_iso(),
+            "details": f"Imported from surgeons database (status: {s.get('status')})"
+        })
+        
+        await db.crm_contacts.insert_one(contact.model_dump())
+        imported += 1
+    
+    return {"imported": imported, "skipped": skipped}
+
+
+@api_router.get("/admin/crm/stats")
+async def get_crm_stats(auth: Dict[str, Any] = Depends(admin_dep)):
+    """Get CRM statistics"""
+    total = await db.crm_contacts.count_documents({})
+    
+    by_status = {}
+    for status in ["lead", "contacted", "interested", "registered", "active", "inactive"]:
+        by_status[status] = await db.crm_contacts.count_documents({"crm_status": status})
+    
+    # Get top tags
+    pipeline = [
+        {"$unwind": "$tags"},
+        {"$group": {"_id": "$tags", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}},
+        {"$limit": 10}
+    ]
+    tags_result = await db.crm_contacts.aggregate(pipeline).to_list(10)
+    top_tags = [{"tag": t["_id"], "count": t["count"]} for t in tags_result]
+    
+    # Get top cities
+    pipeline = [
+        {"$match": {"city": {"$ne": ""}}},
+        {"$group": {"_id": "$city", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}},
+        {"$limit": 10}
+    ]
+    cities_result = await db.crm_contacts.aggregate(pipeline).to_list(10)
+    top_cities = [{"city": c["_id"], "count": c["count"]} for c in cities_result]
+    
+    return {
+        "total": total,
+        "by_status": by_status,
+        "top_tags": top_tags,
+        "top_cities": top_cities,
+    }
+
+
+# Zoho Desk Integration Endpoints
+
+@api_router.get("/admin/crm/zoho/test")
+async def test_zoho_connection(auth: Dict[str, Any] = Depends(admin_dep)):
+    """Test Zoho Desk API connection"""
+    result = await zoho_desk_request("GET", "/departments")
+    if "error" in result:
+        return {"connected": False, "error": result.get("error")}
+    return {"connected": True, "departments": result.get("data", [])}
+
+
+@api_router.post("/admin/crm/zoho/sync-contact/{contact_id}")
+async def sync_contact_to_zoho(contact_id: str, auth: Dict[str, Any] = Depends(admin_dep)):
+    """Create or update contact in Zoho Desk"""
+    contact = await db.crm_contacts.find_one({"id": contact_id}, {"_id": 0})
+    if not contact:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    
+    # Prepare Zoho contact data
+    zoho_data = {
+        "lastName": contact["name"],
+        "email": contact.get("email"),
+        "phone": contact.get("mobile"),
+        "cf": {
+            "cf_city": contact.get("city", ""),
+            "cf_subspecialty": contact.get("subspecialty", ""),
+            "cf_clinic": contact.get("clinic_name", ""),
+        }
+    }
+    
+    # Check if already synced
+    if contact.get("zoho_contact_id"):
+        # Update existing
+        result = await zoho_desk_request("PATCH", f"/contacts/{contact['zoho_contact_id']}", zoho_data)
+    else:
+        # Create new
+        result = await zoho_desk_request("POST", "/contacts", zoho_data)
+    
+    if "error" in result:
+        return {"ok": False, "error": result.get("error")}
+    
+    # Save Zoho contact ID
+    zoho_id = result.get("id") or contact.get("zoho_contact_id")
+    if zoho_id:
+        await db.crm_contacts.update_one(
+            {"id": contact_id},
+            {"$set": {"zoho_contact_id": zoho_id, "updated_at": now_iso()}}
+        )
+    
+    return {"ok": True, "zoho_contact_id": zoho_id}
+
+
+@api_router.post("/admin/crm/zoho/create-ticket/{contact_id}")
+async def create_zoho_ticket(
+    contact_id: str,
+    subject: str,
+    description: str,
+    department_id: Optional[str] = None,
+    auth: Dict[str, Any] = Depends(admin_dep)
+):
+    """Create a ticket in Zoho Desk for a contact"""
+    contact = await db.crm_contacts.find_one({"id": contact_id}, {"_id": 0})
+    if not contact:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    
+    # Get departments if not provided
+    if not department_id:
+        depts = await zoho_desk_request("GET", "/departments")
+        if depts.get("data"):
+            department_id = depts["data"][0]["id"]
+    
+    ticket_data = {
+        "subject": subject,
+        "description": description,
+        "departmentId": department_id,
+        "contactId": contact.get("zoho_contact_id"),
+        "email": contact.get("email"),
+        "phone": contact.get("mobile"),
+    }
+    
+    result = await zoho_desk_request("POST", "/tickets", ticket_data)
+    
+    if "error" in result:
+        return {"ok": False, "error": result.get("error")}
+    
+    # Save ticket ID to contact
+    ticket_id = result.get("id")
+    if ticket_id:
+        await db.crm_contacts.update_one(
+            {"id": contact_id},
+            {
+                "$push": {"zoho_ticket_ids": ticket_id},
+                "$set": {"updated_at": now_iso()}
+            }
+        )
+    
+    return {"ok": True, "ticket_id": ticket_id}
+
+
+@api_router.post("/admin/crm/broadcast")
+async def send_broadcast(payload: BroadcastMessage, auth: Dict[str, Any] = Depends(admin_dep)):
+    """Send broadcast message to multiple contacts"""
+    results = {"sent": 0, "failed": 0, "details": []}
+    
+    for contact_id in payload.contact_ids:
+        contact = await db.crm_contacts.find_one({"id": contact_id}, {"_id": 0})
+        if not contact:
+            results["failed"] += 1
+            continue
+        
+        success = False
+        
+        # Send via email
+        if payload.channel in ["email", "both"] and contact.get("email"):
+            subject = payload.subject or f"Update from OrthoConnect: {payload.message_type.replace('_', ' ').title()}"
+            html = generate_broadcast_email(contact, payload.message, payload.message_type)
+            success = send_email(contact["email"], subject, html)
+        
+        # Log activity
+        if success or payload.channel == "whatsapp":
+            await db.crm_contacts.update_one(
+                {"id": contact_id},
+                {
+                    "$push": {
+                        "activities": {
+                            "type": f"broadcast_{payload.message_type}",
+                            "timestamp": now_iso(),
+                            "channel": payload.channel,
+                            "details": payload.message[:100],
+                        }
+                    },
+                    "$set": {"last_contacted": now_iso(), "updated_at": now_iso()}
+                }
+            )
+            results["sent"] += 1
+        else:
+            results["failed"] += 1
+    
+    return results
+
+
+def generate_broadcast_email(contact: dict, message: str, message_type: str) -> str:
+    """Generate broadcast email HTML"""
+    name = contact.get("name", "Doctor")
+    
+    type_titles = {
+        "promotion": "Special Update",
+        "cme_update": "CME/Conference Update",
+        "conference": "Conference Announcement",
+        "general": "Update from OrthoConnect",
+    }
+    
+    return f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.8; color: #1e293b; margin: 0; padding: 0; background-color: #f8fafc;">
+        <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                <div style="background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%); padding: 30px; text-align: center;">
+                    <h1 style="color: white; margin: 0; font-size: 24px;">OrthoConnect</h1>
+                    <p style="color: rgba(255,255,255,0.8); margin: 8px 0 0; font-size: 14px;">{type_titles.get(message_type, 'Update')}</p>
+                </div>
+                
+                <div style="padding: 40px 30px;">
+                    <p>Dear Dr. {name},</p>
+                    <div style="white-space: pre-wrap;">{message}</div>
+                    <p style="margin-top: 30px;">Best regards,<br>Team OrthoConnect</p>
+                </div>
+                
+                <div style="background: #f1f5f9; padding: 20px 30px; text-align: center; color: #64748b; font-size: 12px;">
+                    <p style="margin: 0;">OrthoConnect — An initiative of AgileOrtho</p>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+
+
+@api_router.get("/admin/crm/whatsapp-broadcast-links")
+async def get_whatsapp_broadcast_links(
+    contact_ids: str,
+    message: str,
+    auth: Dict[str, Any] = Depends(admin_dep)
+):
+    """Generate WhatsApp broadcast links for multiple contacts"""
+    ids = [i.strip() for i in contact_ids.split(",")]
+    links = []
+    
+    for contact_id in ids:
+        contact = await db.crm_contacts.find_one({"id": contact_id}, {"_id": 0, "name": 1, "mobile": 1})
+        if not contact or not contact.get("mobile"):
+            continue
+        
+        mobile = contact["mobile"]
+        if len(mobile) == 10:
+            mobile = "91" + mobile
+        
+        # Personalize message
+        name = contact.get("name", "Doctor")
+        if name.lower().startswith("dr."):
+            name = name[3:].strip()
+        
+        personalized = message.replace("{name}", name).replace("{doctor_name}", f"Dr. {name}")
+        encoded = requests.utils.quote(personalized)
+        
+        links.append({
+            "contact_id": contact_id,
+            "name": contact.get("name"),
+            "mobile": contact.get("mobile"),
+            "whatsapp_url": f"https://api.whatsapp.com/send?phone={mobile}&text={encoded}"
+        })
+    
+    return {"links": links}
+
+
 @app.on_event("startup")
 async def ensure_indexes():
     try:
