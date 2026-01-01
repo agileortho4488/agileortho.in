@@ -61,6 +61,90 @@ JWT_EXP_MINUTES = int(os.environ.get("JWT_EXP_MINUTES", "720"))
 UPLOADS_DIR = ROOT_DIR / "uploads"
 UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 
+# Zoho Desk Config
+ZOHO_CLIENT_ID = os.environ.get("ZOHO_CLIENT_ID", "")
+ZOHO_CLIENT_SECRET = os.environ.get("ZOHO_CLIENT_SECRET", "")
+ZOHO_DESK_ORG_ID = os.environ.get("ZOHO_DESK_ORG_ID", "")
+ZOHO_DESK_REFRESH_TOKEN = os.environ.get("ZOHO_DESK_REFRESH_TOKEN", "")
+ZOHO_API_DOMAIN = os.environ.get("ZOHO_API_DOMAIN", "https://www.zohoapis.in")
+
+# In-memory token cache
+_zoho_access_token = {"token": None, "expires_at": 0}
+
+
+# -----------------------------
+# Zoho Desk API Helper
+# -----------------------------
+
+def get_zoho_access_token() -> str:
+    """Get or refresh Zoho access token"""
+    global _zoho_access_token
+    
+    # Check if token is still valid (with 5 min buffer)
+    if _zoho_access_token["token"] and _zoho_access_token["expires_at"] > datetime.now(timezone.utc).timestamp() + 300:
+        return _zoho_access_token["token"]
+    
+    # Refresh the token
+    try:
+        resp = requests.post(
+            "https://accounts.zoho.in/oauth/v2/token",
+            data={
+                "grant_type": "refresh_token",
+                "client_id": ZOHO_CLIENT_ID,
+                "client_secret": ZOHO_CLIENT_SECRET,
+                "refresh_token": ZOHO_DESK_REFRESH_TOKEN,
+            },
+            timeout=10
+        )
+        data = resp.json()
+        
+        if "access_token" in data:
+            _zoho_access_token["token"] = data["access_token"]
+            _zoho_access_token["expires_at"] = datetime.now(timezone.utc).timestamp() + data.get("expires_in", 3600)
+            logger.info("Zoho access token refreshed")
+            return data["access_token"]
+        else:
+            logger.error("Failed to refresh Zoho token: %s", data)
+            return ""
+    except Exception as e:
+        logger.error("Error refreshing Zoho token: %s", e)
+        return ""
+
+
+async def zoho_desk_request(method: str, endpoint: str, data: dict = None) -> dict:
+    """Make authenticated request to Zoho Desk API"""
+    token = get_zoho_access_token()
+    if not token:
+        return {"error": "Failed to get Zoho access token"}
+    
+    url = f"{ZOHO_API_DOMAIN}/desk/v1{endpoint}"
+    headers = {
+        "Authorization": f"Zoho-oauthtoken {token}",
+        "orgId": ZOHO_DESK_ORG_ID,
+        "Content-Type": "application/json",
+    }
+    
+    try:
+        if method == "GET":
+            resp = requests.get(url, headers=headers, timeout=15)
+        elif method == "POST":
+            resp = requests.post(url, headers=headers, json=data, timeout=15)
+        elif method == "PATCH":
+            resp = requests.patch(url, headers=headers, json=data, timeout=15)
+        elif method == "DELETE":
+            resp = requests.delete(url, headers=headers, timeout=15)
+        else:
+            return {"error": f"Unknown method: {method}"}
+        
+        if resp.status_code in [200, 201]:
+            return resp.json() if resp.text else {"ok": True}
+        else:
+            logger.error("Zoho Desk API error: %s - %s", resp.status_code, resp.text)
+            return {"error": resp.text, "status_code": resp.status_code}
+    except Exception as e:
+        logger.error("Zoho Desk request failed: %s", e)
+        return {"error": str(e)}
+
 
 # -----------------------------
 # Utilities
