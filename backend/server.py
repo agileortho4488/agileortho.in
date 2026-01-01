@@ -4290,38 +4290,92 @@ class DiscoveryImportRequest(BaseModel):
 
 
 async def search_google_maps(city: str, query: str) -> List[Dict[str, Any]]:
-    """Search for surgeons using Google Places API (via SerpAPI or similar)"""
-    # Note: In production, use Google Places API or SerpAPI
-    # For now, we'll use a web search approach
+    """Search for surgeons using SerpAPI Google Maps"""
     results = []
     
-    try:
-        # Use DuckDuckGo or similar for now (free alternative)
-        search_url = "https://api.duckduckgo.com/"
-        params = {
-            "q": f"{query} {city} India contact phone",
-            "format": "json",
-            "no_html": 1,
-            "skip_disambig": 1,
-        }
-        resp = requests.get(search_url, params=params, timeout=15)
-        data = resp.json()
-        
-        # Parse results - this is simplified, real implementation would use proper APIs
-        if data.get("RelatedTopics"):
-            for topic in data["RelatedTopics"][:10]:
-                if isinstance(topic, dict) and topic.get("Text"):
-                    text = topic.get("Text", "")
-                    # Extract potential doctor names
-                    if "dr." in text.lower() or "doctor" in text.lower():
-                        results.append({
-                            "name": text[:100],
-                            "source": "google_maps",
-                            "city": city,
-                            "profile_url": topic.get("FirstURL", ""),
-                        })
-    except Exception as e:
-        logger.error("Google Maps search failed: %s", e)
+    # Check for SerpAPI key
+    serpapi_key = os.environ.get("SERPAPI_KEY")
+    
+    if serpapi_key:
+        try:
+            from serpapi import GoogleSearch
+            
+            # Build search parameters
+            params = {
+                "engine": "google_maps",
+                "q": f"{query} in {city}",
+                "hl": "en",
+                "type": "search",
+                "api_key": serpapi_key
+            }
+            
+            search = GoogleSearch(params)
+            data = search.get_dict()
+            
+            # Parse local results
+            local_results = data.get("local_results", [])
+            for place in local_results[:20]:
+                name = place.get("title", "")
+                if not name:
+                    continue
+                    
+                # Extract phone number
+                phone = ""
+                if place.get("phone"):
+                    phone = re.sub(r'[^\d]', '', place["phone"])
+                    if len(phone) == 10:
+                        pass  # Valid Indian mobile
+                    elif len(phone) == 11 and phone.startswith("0"):
+                        phone = phone[1:]
+                    else:
+                        phone = ""
+                
+                results.append({
+                    "name": name,
+                    "qualifications": place.get("type", "Orthopaedic Surgeon"),
+                    "hospital": place.get("title", ""),
+                    "address": place.get("address", ""),
+                    "city": city,
+                    "phone": phone,
+                    "rating": place.get("rating"),
+                    "reviews_count": place.get("reviews"),
+                    "source": "google_maps",
+                    "profile_url": place.get("website") or place.get("place_id_search", ""),
+                    "place_id": place.get("place_id", ""),
+                    "gps_coordinates": place.get("gps_coordinates", {}),
+                })
+                
+            logger.info(f"SerpAPI Google Maps found {len(results)} results for {city}")
+            
+        except Exception as e:
+            logger.error("SerpAPI Google Maps search failed: %s", e)
+    else:
+        logger.warning("SERPAPI_KEY not configured, using fallback search")
+        # Fallback to basic search
+        try:
+            search_url = "https://api.duckduckgo.com/"
+            params = {
+                "q": f"{query} {city} India contact phone",
+                "format": "json",
+                "no_html": 1,
+                "skip_disambig": 1,
+            }
+            resp = requests.get(search_url, params=params, timeout=15)
+            data = resp.json()
+            
+            if data.get("RelatedTopics"):
+                for topic in data["RelatedTopics"][:10]:
+                    if isinstance(topic, dict) and topic.get("Text"):
+                        text = topic.get("Text", "")
+                        if "dr." in text.lower() or "doctor" in text.lower() or "ortho" in text.lower():
+                            results.append({
+                                "name": text[:100],
+                                "source": "google_maps",
+                                "city": city,
+                                "profile_url": topic.get("FirstURL", ""),
+                            })
+        except Exception as e:
+            logger.error("Fallback search failed: %s", e)
     
     return results
 
