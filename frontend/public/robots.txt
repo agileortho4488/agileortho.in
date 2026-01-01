@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+
+# Sitemaps
+Sitemap: https://www.orthoconnect.in/sitemap.xml
+
+# Disallow admin pages
+Disallow: /admin
+Disallow: /admin/dashboard
+
+# Allow all other pages
+Allow: /surgeons
+Allow: /education
+Allow: /about
+Allow: /contact
+Allow: /doctor/
+Allow: /orthopaedic-surgeons-*
