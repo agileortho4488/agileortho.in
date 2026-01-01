@@ -57,6 +57,7 @@ export default function App() {
           <Route path="/admin" element={<AdminLogin />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/analytics" element={<AdminAnalytics />} />
+          <Route path="/admin/outreach" element={<AdminOutreach />} />
           
           {/* SEO City Landing Pages */}
           {CITIES.map((city) => (
