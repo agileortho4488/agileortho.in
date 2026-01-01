@@ -381,6 +381,7 @@ class SurgeonSearchResult(BaseModel):
     clinic: Optional[Clinic] = None
     locations: List[Location] = Field(default_factory=list)
     distance_km: Optional[float] = None
+    status: Optional[str] = "approved"  # approved or unclaimed
 
 
 class AdminLoginRequest(BaseModel):
