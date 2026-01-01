@@ -1,42 +1,26 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { MapPin, Users, Stethoscope, TrendingUp, ChevronRight, Search, Filter } from "lucide-react";
+import { MapPin, Users, Stethoscope, TrendingUp, ChevronRight, Search } from "lucide-react";
 import { apiClient } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 
-// Dynamic stats for the ticker
-const TICKER_TEMPLATES = [
-  { type: "city", template: "{count} surgeons in {name}" },
-  { type: "subspecialty", template: "{count} {name} specialists" },
-  { type: "total", template: "{count} verified orthopaedic surgeons" },
-  { type: "joined", template: "New surgeon joined from {name}" },
-];
+// Floating stats that flow behind the hero
+function FloatingStats({ surgeons }) {
+  const [stats, setStats] = useState([]);
 
-const CITIES = ["Hyderabad", "Mumbai", "Delhi", "Bangalore", "Chennai", "Kolkata", "Pune"];
-const SUBSPECIALTIES = ["Knee", "Hip", "Shoulder", "Spine", "Sports Medicine", "Trauma", "Hand", "Paediatrics"];
-
-function AnimatedTicker({ surgeons }) {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [tickerItems, setTickerItems] = useState([]);
-
-  // Generate dynamic ticker items based on actual data
   useEffect(() => {
     if (!surgeons.length) return;
 
     const items = [];
-    
-    // Count by city
     const cityCount = {};
     const subCount = {};
     
     surgeons.forEach(s => {
       const city = s.locations?.[0]?.city || s.clinic?.city;
-      if (city) {
-        cityCount[city] = (cityCount[city] || 0) + 1;
-      }
+      if (city) cityCount[city] = (cityCount[city] || 0) + 1;
       (s.subspecialties || []).forEach(sub => {
         subCount[sub] = (subCount[sub] || 0) + 1;
       });
@@ -44,75 +28,80 @@ function AnimatedTicker({ surgeons }) {
 
     // Add city stats
     Object.entries(cityCount).forEach(([city, count]) => {
-      items.push({ text: `${count} surgeons in ${city}`, icon: MapPin, color: "text-teal-400" });
+      items.push({ text: `${count} surgeons in ${city}`, type: "city" });
     });
 
     // Add subspecialty stats
     Object.entries(subCount).forEach(([sub, count]) => {
-      items.push({ text: `${count} ${sub} specialists`, icon: Stethoscope, color: "text-emerald-400" });
+      items.push({ text: `${count} ${sub} specialists`, type: "sub" });
     });
 
-    // Add total
-    items.push({ text: `${surgeons.length} verified orthopaedic surgeons`, icon: Users, color: "text-sky-400" });
+    // Add general stats
+    items.push({ text: `${surgeons.length} verified surgeons`, type: "total" });
+    items.push({ text: "100% Free listings", type: "free" });
+    items.push({ text: "No paid rankings", type: "trust" });
+    items.push({ text: "Join the community", type: "cta" });
 
-    // Add recent joiners
-    surgeons.slice(0, 3).forEach(s => {
-      const city = s.locations?.[0]?.city || s.clinic?.city || "India";
-      items.push({ text: `New surgeon joined from ${city}`, icon: TrendingUp, color: "text-amber-400" });
-    });
-
-    // Shuffle for randomness
-    setTickerItems(items.sort(() => Math.random() - 0.5));
+    // Duplicate for continuous flow
+    setStats([...items, ...items, ...items]);
   }, [surgeons]);
 
-  // Rotate ticker
-  useEffect(() => {
-    if (!tickerItems.length) return;
-    const interval = setInterval(() => {
-      setCurrentIndex(i => (i + 1) % tickerItems.length);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [tickerItems.length]);
-
-  if (!tickerItems.length) return null;
-
-  const current = tickerItems[currentIndex];
-  const Icon = current?.icon || Users;
+  if (!stats.length) return null;
 
   return (
-    <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border-b border-slate-700/50">
-      <div className="mx-auto max-w-6xl px-4 py-3">
-        <div className="flex items-center justify-center gap-8 overflow-hidden">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentIndex}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.5 }}
-              className="flex items-center gap-3"
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {/* Row 1 - flows left */}
+      <div className="absolute top-[15%] left-0 right-0">
+        <motion.div
+          className="flex gap-8 whitespace-nowrap"
+          animate={{ x: [0, -2000] }}
+          transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
+        >
+          {stats.map((stat, i) => (
+            <span
+              key={i}
+              className="text-white/[0.07] text-2xl sm:text-3xl font-bold tracking-wide"
             >
-              <div className={`flex items-center justify-center w-8 h-8 rounded-full bg-white/10 ${current?.color}`}>
-                <Icon className="w-4 h-4" />
-              </div>
-              <span className="text-sm font-medium text-white">
-                {current?.text}
-              </span>
-            </motion.div>
-          </AnimatePresence>
-          
-          {/* Dots indicator */}
-          <div className="hidden sm:flex items-center gap-1.5">
-            {tickerItems.slice(0, 5).map((_, i) => (
-              <div
-                key={i}
-                className={`w-1.5 h-1.5 rounded-full transition-all ${
-                  i === currentIndex % 5 ? "bg-teal-400 w-4" : "bg-slate-600"
-                }`}
-              />
-            ))}
-          </div>
-        </div>
+              {stat.text}
+            </span>
+          ))}
+        </motion.div>
+      </div>
+
+      {/* Row 2 - flows right */}
+      <div className="absolute top-[40%] left-0 right-0">
+        <motion.div
+          className="flex gap-8 whitespace-nowrap"
+          animate={{ x: [-1500, 500] }}
+          transition={{ duration: 50, repeat: Infinity, ease: "linear" }}
+        >
+          {stats.slice().reverse().map((stat, i) => (
+            <span
+              key={i}
+              className="text-white/[0.05] text-3xl sm:text-4xl font-bold tracking-wide"
+            >
+              {stat.text}
+            </span>
+          ))}
+        </motion.div>
+      </div>
+
+      {/* Row 3 - flows left slower */}
+      <div className="absolute top-[70%] left-0 right-0">
+        <motion.div
+          className="flex gap-12 whitespace-nowrap"
+          animate={{ x: [0, -2500] }}
+          transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
+        >
+          {stats.map((stat, i) => (
+            <span
+              key={i}
+              className="text-white/[0.04] text-4xl sm:text-5xl font-bold tracking-wide"
+            >
+              {stat.text}
+            </span>
+          ))}
+        </motion.div>
       </div>
     </div>
   );
@@ -191,7 +180,6 @@ export default function Surgeons() {
     async function loadSurgeons() {
       setLoading(true);
       try {
-        // Load all approved surgeons
         const res = await api.get("/profiles/all");
         setSurgeons(res.data || []);
       } catch (e) {
@@ -206,7 +194,6 @@ export default function Surgeons() {
   // Filter surgeons
   const filteredSurgeons = useMemo(() => {
     return surgeons.filter(s => {
-      // Search filter
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
         const matchesName = s.name?.toLowerCase().includes(query);
@@ -214,23 +201,17 @@ export default function Surgeons() {
         const matchesSub = s.subspecialties?.some(sub => sub.toLowerCase().includes(query));
         if (!matchesName && !matchesCity && !matchesSub) return false;
       }
-      
-      // City filter
       if (selectedCity) {
         const city = s.locations?.[0]?.city || s.clinic?.city || "";
         if (!city.toLowerCase().includes(selectedCity.toLowerCase())) return false;
       }
-      
-      // Subspecialty filter
       if (selectedSubspecialty) {
         if (!s.subspecialties?.includes(selectedSubspecialty)) return false;
       }
-      
       return true;
     });
   }, [surgeons, searchQuery, selectedCity, selectedSubspecialty]);
 
-  // Get unique cities from surgeons
   const availableCities = useMemo(() => {
     const cities = new Set();
     surgeons.forEach(s => {
@@ -240,7 +221,6 @@ export default function Surgeons() {
     return Array.from(cities).sort();
   }, [surgeons]);
 
-  // Get unique subspecialties from surgeons
   const availableSubspecialties = useMemo(() => {
     const subs = new Set();
     surgeons.forEach(s => {
@@ -251,31 +231,39 @@ export default function Surgeons() {
 
   return (
     <main data-testid="surgeons-page" className="min-h-screen bg-slate-50">
-      {/* Animated Ticker Banner */}
-      <AnimatedTicker surgeons={surgeons} />
-
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-teal-900 overflow-hidden">
+      {/* Hero Section with Floating Stats */}
+      <section className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-teal-900 overflow-hidden min-h-[420px]">
+        {/* Gradient Orbs */}
         <div className="absolute inset-0">
           <div className="absolute top-0 right-0 w-96 h-96 bg-teal-500/20 rounded-full blur-3xl" />
           <div className="absolute bottom-0 left-1/4 w-80 h-80 bg-emerald-500/15 rounded-full blur-3xl" />
+          <div className="absolute top-1/2 left-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl" />
         </div>
 
-        <div className="relative mx-auto max-w-6xl px-4 py-16 sm:px-6">
+        {/* Flowing Stats Background */}
+        <FloatingStats surgeons={surgeons} />
+
+        {/* Content */}
+        <div className="relative mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             className="text-center"
           >
-            <div className="inline-flex items-center gap-2 rounded-full border border-teal-500/30 bg-teal-500/10 px-4 py-2 text-sm text-teal-300 mb-6">
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="inline-flex items-center gap-2 rounded-full border border-teal-500/30 bg-teal-500/10 px-4 py-2 text-sm text-teal-300 mb-6 backdrop-blur-sm"
+            >
               <Users className="h-4 w-4" />
-              {surgeons.length} Verified Surgeons
-            </div>
+              {surgeons.length} Verified Surgeons & Growing
+            </motion.div>
 
             <h1
               data-testid="surgeons-page-title"
-              className="text-4xl font-bold tracking-tight text-white sm:text-5xl"
+              className="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl"
             >
               Our Surgeon{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-emerald-400">
@@ -283,30 +271,35 @@ export default function Surgeons() {
               </span>
             </h1>
 
-            <p className="mt-4 max-w-2xl mx-auto text-lg text-slate-300">
+            <p className="mt-6 max-w-2xl mx-auto text-lg text-slate-300">
               Meet the verified orthopaedic specialists who have joined OrthoConnect.
               No paid listings, no rankings — just trusted doctors.
             </p>
 
             {/* Stats Row */}
-            <div className="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-2xl mx-auto">
-              <div className="rounded-xl bg-white/5 backdrop-blur border border-white/10 p-4 text-center">
-                <div className="text-2xl font-bold text-white">{surgeons.length}</div>
-                <div className="text-xs text-slate-400 mt-1">Total Surgeons</div>
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-2xl mx-auto"
+            >
+              <div className="rounded-xl bg-white/10 backdrop-blur border border-white/10 p-4 text-center">
+                <div className="text-3xl font-bold text-white">{surgeons.length}</div>
+                <div className="text-xs text-slate-300 mt-1">Total Surgeons</div>
               </div>
-              <div className="rounded-xl bg-white/5 backdrop-blur border border-white/10 p-4 text-center">
-                <div className="text-2xl font-bold text-white">{availableCities.length}</div>
-                <div className="text-xs text-slate-400 mt-1">Cities</div>
+              <div className="rounded-xl bg-white/10 backdrop-blur border border-white/10 p-4 text-center">
+                <div className="text-3xl font-bold text-white">{availableCities.length}</div>
+                <div className="text-xs text-slate-300 mt-1">Cities</div>
               </div>
-              <div className="rounded-xl bg-white/5 backdrop-blur border border-white/10 p-4 text-center">
-                <div className="text-2xl font-bold text-white">{availableSubspecialties.length}</div>
-                <div className="text-xs text-slate-400 mt-1">Subspecialties</div>
+              <div className="rounded-xl bg-white/10 backdrop-blur border border-white/10 p-4 text-center">
+                <div className="text-3xl font-bold text-white">{availableSubspecialties.length}</div>
+                <div className="text-xs text-slate-300 mt-1">Subspecialties</div>
               </div>
-              <div className="rounded-xl bg-white/5 backdrop-blur border border-white/10 p-4 text-center">
-                <div className="text-2xl font-bold text-white">Free</div>
-                <div className="text-xs text-slate-400 mt-1">Always Free</div>
+              <div className="rounded-xl bg-white/10 backdrop-blur border border-white/10 p-4 text-center">
+                <div className="text-3xl font-bold text-white">Free</div>
+                <div className="text-xs text-slate-300 mt-1">Always Free</div>
               </div>
-            </div>
+            </motion.div>
           </motion.div>
         </div>
       </section>
@@ -315,7 +308,6 @@ export default function Surgeons() {
       <section className="sticky top-0 z-20 bg-white/80 backdrop-blur border-b border-slate-200">
         <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6">
           <div className="flex flex-col sm:flex-row gap-3">
-            {/* Search */}
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
@@ -326,8 +318,6 @@ export default function Surgeons() {
                 className="pl-10 h-11 rounded-xl border-slate-200 bg-white"
               />
             </div>
-
-            {/* City Filter */}
             <select
               data-testid="surgeons-city-filter"
               value={selectedCity}
@@ -339,8 +329,6 @@ export default function Surgeons() {
                 <option key={city} value={city}>{city}</option>
               ))}
             </select>
-
-            {/* Subspecialty Filter */}
             <select
               data-testid="surgeons-subspecialty-filter"
               value={selectedSubspecialty}
@@ -368,10 +356,6 @@ export default function Surgeons() {
                     <div className="h-5 w-3/4 bg-slate-200 rounded mb-2" />
                     <div className="h-4 w-1/2 bg-slate-100 rounded" />
                   </div>
-                </div>
-                <div className="flex gap-2 mt-4">
-                  <div className="h-6 w-16 bg-slate-100 rounded-full" />
-                  <div className="h-6 w-20 bg-slate-100 rounded-full" />
                 </div>
               </div>
             ))}
@@ -404,7 +388,6 @@ export default function Surgeons() {
                 {selectedSubspecialty && ` • ${selectedSubspecialty}`}
               </h2>
             </div>
-
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {filteredSurgeons.map((surgeon, idx) => (
                 <SurgeonCard key={surgeon.id} surgeon={surgeon} index={idx} />
@@ -421,7 +404,7 @@ export default function Surgeons() {
             Are you an Orthopaedic Surgeon?
           </h2>
           <p className="mt-4 text-teal-100">
-            Join our growing community of verified surgeons. No fees, no commissions, no paid rankings.
+            Join our growing community. Get invited to conferences, CMEs, and connect with peers.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button
