@@ -117,7 +117,8 @@ async def zoho_desk_request(method: str, endpoint: str, data: dict = None) -> di
     if not token:
         return {"error": "Failed to get Zoho access token"}
     
-    url = f"{ZOHO_API_DOMAIN}/desk/v1{endpoint}"
+    # Use Zoho Desk API domain (not the generic API domain)
+    url = f"https://desk.zoho.in/api/v1{endpoint}"
     headers = {
         "Authorization": f"Zoho-oauthtoken {token}",
         "orgId": ZOHO_DESK_ORG_ID,
