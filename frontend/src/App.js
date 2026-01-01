@@ -73,11 +73,12 @@ export default function App() {
           ))}
           
           {/* 404 Not Found */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-        <SiteFooter />
-        <Toaster />
-      </BrowserRouter>
-    </div>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          <SiteFooter />
+          <Toaster />
+        </BrowserRouter>
+      </div>
+    </GoogleMapsProvider>
   );
 }
