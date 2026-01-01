@@ -312,7 +312,7 @@ export default function JoinSurgeon() {
               </div>
             ) : null}
 
-            <div className="mt-5 flex gap-3">
+            <div className="mt-5 flex flex-wrap items-center gap-3">
               {authStep === "request" ? (
                 <Button
                   data-testid="surgeon-request-otp-button"
@@ -323,14 +323,39 @@ export default function JoinSurgeon() {
                   {loading ? "Sending…" : "Send OTP"}
                 </Button>
               ) : (
-                <Button
-                  data-testid="surgeon-verify-otp-button"
-                  onClick={verifyOtp}
-                  disabled={loading || otp.trim().length !== 6}
-                  className="h-11 rounded-xl bg-slate-900 px-6 text-white hover:bg-slate-800 disabled:opacity-50"
-                >
-                  {loading ? "Verifying…" : "Verify & Continue"}
-                </Button>
+                <>
+                  <Button
+                    data-testid="surgeon-verify-otp-button"
+                    onClick={verifyOtp}
+                    disabled={loading || otp.trim().length !== 6}
+                    className="h-11 rounded-xl bg-slate-900 px-6 text-white hover:bg-slate-800 disabled:opacity-50"
+                  >
+                    {loading ? "Verifying…" : "Verify & Continue"}
+                  </Button>
+                  <Button
+                    data-testid="surgeon-resend-otp-button"
+                    onClick={resendOtp}
+                    disabled={loading || resendCountdown > 0}
+                    variant="outline"
+                    className="h-11 rounded-xl border-slate-200 px-6 text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                  >
+                    {resendCountdown > 0 ? `Resend in ${resendCountdown}s` : "Resend OTP"}
+                  </Button>
+                  <button
+                    data-testid="surgeon-change-mobile-button"
+                    type="button"
+                    onClick={() => {
+                      setAuthStep("request");
+                      setOtp("");
+                      setMockedOtp(null);
+                      setSmsSent(false);
+                      setResendCountdown(0);
+                    }}
+                    className="text-sm text-slate-500 underline hover:text-slate-700"
+                  >
+                    Change number
+                  </button>
+                </>
               )}
             </div>
           </div>
