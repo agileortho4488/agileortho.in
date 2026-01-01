@@ -575,6 +575,244 @@ def send_status_notification(surgeon_email: str, surgeon_name: str, new_status: 
     send_email(surgeon_email, status_info["subject"], html)
 
 
+# -----------------------------
+# Outreach & Marketing Automation
+# -----------------------------
+
+class OutreachContact(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    email: str
+    mobile: str = ""
+    city: str = ""
+    subspecialty: str = ""
+    clinic_name: str = ""
+    
+    # Status tracking
+    status: Literal["new", "invited", "opened", "clicked", "signed_up", "unsubscribed"] = "new"
+    
+    # Campaign tracking
+    campaign_id: Optional[str] = None
+    emails_sent: int = 0
+    last_email_sent: Optional[str] = None
+    email_opened_at: Optional[str] = None
+    link_clicked_at: Optional[str] = None
+    signed_up_at: Optional[str] = None
+    
+    # Metadata
+    source: str = "csv_import"  # csv_import, manual, referral
+    notes: str = ""
+    created_at: str = Field(default_factory=now_iso)
+    updated_at: str = Field(default_factory=now_iso)
+
+
+class EmailCampaign(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    description: str = ""
+    
+    # Email sequence
+    template_type: Literal["invitation", "followup_1", "followup_2", "reminder"] = "invitation"
+    
+    # Stats
+    total_contacts: int = 0
+    emails_sent: int = 0
+    emails_opened: int = 0
+    links_clicked: int = 0
+    signups: int = 0
+    
+    # Status
+    status: Literal["draft", "active", "paused", "completed"] = "draft"
+    
+    created_at: str = Field(default_factory=now_iso)
+    updated_at: str = Field(default_factory=now_iso)
+
+
+class ContactImport(BaseModel):
+    contacts: List[Dict[str, str]]
+
+
+class SendCampaignRequest(BaseModel):
+    contact_ids: List[str]
+    template_type: str = "invitation"
+
+
+def get_email_template(template_type: str, contact: Dict[str, Any], tracking_id: str) -> Tuple[str, str]:
+    """Generate email subject and HTML body for different template types"""
+    
+    name = contact.get("name", "Doctor")
+    first_name = name.split()[0] if name else "Doctor"
+    city = contact.get("city", "")
+    subspecialty = contact.get("subspecialty", "")
+    
+    base_url = "https://orthoconnect.agileortho.in"
+    join_url = f"{base_url}/join?ref=email&tid={tracking_id}"
+    track_pixel = f"{base_url}/api/outreach/track/open/{tracking_id}"
+    
+    templates = {
+        "invitation": {
+            "subject": f"Dr. {first_name}, Join India's Ethical Orthopaedic Directory",
+            "body": f"""
+                <p>Dear Dr. {name},</p>
+                
+                <p>We're building <strong>OrthoConnect</strong> — India's first <em>ethical, patient-first</em> orthopaedic surgeon directory.</p>
+                
+                <p><strong>What makes us different:</strong></p>
+                <ul style="color: #334155;">
+                    <li>✅ <strong>100% Free</strong> — No subscription, no hidden fees</li>
+                    <li>✅ <strong>No Paid Rankings</strong> — Patients find you by location, not by who pays more</li>
+                    <li>✅ <strong>No Advertisements</strong> — Clean, professional experience</li>
+                    <li>✅ <strong>Verification Badges</strong> — Build trust with verified credentials</li>
+                </ul>
+                
+                {f'<p>We noticed you practice in <strong>{city}</strong>' + (f' specializing in <strong>{subspecialty}</strong>' if subspecialty else '') + '. We'd love to have you as a founding member.</p>' if city else '<p>We'd love to have you as a founding member of our platform.</p>'}
+                
+                <p style="margin: 30px 0;">
+                    <a href="{join_url}" style="background-color: #0d9488; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block;">
+                        Create Your Free Profile →
+                    </a>
+                </p>
+                
+                <p style="color: #64748b; font-size: 14px;">Takes less than 5 minutes. Your profile will be reviewed within 24 hours.</p>
+            """
+        },
+        "followup_1": {
+            "subject": f"Dr. {first_name}, Your Colleagues Are Already on OrthoConnect",
+            "body": f"""
+                <p>Dear Dr. {name},</p>
+                
+                <p>A few days ago, we invited you to join OrthoConnect. Since then, <strong>orthopaedic surgeons across India</strong> have created their profiles.</p>
+                
+                <p><strong>Why are they joining?</strong></p>
+                <ul style="color: #334155;">
+                    <li>🏥 Patients actively searching for orthopaedic care find them</li>
+                    <li>📍 Location-based discovery brings local patients</li>
+                    <li>🎖️ Verified badges build instant trust</li>
+                    <li>📱 Mobile-friendly profiles with direct contact</li>
+                </ul>
+                
+                <p>Your profile can be live in under 5 minutes:</p>
+                
+                <p style="margin: 30px 0;">
+                    <a href="{join_url}" style="background-color: #0d9488; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block;">
+                        Join Now — It's Free →
+                    </a>
+                </p>
+                
+                <p style="color: #64748b; font-size: 14px;">Questions? Reply to this email — we're happy to help.</p>
+            """
+        },
+        "followup_2": {
+            "subject": f"Last reminder: Claim your OrthoConnect profile, Dr. {first_name}",
+            "body": f"""
+                <p>Dear Dr. {name},</p>
+                
+                <p>This is our final reminder about OrthoConnect.</p>
+                
+                <p>We built this platform because we believe doctors shouldn't have to pay to be discovered. Patients deserve to find the right surgeon based on <em>expertise and location</em>, not advertising budgets.</p>
+                
+                <p><strong>OrthoConnect is and will always be:</strong></p>
+                <ul style="color: #334155;">
+                    <li>Free for surgeons</li>
+                    <li>Free of advertisements</li>
+                    <li>Free of paid rankings</li>
+                </ul>
+                
+                <p>If you'd like to be part of this mission, we'd love to have you:</p>
+                
+                <p style="margin: 30px 0;">
+                    <a href="{join_url}" style="background-color: #0d9488; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block;">
+                        Create Free Profile →
+                    </a>
+                </p>
+                
+                <p style="color: #64748b; font-size: 14px;">If you're not interested, no problem — we won't email you again.</p>
+            """
+        },
+        "reminder": {
+            "subject": f"Dr. {first_name}, Complete Your OrthoConnect Profile",
+            "body": f"""
+                <p>Dear Dr. {name},</p>
+                
+                <p>We noticed you started creating your OrthoConnect profile but haven't completed it yet.</p>
+                
+                <p>Complete your profile to:</p>
+                <ul style="color: #334155;">
+                    <li>✅ Appear in patient searches</li>
+                    <li>✅ Get verified badges</li>
+                    <li>✅ Receive patient inquiries</li>
+                </ul>
+                
+                <p style="margin: 30px 0;">
+                    <a href="{join_url}" style="background-color: #0d9488; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block;">
+                        Complete Your Profile →
+                    </a>
+                </p>
+            """
+        }
+    }
+    
+    template = templates.get(template_type, templates["invitation"])
+    
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.8; color: #1e293b; margin: 0; padding: 0; background-color: #f8fafc;">
+        <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                <!-- Header -->
+                <div style="background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%); padding: 30px; text-align: center;">
+                    <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 700;">OrthoConnect</h1>
+                    <p style="color: rgba(255,255,255,0.8); margin: 8px 0 0; font-size: 14px;">India's Ethical Orthopaedic Directory</p>
+                </div>
+                
+                <!-- Body -->
+                <div style="padding: 40px 30px;">
+                    {template['body']}
+                </div>
+                
+                <!-- Footer -->
+                <div style="background: #f1f5f9; padding: 20px 30px; text-align: center; color: #64748b; font-size: 12px;">
+                    <p style="margin: 0 0 10px;">OrthoConnect — An initiative of AgileOrtho</p>
+                    <p style="margin: 0;">
+                        <a href="{base_url}/unsubscribe?id={tracking_id}" style="color: #64748b;">Unsubscribe</a> · 
+                        <a href="{base_url}" style="color: #64748b;">Visit Website</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <img src="{track_pixel}" width="1" height="1" style="display:none;" alt="" />
+    </body>
+    </html>
+    """
+    
+    return template["subject"], html
+
+
+def get_whatsapp_message(contact: Dict[str, Any]) -> str:
+    """Generate WhatsApp invitation message"""
+    name = contact.get("name", "Doctor")
+    return f"""Dear Dr. {name},
+
+We're inviting you to join *OrthoConnect* — India's ethical, patient-first orthopaedic surgeon directory.
+
+✅ 100% Free — No fees ever
+✅ No Paid Rankings — Fair discovery
+✅ Verified Badges — Build trust
+
+Create your free profile: https://orthoconnect.agileortho.in/join
+
+— Team AgileOrtho"""
+
+
 def normalize_mobile(mobile: str) -> str:
     m = re.sub(r"\D", "", mobile or "")
     # keep last 10 digits for India-style mobile
