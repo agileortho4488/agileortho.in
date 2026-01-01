@@ -2273,7 +2273,9 @@ async def claim_verify_and_create_account(payload: ClaimProfileRequest):
             otp_time = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
             if datetime.now(timezone.utc) - otp_time > timedelta(minutes=10):
                 raise HTTPException(status_code=400, detail="OTP expired")
-        except:
+        except HTTPException:
+            raise
+        except Exception:
             pass
     
     # Get the unclaimed profile
