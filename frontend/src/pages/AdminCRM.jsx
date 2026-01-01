@@ -95,8 +95,10 @@ export default function AdminCRM() {
         c.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         c.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         c.mobile?.includes(searchQuery) ||
-        c.city?.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesStatus = statusFilter === "all" || c.crm_status === statusFilter;
+        c.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        c.hospital?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        c.source?.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus = statusFilter === "all" || c.crm_status === statusFilter || c.status === statusFilter;
       const matchesTag = !tagFilter || c.tags?.includes(tagFilter);
       return matchesSearch && matchesStatus && matchesTag;
     });
