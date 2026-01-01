@@ -1020,6 +1020,9 @@ async def surgeon_upsert_profile(payload: SurgeonProfileUpsert, auth: Dict[str, 
 
     # existing profile? (user_id)
     existing = await db.surgeons.find_one({"user_id": user_id}, {"_id": 0})
+    
+    # Use name from payload if provided, otherwise fall back to user record
+    surgeon_name = payload.name.strip() if payload.name.strip() else user.get("name", "")
 
     if existing:
         await db.surgeons.update_one(
@@ -1028,7 +1031,7 @@ async def surgeon_upsert_profile(payload: SurgeonProfileUpsert, auth: Dict[str, 
                 "$set": {
                     "updated_at": now_iso(),
                     "status": "pending",  # re-review on changes
-                    "name": user.get("name", ""),
+                    "name": surgeon_name,
                     "qualifications": payload.qualifications.strip(),
                     "registration_number": payload.registration_number.strip(),
                     "subspecialties": subs_list,
@@ -1044,7 +1047,7 @@ async def surgeon_upsert_profile(payload: SurgeonProfileUpsert, auth: Dict[str, 
 
     surgeon_id = str(uuid.uuid4())
     upload_token = str(uuid.uuid4())
-    slug = make_slug(name=user.get("name", ""), primary_sub=(subs_list[0] if subs_list else None), city=locations[0].get("city"))
+    slug = make_slug(name=surgeon_name, primary_sub=(subs_list[0] if subs_list else None), city=locations[0].get("city"))
 
     doc = {
         "id": surgeon_id,
@@ -1055,7 +1058,7 @@ async def surgeon_upsert_profile(payload: SurgeonProfileUpsert, auth: Dict[str, 
         "updated_at": now_iso(),
         "upload_token": upload_token,
         "rejection_reason": None,
-        "name": user.get("name", ""),
+        "name": surgeon_name,
         "qualifications": payload.qualifications.strip(),
         "registration_number": payload.registration_number.strip(),
         "subspecialties": subs_list,
