@@ -3,6 +3,7 @@ import "@/App.css";
 
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
+import { GoogleMapsProvider } from "@/components/GoogleMapsProvider";
 
 import SiteHeader from "@/components/layout/SiteHeader";
 import SiteFooter from "@/components/layout/SiteFooter";
@@ -32,32 +33,33 @@ import CityLanding, { CITIES } from "@/pages/CityLanding";
 
 export default function App() {
   return (
-    <div data-testid="app-root" className="min-h-screen bg-white text-slate-900">
-      <BrowserRouter>
-        <SiteHeader />
-        <Routes>
-          <Route path="/" element={<Home />} />
+    <GoogleMapsProvider>
+      <div data-testid="app-root" className="min-h-screen bg-white text-slate-900">
+        <BrowserRouter>
+          <SiteHeader />
+          <Routes>
+            <Route path="/" element={<Home />} />
 
-          {/* Patient education library */}
-          <Route path="/education" element={<EducationHub />} />
-          <Route path="/education/:categoryKey" element={<EducationCategory />} />
-          <Route path="/education/:categoryKey/:topicSlug" element={<EducationTopic />} />
+            {/* Patient education library */}
+            <Route path="/education" element={<EducationHub />} />
+            <Route path="/education/:categoryKey" element={<EducationCategory />} />
+            <Route path="/education/:categoryKey/:topicSlug" element={<EducationTopic />} />
 
-          {/* Curated condition pages (separate from full library) */}
-          <Route path="/conditions" element={<Conditions />} />
-          <Route path="/conditions/category/:categoryKey" element={<ConditionCategory />} />
-          <Route path="/conditions/:slug" element={<ConditionDetail />} />
-          <Route path="/doctor/:slug" element={<DoctorProfile />} />
-          <Route path="/join" element={<JoinSurgeon />} />
-          <Route path="/surgeons" element={<Surgeons />} />
-          <Route path="/events" element={<Events />} />
-          <Route path="/blog" element={<BlogList />} />
-          <Route path="/blog/:slug" element={<BlogArticle />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/admin" element={<AdminLogin />} />
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/admin/analytics" element={<AdminAnalytics />} />
+            {/* Curated condition pages (separate from full library) */}
+            <Route path="/conditions" element={<Conditions />} />
+            <Route path="/conditions/category/:categoryKey" element={<ConditionCategory />} />
+            <Route path="/conditions/:slug" element={<ConditionDetail />} />
+            <Route path="/doctor/:slug" element={<DoctorProfile />} />
+            <Route path="/join" element={<JoinSurgeon />} />
+            <Route path="/surgeons" element={<Surgeons />} />
+            <Route path="/events" element={<Events />} />
+            <Route path="/blog" element={<BlogList />} />
+            <Route path="/blog/:slug" element={<BlogArticle />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/admin" element={<AdminLogin />} />
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/analytics" element={<AdminAnalytics />} />
           <Route path="/admin/outreach" element={<AdminOutreach />} />
           <Route path="/admin/crm" element={<AdminCRM />} />
           
