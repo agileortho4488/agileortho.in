@@ -118,6 +118,13 @@ export default function SiteHeader() {
         >
           <nav className="flex flex-col gap-4">
             <NavItem
+              testId="nav-surgeons-link-mobile"
+              to="/surgeons"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Surgeons
+            </NavItem>
+            <NavItem
               testId="nav-education-link-mobile"
               to="/education"
               onClick={() => setMobileMenuOpen(false)}
