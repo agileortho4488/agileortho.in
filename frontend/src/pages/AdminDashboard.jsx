@@ -415,10 +415,17 @@ export default function AdminDashboard() {
                               </div>
                               <div
                                 data-testid="admin-review-qualifications"
-                            className="mt-1 text-sm text-slate-600"
-                          >
-                            {selected.qualifications}
-                          </div>
+                                className="mt-1 text-sm text-slate-600"
+                              >
+                                {selected.qualifications}
+                              </div>
+                              {selected.email && (
+                                <div className="mt-1 text-sm text-teal-600">
+                                  📧 {selected.email}
+                                </div>
+                              )}
+                            </>
+                          )}
                         </div>
                         <Badge
                           data-testid="admin-review-status"
