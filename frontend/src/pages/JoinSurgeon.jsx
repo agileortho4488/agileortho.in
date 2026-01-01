@@ -33,6 +33,7 @@ export default function JoinSurgeon() {
   const [mobile, setMobile] = useState("");
   const [otp, setOtp] = useState("");
   const [mockedOtp, setMockedOtp] = useState(null);
+  const [smsSent, setSmsSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -58,7 +59,8 @@ export default function JoinSurgeon() {
     setError("");
     try {
       const res = await api.post("/auth/otp/request", { mobile });
-      setMockedOtp(res.data.mocked_otp);
+      setSmsSent(res.data.sms_sent);
+      setMockedOtp(res.data.mocked_otp || null);
       setAuthStep("verify");
     } catch (e) {
       setError(e?.response?.data?.detail || "OTP request failed");
