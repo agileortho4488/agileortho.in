@@ -53,11 +53,13 @@ export default function AdminCRM() {
 
   const token = getToken("admin");
 
-  async function loadData() {
+  async function loadData(tagOverride = null) {
     setLoading(true);
     try {
+      const tag = tagOverride !== null ? tagOverride : tagFilter;
+      const params = tag ? `?tag=${tag}` : '';
       const [contactsRes, statsRes] = await Promise.all([
-        api.get("/admin/crm/contacts", { headers: { Authorization: `Bearer ${token}` } }),
+        api.get(`/admin/crm/contacts${params}`, { headers: { Authorization: `Bearer ${token}` } }),
         api.get("/admin/crm/stats", { headers: { Authorization: `Bearer ${token}` } }),
       ]);
       setContacts(contactsRes.data || []);
