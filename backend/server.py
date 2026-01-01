@@ -983,6 +983,10 @@ async def surgeon_upsert_profile(payload: SurgeonProfileUpsert, auth: Dict[str, 
         raise HTTPException(status_code=400, detail="Medical registration number is required")
 
     subs_list = [normalize_subspecialty(s) for s in payload.subspecialties if s.strip()]
+    
+    # Validate max 2 subspecialties
+    if len(subs_list) > 2:
+        raise HTTPException(status_code=400, detail="Maximum 2 subspecialties allowed")
 
     # Geocode each location
     locations: List[Dict[str, Any]] = []
