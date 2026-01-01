@@ -59,27 +59,9 @@ const CORE_VALUES = [
 
 const LEADERSHIP = [
   {
-    name: "Dr. Harsha Vardhan Reddy",
-    role: "Founder & Advisor",
-    bio: "Orthopaedic surgeon with MBA in Hospital Administration. Focused on contributing to healthcare by adding value to lives and building sustainable business practices.",
-    image: null,
-  },
-  {
-    name: "Dr. Madhav Nekkanti",
-    role: "Clinical Director",
-    bio: "Practicing orthopaedic surgeon deeply involved in patient well-being. Responsible for implant manufacturing oversight, identifying advancements, and surgeon training.",
-    image: null,
-  },
-  {
     name: "B. Nagi Reddy",
     role: "Director - Finance & Legal",
     bio: "35+ years in Banking and Legal. Qualified CA and LLB. Provides crucial expertise in compliance, policy decisions, and regulatory adherence.",
-    image: null,
-  },
-  {
-    name: "Dr. Deepthi Nandan Reddy Adla",
-    role: "Technical Expert Advisor",
-    bio: "28 years experience in Shoulder, Elbow, Hand surgeries and Trauma. Published researcher and Mayo Travelling Fellowship recipient.",
     image: null,
   },
 ];
@@ -211,7 +193,7 @@ export default function About() {
             <div className="prose prose-slate max-w-none">
               <p className="text-lg text-slate-600 leading-relaxed">
                 OrthoConnect is the patient-facing platform of <strong>AgileOrtho</strong>, a company dedicated to 
-                revolutionizing orthopaedic care in India. Founded in 2021 by Dr. Harsha Vardhan Reddy, AgileOrtho 
+                revolutionizing orthopaedic care in India. Founded in 2021, AgileOrtho 
                 started with a simple but powerful vision: to ensure every Indian has access to quality 
                 orthopaedic care.
               </p>
@@ -287,19 +269,19 @@ export default function About() {
       <AnimatedSection className="py-16 sm:py-20 bg-gradient-to-br from-slate-900 via-slate-800 to-teal-900">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <motion.div variants={fadeInUp} className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-white sm:text-4xl">Leadership Team</h2>
+            <h2 className="text-3xl font-bold text-white sm:text-4xl">Advisory Board</h2>
             <p className="mt-4 max-w-2xl mx-auto text-slate-400">
-              Experienced professionals driving orthopaedic excellence
+              Experienced professionals guiding our operations
             </p>
           </motion.div>
 
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="flex justify-center">
             {LEADERSHIP.map((person, idx) => (
               <motion.div
                 key={person.name}
                 variants={fadeInUp}
                 whileHover={{ y: -5 }}
-                className="rounded-2xl bg-white/5 backdrop-blur border border-white/10 p-6 text-center"
+                className="rounded-2xl bg-white/5 backdrop-blur border border-white/10 p-8 text-center max-w-sm"
               >
                 <div className="flex h-20 w-20 mx-auto items-center justify-center rounded-full bg-gradient-to-br from-teal-400 to-emerald-500 text-2xl font-bold text-white mb-4">
                   {person.name.split(" ").map(n => n[0]).join("").slice(0, 2)}

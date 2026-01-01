@@ -9,8 +9,8 @@ export default function SiteFooter() {
           {/* Brand */}
           <div className="md:col-span-2">
             <div className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white">
-                <span className="text-sm font-bold text-slate-900">O</span>
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-teal-400 to-emerald-500">
+                <span className="text-sm font-bold text-white">A</span>
               </div>
               <div>
                 <div
@@ -20,7 +20,7 @@ export default function SiteFooter() {
                   OrthoConnect
                 </div>
                 <div className="text-xs text-slate-400">
-                  Ethical care discovery
+                  An initiative of AgileOrtho
                 </div>
               </div>
             </div>
@@ -91,7 +91,7 @@ export default function SiteFooter() {
             data-testid="footer-bottom"
             className="text-xs text-slate-500"
           >
-            © {new Date().getFullYear()} OrthoConnect. Built for patients and doctor dignity.
+            © {new Date().getFullYear()} OrthoConnect by AgileOrtho. Built for patients and doctor dignity.
           </div>
           <div className="flex items-center gap-4 text-xs text-slate-500">
             <span>No ads</span>

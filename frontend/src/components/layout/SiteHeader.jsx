@@ -41,9 +41,9 @@ export default function SiteHeader() {
         >
           <div
             data-testid="site-logo-mark"
-            className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900"
+            className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-teal-500 to-emerald-600"
           >
-            <span className="text-sm font-bold text-white">O</span>
+            <span className="text-sm font-bold text-white">A</span>
           </div>
           <div className="hidden sm:block">
             <div
@@ -56,7 +56,7 @@ export default function SiteHeader() {
               data-testid="site-logo-tagline"
               className="text-xs text-slate-500"
             >
-              Ethical care discovery
+              An initiative of AgileOrtho
             </div>
           </div>
         </Link>
