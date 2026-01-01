@@ -1949,6 +1949,333 @@ async def admin_update_surgeon(
     return {"ok": True}
 
 
+# -----------------------------
+# Bulk Import & Claim Profile System
+# -----------------------------
+
+@api_router.post("/admin/surgeons/bulk-import")
+async def bulk_import_surgeons(
+    payload: BulkImportRequest,
+    auth: Dict[str, Any] = Depends(admin_dep)
+):
+    """Import surgeon contacts in bulk and create unclaimed profiles"""
+    imported = 0
+    skipped = 0
+    errors = []
+    
+    for contact in payload.contacts:
+        # Clean mobile number
+        mobile = re.sub(r'\D', '', contact.mobile)
+        if len(mobile) == 12 and mobile.startswith('91'):
+            mobile = mobile[2:]
+        if len(mobile) != 10:
+            errors.append(f"Invalid mobile: {contact.mobile}")
+            continue
+        
+        # Check if surgeon already exists
+        existing = await db.surgeons.find_one({"mobile": mobile})
+        if existing:
+            skipped += 1
+            continue
+        
+        # Check if user exists
+        existing_user = await db.users.find_one({"mobile": mobile})
+        if existing_user:
+            skipped += 1
+            continue
+        
+        # Create unclaimed profile
+        surgeon_id = str(uuid.uuid4())
+        name = contact.name.strip() or "Doctor"
+        city = contact.city.strip() or "Unknown"
+        
+        # Generate slug
+        slug_base = re.sub(r'[^a-z0-9]+', '-', name.lower()).strip('-')
+        slug_base = f"{slug_base}-{city.lower()}" if city != "Unknown" else slug_base
+        slug = f"{slug_base}-{surgeon_id[:4]}"
+        
+        # Parse subspecialties
+        subspecialties = []
+        if contact.subspecialty:
+            subspecialties = [s.strip() for s in contact.subspecialty.split(',') if s.strip()]
+        
+        # Create location if city provided
+        locations = []
+        if city != "Unknown":
+            loc_id = str(uuid.uuid4())
+            geo = await geocode_location(city + ", India")
+            geo_point = None
+            if geo:
+                geo_point = {"type": "Point", "coordinates": [geo["lng"], geo["lat"]]}
+            
+            locations.append({
+                "id": loc_id,
+                "facility_name": contact.hospital.strip() or "",
+                "address": "",
+                "city": city,
+                "pincode": "",
+                "opd_timings": "",
+                "phone": "",
+                "geo": geo_point,
+            })
+        
+        surgeon_doc = {
+            "id": surgeon_id,
+            "user_id": None,  # No user yet - unclaimed
+            "slug": slug,
+            "name": name,
+            "mobile": mobile,
+            "email": contact.email.strip().lower() if contact.email else "",
+            "qualifications": contact.qualifications.strip() or "",
+            "registration_number": "",
+            "subspecialties": subspecialties,
+            "about": "",
+            "conditions_treated": [],
+            "procedures_performed": [],
+            "website": "",
+            "has_profile_photo": False,
+            "photo_visibility": "admin_only",
+            "public_photo_url": None,
+            "locations": locations,
+            "documents": [],
+            "upload_token": secrets.token_urlsafe(32),
+            "status": "unclaimed",
+            "rejection_reason": None,
+            "profile_views": 0,
+            "referral_code": None,
+            "referred_by": None,
+            "claim_token": secrets.token_urlsafe(16),
+            "created_at": now_iso(),
+            "updated_at": now_iso(),
+        }
+        
+        await db.surgeons.insert_one(surgeon_doc)
+        imported += 1
+        
+        # Send SMS if requested
+        if payload.send_sms and mobile:
+            try:
+                sms_message = f"Dr. {name.split()[0]}, your OrthoConnect profile is ready! Claim it now: https://orthoconnect.agileortho.in/claim?m={mobile}"
+                # Use 2Factor SMS API
+                sms_url = f"https://2factor.in/API/V1/{TWOFACTOR_API_KEY}/ADDON_SERVICES/SEND/TSMS"
+                requests.post(sms_url, data={
+                    "From": "ORTCNT",
+                    "To": mobile,
+                    "Msg": sms_message,
+                }, timeout=10)
+            except Exception as e:
+                logger.warning(f"SMS send failed for {mobile}: {e}")
+        
+        # Send email if requested
+        if payload.send_email and contact.email:
+            try:
+                subject = f"Dr. {name.split()[0]}, Your OrthoConnect Profile is Ready!"
+                html = f"""
+                <html>
+                <body style="font-family: sans-serif; line-height: 1.6;">
+                    <p>Dear Dr. {name},</p>
+                    <p>Your profile on <strong>OrthoConnect</strong> is ready to be claimed!</p>
+                    <p>OrthoConnect is India's ethical, patient-first orthopaedic surgeon directory - 100% free, no paid rankings.</p>
+                    <p><a href="https://orthoconnect.agileortho.in/claim?m={mobile}" 
+                          style="background-color: #0d9488; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">
+                        Claim Your Profile →
+                    </a></p>
+                    <p>Best regards,<br>OrthoConnect Team</p>
+                </body>
+                </html>
+                """
+                send_email(contact.email.strip(), subject, html)
+            except Exception as e:
+                logger.warning(f"Email send failed for {contact.email}: {e}")
+    
+    return {
+        "imported": imported,
+        "skipped": skipped,
+        "errors": errors[:10],  # Limit error list
+        "total_processed": len(payload.contacts),
+    }
+
+
+@api_router.get("/admin/surgeons/unclaimed")
+async def get_unclaimed_surgeons(
+    auth: Dict[str, Any] = Depends(admin_dep),
+    city: Optional[str] = None,
+    limit: int = 100,
+    skip: int = 0,
+):
+    """Get list of unclaimed surgeon profiles"""
+    query = {"status": "unclaimed"}
+    if city:
+        query["locations.city"] = {"$regex": city, "$options": "i"}
+    
+    surgeons = await db.surgeons.find(query, {"_id": 0}).skip(skip).limit(limit).to_list(limit)
+    total = await db.surgeons.count_documents(query)
+    
+    return {
+        "surgeons": surgeons,
+        "total": total,
+        "limit": limit,
+        "skip": skip,
+    }
+
+
+@api_router.get("/claim/check/{mobile}")
+async def check_claimable_profile(mobile: str):
+    """Check if a profile exists for claiming"""
+    mobile_clean = re.sub(r'\D', '', mobile)
+    if len(mobile_clean) == 12 and mobile_clean.startswith('91'):
+        mobile_clean = mobile_clean[2:]
+    
+    surgeon = await db.surgeons.find_one(
+        {"mobile": mobile_clean, "status": "unclaimed"},
+        {"_id": 0, "id": 1, "name": 1, "city": 1, "locations": 1, "qualifications": 1}
+    )
+    
+    if not surgeon:
+        return {"found": False, "message": "No unclaimed profile found for this mobile number"}
+    
+    city = surgeon.get("locations", [{}])[0].get("city", "")
+    
+    return {
+        "found": True,
+        "profile": {
+            "name": surgeon.get("name", ""),
+            "city": city,
+            "qualifications": surgeon.get("qualifications", ""),
+        }
+    }
+
+
+@api_router.post("/claim/request-otp")
+async def claim_request_otp(payload: OtpRequest):
+    """Request OTP to claim an unclaimed profile"""
+    mobile = re.sub(r'\D', '', payload.mobile)
+    if len(mobile) == 12 and mobile.startswith('91'):
+        mobile = mobile[2:]
+    
+    # Check if unclaimed profile exists
+    surgeon = await db.surgeons.find_one({"mobile": mobile, "status": "unclaimed"})
+    if not surgeon:
+        raise HTTPException(status_code=404, detail="No unclaimed profile found for this mobile number")
+    
+    # Send OTP via 2Factor
+    otp = str(random.randint(100000, 999999))
+    await db.otp_codes.update_one(
+        {"mobile": mobile},
+        {"$set": {"code": otp, "created_at": now_iso(), "purpose": "claim"}},
+        upsert=True,
+    )
+    
+    if TWOFACTOR_API_KEY:
+        try:
+            resp = requests.get(
+                f"https://2factor.in/API/V1/{TWOFACTOR_API_KEY}/SMS/{mobile}/{otp}/OrthoConnect",
+                timeout=10,
+            )
+            resp.raise_for_status()
+            logger.info("Claim OTP sent to %s***", mobile[:5])
+        except Exception as e:
+            logger.error("Failed to send claim OTP: %s", e)
+            raise HTTPException(status_code=500, detail="Failed to send OTP")
+    else:
+        logger.warning("2Factor not configured, OTP: %s", otp)
+    
+    return {"ok": True, "message": "OTP sent to your mobile number"}
+
+
+@api_router.post("/claim/verify")
+async def claim_verify_and_create_account(payload: ClaimProfileRequest):
+    """Verify OTP and claim the profile by creating a user account"""
+    mobile = re.sub(r'\D', '', payload.mobile)
+    if len(mobile) == 12 and mobile.startswith('91'):
+        mobile = mobile[2:]
+    
+    # Verify OTP
+    otp_doc = await db.otp_codes.find_one({"mobile": mobile, "purpose": "claim"})
+    if not otp_doc or otp_doc.get("code") != payload.otp:
+        raise HTTPException(status_code=400, detail="Invalid OTP")
+    
+    # Check OTP age (10 minutes max)
+    created_at = otp_doc.get("created_at", "")
+    if created_at:
+        try:
+            otp_time = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+            if datetime.now(timezone.utc) - otp_time > timedelta(minutes=10):
+                raise HTTPException(status_code=400, detail="OTP expired")
+        except:
+            pass
+    
+    # Get the unclaimed profile
+    surgeon = await db.surgeons.find_one({"mobile": mobile, "status": "unclaimed"})
+    if not surgeon:
+        raise HTTPException(status_code=404, detail="Profile not found or already claimed")
+    
+    # Create user account
+    user_id = str(uuid.uuid4())
+    user_doc = {
+        "id": user_id,
+        "mobile": mobile,
+        "email": surgeon.get("email", ""),
+        "role": "surgeon",
+        "created_at": now_iso(),
+    }
+    await db.users.insert_one(user_doc)
+    
+    # Update surgeon profile - mark as claimed (pending)
+    await db.surgeons.update_one(
+        {"id": surgeon["id"]},
+        {
+            "$set": {
+                "user_id": user_id,
+                "status": "pending",  # Now needs to complete profile
+                "claimed_at": now_iso(),
+                "updated_at": now_iso(),
+            }
+        }
+    )
+    
+    # Delete OTP
+    await db.otp_codes.delete_one({"mobile": mobile, "purpose": "claim"})
+    
+    # Generate auth token
+    token = create_token({"sub": user_id, "mobile": mobile, "role": "surgeon"})
+    
+    return {
+        "ok": True,
+        "token": token,
+        "surgeon_id": surgeon["id"],
+        "message": "Profile claimed successfully! Please complete your profile.",
+    }
+
+
+@api_router.get("/admin/surgeons/stats/unclaimed")
+async def get_unclaimed_stats(auth: Dict[str, Any] = Depends(admin_dep)):
+    """Get statistics about unclaimed profiles"""
+    total_unclaimed = await db.surgeons.count_documents({"status": "unclaimed"})
+    
+    # By city
+    pipeline = [
+        {"$match": {"status": "unclaimed"}},
+        {"$unwind": {"path": "$locations", "preserveNullAndEmptyArrays": True}},
+        {"$group": {"_id": "$locations.city", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}},
+        {"$limit": 10}
+    ]
+    by_city = await db.surgeons.aggregate(pipeline).to_list(10)
+    
+    # Recently claimed
+    recently_claimed = await db.surgeons.count_documents({
+        "claimed_at": {"$exists": True},
+        "claimed_at": {"$gte": (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()}
+    })
+    
+    return {
+        "total_unclaimed": total_unclaimed,
+        "by_city": [{"city": c["_id"] or "Unknown", "count": c["count"]} for c in by_city],
+        "claimed_this_week": recently_claimed,
+    }
+
+
 @api_router.get("/admin/documents/{doc_id}/download")
 async def admin_download_document(
     doc_id: str,
