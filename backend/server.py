@@ -1430,6 +1430,357 @@ app.add_middleware(
 )
 
 
+# -----------------------------
+# Profile Views Tracking
+# -----------------------------
+
+@api_router.post("/profiles/{slug}/view")
+async def track_profile_view(slug: str):
+    """Track a profile view (called when someone visits a doctor profile)"""
+    doc = await db.surgeons.find_one({"slug": slug, "status": "approved"}, {"_id": 0, "id": 1})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    
+    # Increment view count
+    await db.surgeons.update_one(
+        {"slug": slug},
+        {"$inc": {"view_count": 1}}
+    )
+    
+    # Log the view with timestamp for analytics
+    await db.profile_views.insert_one({
+        "surgeon_id": doc["id"],
+        "slug": slug,
+        "viewed_at": now_iso(),
+    })
+    
+    return {"ok": True}
+
+
+@api_router.get("/profiles/{slug}/stats")
+async def get_profile_stats(slug: str):
+    """Get profile statistics (view count)"""
+    doc = await db.surgeons.find_one({"slug": slug}, {"_id": 0, "view_count": 1})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    
+    return {"view_count": doc.get("view_count", 0)}
+
+
+# -----------------------------
+# Admin Export & Analytics
+# -----------------------------
+
+@api_router.get("/admin/export/surgeons")
+async def admin_export_surgeons(auth: Dict[str, Any] = Depends(admin_dep)):
+    """Export all surgeons as CSV for conference organizers"""
+    docs = await db.surgeons.find({}, {"_id": 0}).to_list(10000)
+    
+    output = io.StringIO()
+    writer = csv.writer(output)
+    
+    # Header row
+    writer.writerow([
+        "Name", "Email", "Mobile", "Qualifications", "Registration Number",
+        "Subspecialties", "Status", "City", "Facility", "Phone",
+        "Website", "Created At", "View Count"
+    ])
+    
+    for d in docs:
+        locs = d.get("locations") or []
+        loc = locs[0] if locs else {}
+        
+        writer.writerow([
+            d.get("name", ""),
+            d.get("email", ""),
+            d.get("mobile", ""),
+            d.get("qualifications", ""),
+            d.get("registration_number", ""),
+            ", ".join(d.get("subspecialties", [])),
+            d.get("status", ""),
+            loc.get("city", ""),
+            loc.get("facility_name", ""),
+            loc.get("phone", ""),
+            d.get("website", ""),
+            d.get("created_at", ""),
+            d.get("view_count", 0),
+        ])
+    
+    output.seek(0)
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=surgeons_export.csv"}
+    )
+
+
+@api_router.get("/admin/analytics")
+async def admin_analytics(auth: Dict[str, Any] = Depends(admin_dep)):
+    """Get platform analytics for admin dashboard"""
+    # Total counts by status
+    total = await db.surgeons.count_documents({})
+    approved = await db.surgeons.count_documents({"status": "approved"})
+    pending = await db.surgeons.count_documents({"status": "pending"})
+    rejected = await db.surgeons.count_documents({"status": "rejected"})
+    needs_clarification = await db.surgeons.count_documents({"status": "needs_clarification"})
+    
+    # City-wise distribution
+    city_pipeline = [
+        {"$match": {"status": "approved"}},
+        {"$unwind": "$locations"},
+        {"$group": {"_id": "$locations.city", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}},
+        {"$limit": 10}
+    ]
+    city_stats = await db.surgeons.aggregate(city_pipeline).to_list(10)
+    
+    # Subspecialty distribution
+    sub_pipeline = [
+        {"$match": {"status": "approved"}},
+        {"$unwind": "$subspecialties"},
+        {"$group": {"_id": "$subspecialties", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}}
+    ]
+    sub_stats = await db.surgeons.aggregate(sub_pipeline).to_list(20)
+    
+    # Recent signups (last 30 days)
+    thirty_days_ago = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
+    recent_signups = await db.surgeons.count_documents({"created_at": {"$gte": thirty_days_ago}})
+    
+    # Total profile views
+    total_views = await db.profile_views.count_documents({})
+    
+    return {
+        "totals": {
+            "total": total,
+            "approved": approved,
+            "pending": pending,
+            "rejected": rejected,
+            "needs_clarification": needs_clarification,
+        },
+        "city_distribution": [{"city": c["_id"] or "Unknown", "count": c["count"]} for c in city_stats],
+        "subspecialty_distribution": [{"subspecialty": s["_id"], "count": s["count"]} for s in sub_stats],
+        "recent_signups_30d": recent_signups,
+        "total_profile_views": total_views,
+    }
+
+
+# -----------------------------
+# Events/CME Endpoints
+# -----------------------------
+
+class EventCreate(BaseModel):
+    title: str
+    description: str
+    event_type: Literal["conference", "cme", "workshop", "webinar"]
+    start_date: str
+    end_date: Optional[str] = None
+    location: str
+    city: str
+    registration_url: Optional[str] = None
+    organizer: str
+    is_free: bool = False
+    image_url: Optional[str] = None
+
+
+@api_router.post("/admin/events")
+async def create_event(event: EventCreate, auth: Dict[str, Any] = Depends(admin_dep)):
+    """Create a new event (admin only)"""
+    doc = {
+        "id": str(uuid.uuid4()),
+        "title": event.title,
+        "description": event.description,
+        "event_type": event.event_type,
+        "start_date": event.start_date,
+        "end_date": event.end_date,
+        "location": event.location,
+        "city": event.city,
+        "registration_url": event.registration_url,
+        "organizer": event.organizer,
+        "is_free": event.is_free,
+        "image_url": event.image_url,
+        "created_at": now_iso(),
+        "status": "active",
+    }
+    await db.events.insert_one(doc)
+    return {"ok": True, "id": doc["id"]}
+
+
+@api_router.get("/events")
+async def list_events():
+    """List all upcoming events"""
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    docs = await db.events.find(
+        {"status": "active", "start_date": {"$gte": today}},
+        {"_id": 0}
+    ).sort("start_date", 1).to_list(50)
+    return docs
+
+
+@api_router.get("/events/{event_id}")
+async def get_event(event_id: str):
+    """Get event details"""
+    doc = await db.events.find_one({"id": event_id}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Event not found")
+    return doc
+
+
+@api_router.delete("/admin/events/{event_id}")
+async def delete_event(event_id: str, auth: Dict[str, Any] = Depends(admin_dep)):
+    """Delete an event"""
+    result = await db.events.delete_one({"id": event_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Event not found")
+    return {"ok": True}
+
+
+# -----------------------------
+# Blog/Articles Endpoints
+# -----------------------------
+
+class ArticleCreate(BaseModel):
+    title: str
+    slug: str
+    excerpt: str
+    content: str
+    category: str
+    author: str
+    image_url: Optional[str] = None
+    tags: List[str] = Field(default_factory=list)
+
+
+@api_router.post("/admin/articles")
+async def create_article(article: ArticleCreate, auth: Dict[str, Any] = Depends(admin_dep)):
+    """Create a new article (admin only)"""
+    # Check slug uniqueness
+    existing = await db.articles.find_one({"slug": article.slug})
+    if existing:
+        raise HTTPException(status_code=400, detail="Slug already exists")
+    
+    doc = {
+        "id": str(uuid.uuid4()),
+        "title": article.title,
+        "slug": article.slug,
+        "excerpt": article.excerpt,
+        "content": article.content,
+        "category": article.category,
+        "author": article.author,
+        "image_url": article.image_url,
+        "tags": article.tags,
+        "created_at": now_iso(),
+        "updated_at": now_iso(),
+        "status": "published",
+        "view_count": 0,
+    }
+    await db.articles.insert_one(doc)
+    return {"ok": True, "id": doc["id"], "slug": doc["slug"]}
+
+
+@api_router.get("/articles")
+async def list_articles(category: Optional[str] = None, limit: int = 20):
+    """List published articles"""
+    query = {"status": "published"}
+    if category:
+        query["category"] = category
+    
+    docs = await db.articles.find(query, {"_id": 0, "content": 0}).sort("created_at", -1).to_list(limit)
+    return docs
+
+
+@api_router.get("/articles/{slug}")
+async def get_article(slug: str):
+    """Get article by slug"""
+    doc = await db.articles.find_one({"slug": slug, "status": "published"}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Article not found")
+    
+    # Increment view count
+    await db.articles.update_one({"slug": slug}, {"$inc": {"view_count": 1}})
+    
+    return doc
+
+
+# -----------------------------
+# Referral System
+# -----------------------------
+
+@api_router.post("/surgeon/me/referral-code")
+async def generate_referral_code(auth: Dict[str, Any] = Depends(surgeon_dep)):
+    """Generate a referral code for the surgeon"""
+    user_id = auth["sub"]
+    surgeon = await db.surgeons.find_one({"user_id": user_id}, {"_id": 0, "id": 1, "referral_code": 1, "name": 1})
+    
+    if not surgeon:
+        raise HTTPException(status_code=404, detail="Surgeon profile not found")
+    
+    if surgeon.get("referral_code"):
+        return {"referral_code": surgeon["referral_code"]}
+    
+    # Generate unique referral code
+    name_part = "".join(surgeon.get("name", "DR").split()[:2]).upper()[:6]
+    code = f"{name_part}{str(uuid.uuid4())[:4].upper()}"
+    
+    await db.surgeons.update_one(
+        {"user_id": user_id},
+        {"$set": {"referral_code": code}}
+    )
+    
+    return {"referral_code": code}
+
+
+@api_router.post("/surgeon/apply-referral")
+async def apply_referral_code(referral_code: str, auth: Dict[str, Any] = Depends(surgeon_dep)):
+    """Apply a referral code (for new surgeons)"""
+    user_id = auth["sub"]
+    
+    # Check if user already used a referral
+    surgeon = await db.surgeons.find_one({"user_id": user_id}, {"_id": 0, "referred_by": 1})
+    if surgeon and surgeon.get("referred_by"):
+        raise HTTPException(status_code=400, detail="You have already used a referral code")
+    
+    # Find referrer
+    referrer = await db.surgeons.find_one({"referral_code": referral_code.upper()}, {"_id": 0, "id": 1, "name": 1})
+    if not referrer:
+        raise HTTPException(status_code=404, detail="Invalid referral code")
+    
+    # Apply referral
+    await db.surgeons.update_one(
+        {"user_id": user_id},
+        {"$set": {"referred_by": referrer["id"], "referred_by_name": referrer["name"]}}
+    )
+    
+    # Increment referrer's count
+    await db.surgeons.update_one(
+        {"id": referrer["id"]},
+        {"$inc": {"referral_count": 1}}
+    )
+    
+    return {"ok": True, "referred_by": referrer["name"]}
+
+
+@api_router.get("/surgeon/me/referrals")
+async def get_my_referrals(auth: Dict[str, Any] = Depends(surgeon_dep)):
+    """Get list of surgeons I referred"""
+    user_id = auth["sub"]
+    surgeon = await db.surgeons.find_one({"user_id": user_id}, {"_id": 0, "id": 1, "referral_code": 1, "referral_count": 1})
+    
+    if not surgeon:
+        raise HTTPException(status_code=404, detail="Surgeon profile not found")
+    
+    # Get referred surgeons
+    referred = await db.surgeons.find(
+        {"referred_by": surgeon["id"]},
+        {"_id": 0, "name": 1, "status": 1, "created_at": 1}
+    ).to_list(100)
+    
+    return {
+        "referral_code": surgeon.get("referral_code"),
+        "referral_count": surgeon.get("referral_count", 0),
+        "referrals": referred,
+    }
+
+
 @app.on_event("startup")
 async def ensure_indexes():
     try:
