@@ -4415,7 +4415,7 @@ async def search_practo(city: str, query: str) -> List[Dict[str, Any]]:
                 if resp.status_code == 200:
                     soup = BeautifulSoup(resp.text, 'lxml')
                     
-                    # Method 1: Find doctor cards by data-qa-id
+                    # Method 1: Find doctor cards by data-qa-id (main doctor listing pages)
                     doctor_cards = soup.find_all(attrs={"data-qa-id": "doctor_card"})
                     
                     for card in doctor_cards[:30]:
@@ -4474,23 +4474,58 @@ async def search_practo(city: str, query: str) -> List[Dict[str, Any]]:
                             logger.debug(f"Error parsing Practo card: {e}")
                             continue
                     
-                    # Method 2: Fallback - find by common class patterns
-                    if not doctor_cards:
-                        # Try finding doctor name spans
-                        name_elements = soup.find_all('h2', class_=lambda c: c and 'doctor-name' in c.lower()) or \
-                                       soup.find_all('a', attrs={"data-qa-id": "doctor_name"})
+                    # Method 2: Clinics page - find by H2 tags
+                    if 'clinics' in url:
+                        clinic_cards = soup.find_all('div', class_=lambda c: c and ('listing' in str(c).lower() or 'card' in str(c).lower()))
                         
-                        for name_elem in name_elements[:20]:
-                            name = name_elem.get_text(strip=True)
-                            if name and name.lower() not in seen_names:
-                                seen_names.add(name.lower())
-                                results.append({
-                                    "name": f"Dr. {name}" if not name.lower().startswith("dr") else name,
-                                    "qualifications": "Orthopaedic Surgeon",
-                                    "city": city,
-                                    "source": "practo",
-                                    "profile_url": f"https://www.practo.com/{city_slug}/doctor/{name.lower().replace(' ', '-').replace('.', '')}",
-                                })
+                        # Also look for H2 tags with clinic names
+                        h2_elements = soup.find_all('h2')
+                        for h2 in h2_elements:
+                            clinic_name = h2.get_text(strip=True)
+                            if clinic_name and len(clinic_name) > 3 and clinic_name.lower() not in seen_names:
+                                # Filter for relevant clinics
+                                if any(kw in clinic_name.lower() for kw in ['ortho', 'bone', 'joint', 'spine', 'clinic', 'hospital', 'apollo', 'care']):
+                                    seen_names.add(clinic_name.lower())
+                                    
+                                    # Try to find associated link
+                                    parent = h2.parent
+                                    profile_link = parent.find('a', href=True) if parent else None
+                                    profile_url = ""
+                                    if profile_link:
+                                        href = profile_link.get('href', '')
+                                        if href.startswith('/'):
+                                            profile_url = f"https://www.practo.com{href}"
+                                        elif href.startswith('http'):
+                                            profile_url = href
+                                    
+                                    results.append({
+                                        "name": clinic_name,
+                                        "qualifications": "Orthopaedic Clinic",
+                                        "hospital": clinic_name,
+                                        "city": city,
+                                        "source": "practo",
+                                        "profile_url": profile_url or url,
+                                    })
+                    
+                    # Method 3: Fallback - find doctor links
+                    if len(results) < 5:
+                        doctor_links = soup.find_all('a', href=lambda x: x and '/doctor/' in x)
+                        for link in doctor_links[:20]:
+                            name = link.get_text(strip=True)
+                            href = link.get('href', '')
+                            
+                            # Filter out non-name text
+                            if name and len(name) > 3 and len(name) < 60 and name.lower() not in seen_names:
+                                if not any(skip in name.lower() for skip in ['%', 'patient', 'story', 'more', 'view']):
+                                    seen_names.add(name.lower())
+                                    profile_url = f"https://www.practo.com{href}" if href.startswith('/') else href
+                                    results.append({
+                                        "name": f"Dr. {name}" if not name.lower().startswith("dr") else name,
+                                        "qualifications": "Orthopaedic Surgeon",
+                                        "city": city,
+                                        "source": "practo",
+                                        "profile_url": profile_url,
+                                    })
                     
             except requests.RequestException as e:
                 logger.debug(f"Practo URL {url} failed: {e}")
