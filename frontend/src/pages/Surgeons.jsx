@@ -30,20 +30,15 @@ function SurgeonCardSkeleton() {
   );
 }
 
-function SurgeonCard({ surgeon, index }) {
+function SurgeonCard({ surgeon }) {
   const city = surgeon.locations?.[0]?.city || surgeon.clinic?.city || "";
   
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.05, duration: 0.4 }}
+    <Link
+      to={`/doctor/${surgeon.slug}`}
+      data-testid={`surgeon-card-${surgeon.slug}`}
+      className="group block rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-lg hover:border-teal-200 transition-shadow duration-200"
     >
-      <Link
-        to={`/doctor/${surgeon.slug}`}
-        data-testid={`surgeon-card-${surgeon.slug}`}
-        className="group block rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-lg hover:border-teal-200 transition-all duration-300"
-      >
         {/* Header */}
         <div className="flex items-start gap-4">
           <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-teal-500/20">
