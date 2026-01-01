@@ -2341,6 +2341,7 @@ async def send_outreach_emails(
     """Send marketing emails to selected contacts"""
     sent = 0
     failed = 0
+    bounced = 0
     
     for contact_id in payload.contact_ids:
         contact = await db.outreach_contacts.find_one({"id": contact_id})
@@ -2354,8 +2355,8 @@ async def send_outreach_emails(
         # Get email template
         subject, html = get_email_template(payload.template_type, contact, tracking_id)
         
-        # Send email
-        success = send_email(contact["email"], subject, html)
+        # Send email - returns (success, error_code)
+        success, error_code = send_email_with_bounce_detection(contact["email"], subject, html)
         
         if success:
             # Update contact status
@@ -2383,10 +2384,16 @@ async def send_outreach_emails(
             })
             
             sent += 1
+        elif error_code in [550, 551, 552, 553, 554]:
+            # Hard bounce - delete the contact automatically
+            await db.outreach_contacts.delete_one({"id": contact_id})
+            await db.crm_contacts.delete_one({"email": contact["email"]})
+            bounced += 1
+            logger.info(f"Bounced email removed: {contact['email']} (error {error_code})")
         else:
             failed += 1
     
-    return {"sent": sent, "failed": failed}
+    return {"sent": sent, "failed": failed, "bounced_removed": bounced}
 
 
 @api_router.get("/outreach/track/open/{tracking_id}")
