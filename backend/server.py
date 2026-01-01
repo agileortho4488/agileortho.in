@@ -4501,64 +4501,162 @@ async def search_practo(city: str, query: str) -> List[Dict[str, Any]]:
 
 
 async def search_justdial(city: str, query: str) -> List[Dict[str, Any]]:
-    """Search JustDial for orthopaedic surgeons using SerpAPI"""
+    """Search JustDial for orthopaedic surgeons using BeautifulSoup"""
+    from bs4 import BeautifulSoup
     results = []
-    serpapi_key = os.environ.get("SERPAPI_KEY")
     
-    if serpapi_key:
+    try:
+        city_formatted = city.title().replace(" ", "-")
+        
+        urls = [
+            f"https://www.justdial.com/{city_formatted}/Orthopaedic-Doctors",
+            f"https://www.justdial.com/{city_formatted}/Orthopedic-Surgeons",
+            f"https://www.justdial.com/{city_formatted}/Bone-Specialists",
+        ]
+        
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.5",
+            "Accept-Encoding": "gzip, deflate",
+            "Connection": "keep-alive",
+            "Referer": "https://www.justdial.com/",
+        }
+        
+        seen_names = set()
+        
+        for url in urls:
+            try:
+                resp = requests.get(url, headers=headers, timeout=20)
+                
+                if resp.status_code == 200:
+                    soup = BeautifulSoup(resp.text, 'lxml')
+                    
+                    # Method 1: Find listing cards
+                    listing_cards = soup.find_all('li', class_=lambda c: c and ('cntanr' in c or 'resultbox' in c.lower()))
+                    
+                    for card in listing_cards[:30]:
+                        try:
+                            # Extract name
+                            name_elem = card.find('span', class_=lambda c: c and ('lng_cont_name' in c or 'store-name' in c.lower())) or \
+                                       card.find('a', class_=lambda c: c and 'lng_cont_name' in c) or \
+                                       card.find('h2') or card.find('h3')
+                            
+                            name = name_elem.get_text(strip=True) if name_elem else ""
+                            
+                            if not name or len(name) < 5 or name.lower() in seen_names:
+                                continue
+                            
+                            # Filter for doctor/clinic names
+                            if not any(kw in name.lower() for kw in ['dr', 'doctor', 'hospital', 'clinic', 'ortho', 'bone']):
+                                continue
+                                
+                            seen_names.add(name.lower())
+                            
+                            # Extract address
+                            addr_elem = card.find('span', class_=lambda c: c and 'cont_sw_addr' in c) or \
+                                       card.find('p', class_=lambda c: c and 'address' in c.lower())
+                            address = addr_elem.get_text(strip=True) if addr_elem else ""
+                            
+                            # Extract rating
+                            rating_elem = card.find('span', class_=lambda c: c and ('star_m' in c or 'rating' in c.lower()))
+                            rating = rating_elem.get_text(strip=True) if rating_elem else ""
+                            
+                            # Extract phone (JustDial obfuscates phone numbers)
+                            phone = ""
+                            
+                            # Extract profile URL
+                            profile_link = card.find('a', href=True)
+                            profile_url = ""
+                            if profile_link:
+                                href = profile_link.get('href', '')
+                                if href.startswith('/'):
+                                    profile_url = f"https://www.justdial.com{href}"
+                                elif href.startswith('http'):
+                                    profile_url = href
+                            
+                            results.append({
+                                "name": name,
+                                "address": address,
+                                "city": city,
+                                "rating": rating,
+                                "phone": phone,
+                                "source": "justdial",
+                                "profile_url": profile_url,
+                            })
+                            
+                        except Exception as e:
+                            logger.debug(f"Error parsing JustDial card: {e}")
+                            continue
+                    
+                    # Method 2: Fallback - find by common patterns
+                    if not listing_cards:
+                        # Try regex patterns on raw HTML
+                        name_pattern = r'class="[^"]*lng_cont_name[^"]*"[^>]*>([^<]+)<'
+                        matches = re.findall(name_pattern, resp.text, re.IGNORECASE)
+                        
+                        for match in matches[:20]:
+                            name = match.strip()
+                            if name and len(name) > 5 and name.lower() not in seen_names:
+                                seen_names.add(name.lower())
+                                results.append({
+                                    "name": name,
+                                    "city": city,
+                                    "source": "justdial",
+                                    "profile_url": url,
+                                })
+                    
+            except requests.RequestException as e:
+                logger.debug(f"JustDial URL {url} failed: {e}")
+                continue
+        
+        logger.info(f"JustDial BeautifulSoup found {len(results)} results for {city}")
+        
+    except Exception as e:
+        logger.error("JustDial search failed: %s", e)
+    
+    # Also use SerpAPI if available for additional results
+    serpapi_key = os.environ.get("SERPAPI_KEY")
+    if serpapi_key and len(results) < 10:
         try:
             from serpapi import GoogleSearch
             
-            # Search Google for JustDial listings
             params = {
                 "engine": "google",
                 "q": f"site:justdial.com orthopaedic doctors {city}",
                 "hl": "en",
                 "gl": "in",
-                "num": 20,
+                "num": 15,
                 "api_key": serpapi_key
             }
             
             search = GoogleSearch(params)
             data = search.get_dict()
             
-            organic_results = data.get("organic_results", [])
-            for result in organic_results:
+            seen_names_serp = {r["name"].lower() for r in results}
+            
+            for result in data.get("organic_results", []):
                 title = result.get("title", "")
                 link = result.get("link", "")
-                snippet = result.get("snippet", "")
                 
-                if "orthopaedic" in title.lower() or "orthopedic" in title.lower() or "bone" in title.lower():
+                if any(kw in title.lower() for kw in ['orthopaedic', 'orthopedic', 'bone', 'dr.', 'doctor']):
                     name = title.split("-")[0].strip() if "-" in title else title.split("|")[0].strip()
                     
-                    # Try to extract phone from snippet
-                    phone = ""
-                    phone_match = re.search(r'\b(\d{10})\b', snippet)
-                    if phone_match:
-                        phone = phone_match.group(1)
-                    
-                    results.append({
-                        "name": name,
-                        "city": city,
-                        "phone": phone,
-                        "source": "justdial",
-                        "profile_url": link,
-                        "description": snippet[:200] if snippet else "",
-                    })
-                    
-            logger.info(f"SerpAPI JustDial found {len(results)} results for {city}")
+                    if name.lower() not in seen_names_serp:
+                        seen_names_serp.add(name.lower())
+                        results.append({
+                            "name": name,
+                            "city": city,
+                            "source": "justdial",
+                            "profile_url": link,
+                        })
+                        
+            logger.info(f"Added SerpAPI results, total JustDial: {len(results)}")
             
         except Exception as e:
-            logger.error("SerpAPI JustDial search failed: %s", e)
-    else:
-        # Fallback to direct scraping
-        try:
-            url = f"https://www.justdial.com/{city}/Orthopaedic-Doctors"
-            
-            headers = {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-            }
-            resp = requests.get(url, headers=headers, timeout=15)
+            logger.debug(f"SerpAPI JustDial supplement failed: {e}")
+    
+    return results
             
             if resp.status_code == 200:
                 content = resp.text
