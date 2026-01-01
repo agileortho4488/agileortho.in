@@ -166,6 +166,9 @@ export default function AdminDashboard() {
               <TabsTrigger data-testid="admin-tab-pending" value="pending">
                 Pending
               </TabsTrigger>
+              <TabsTrigger data-testid="admin-tab-needs-clarification" value="needs_clarification">
+                Needs Info
+              </TabsTrigger>
               <TabsTrigger data-testid="admin-tab-approved" value="approved">
                 Approved
               </TabsTrigger>
