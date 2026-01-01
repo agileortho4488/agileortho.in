@@ -122,8 +122,15 @@ export default function JoinSurgeon() {
   function toggleSub(s) {
     setSubspecialtySet((prev) => {
       const next = new Set(prev);
-      if (next.has(s)) next.delete(s);
-      else next.add(s);
+      if (next.has(s)) {
+        next.delete(s);
+      } else {
+        // Limit to max 2 subspecialties
+        if (next.size >= 2) {
+          return prev; // Don't add more if already 2
+        }
+        next.add(s);
+      }
       return next;
     });
   }
