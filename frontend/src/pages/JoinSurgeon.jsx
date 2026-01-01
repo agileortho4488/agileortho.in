@@ -254,8 +254,8 @@ export default function JoinSurgeon() {
     setLoading(true);
     setError("");
     
-    // Validate required documents
-    if (docFiles.length === 0 && !profileExists) {
+    // Validate required documents (either new uploads or existing docs)
+    if (docFiles.length === 0 && existingDocs.length === 0) {
       setError("Please upload at least one document (registration proof or degree certificate) for verification.");
       toast.error("Document Required", {
         description: "Upload registration proof or degree certificate before submitting.",
