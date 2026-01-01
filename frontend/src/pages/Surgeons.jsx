@@ -175,6 +175,8 @@ export default function Surgeons() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
   const [selectedSubspecialty, setSelectedSubspecialty] = useState("");
+  const [userLocation, setUserLocation] = useState(null);
+  const [searchRadius, setSearchRadius] = useState(25);
 
   useEffect(() => {
     async function loadSurgeons() {
@@ -191,9 +193,28 @@ export default function Surgeons() {
     loadSurgeons();
   }, [api]);
 
+  // Calculate distance between two points using Haversine formula
+  const calculateDistance = (lat1, lng1, lat2, lng2) => {
+    const R = 6371; // Earth's radius in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLng/2) * Math.sin(dLng/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
+
+  // Handle location selection from DistanceSearch component
+  const handleLocationSelect = (location, radius) => {
+    setUserLocation(location);
+    setSearchRadius(radius);
+  };
+
   // Filter surgeons
   const filteredSurgeons = useMemo(() => {
-    return surgeons.filter(s => {
+    let filtered = surgeons.filter(s => {
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
         const matchesName = s.name?.toLowerCase().includes(query);
@@ -210,7 +231,29 @@ export default function Surgeons() {
       }
       return true;
     });
-  }, [surgeons, searchQuery, selectedCity, selectedSubspecialty]);
+
+    // If user has selected location, filter by distance and sort
+    if (userLocation) {
+      filtered = filtered.map(s => {
+        const loc = s.locations?.[0]?.geo || s.clinic?.geo;
+        if (loc?.coordinates) {
+          const distance = calculateDistance(
+            userLocation.lat, userLocation.lng,
+            loc.coordinates[1], loc.coordinates[0]
+          );
+          return { ...s, distance };
+        }
+        return { ...s, distance: null };
+      }).filter(s => s.distance === null || s.distance <= searchRadius)
+        .sort((a, b) => {
+          if (a.distance === null) return 1;
+          if (b.distance === null) return -1;
+          return a.distance - b.distance;
+        });
+    }
+
+    return filtered;
+  }, [surgeons, searchQuery, selectedCity, selectedSubspecialty, userLocation, searchRadius]);
 
   const availableCities = useMemo(() => {
     const cities = new Set();
