@@ -2965,17 +2965,30 @@ async def sync_contact_to_zoho(contact_id: str, auth: Dict[str, Any] = Depends(a
     if not contact:
         raise HTTPException(status_code=404, detail="Contact not found")
     
+    # Parse name into first/last
+    name = contact.get("name", "Unknown")
+    name_parts = name.replace("Dr.", "").replace("DR.", "").strip().split()
+    first_name = name_parts[0] if name_parts else "Doctor"
+    last_name = " ".join(name_parts[1:]) if len(name_parts) > 1 else name
+    
+    # Ensure phone has country code
+    mobile = contact.get("mobile", "")
+    if mobile and len(mobile) == 10:
+        mobile = "91" + mobile
+    
     # Prepare Zoho contact data
     zoho_data = {
-        "lastName": contact["name"],
-        "email": contact.get("email"),
-        "phone": contact.get("mobile"),
-        "cf": {
-            "cf_city": contact.get("city", ""),
-            "cf_subspecialty": contact.get("subspecialty", ""),
-            "cf_clinic": contact.get("clinic_name", ""),
-        }
+        "firstName": first_name,
+        "lastName": last_name,
+        "email": contact.get("email") or None,
+        "phone": mobile or None,
+        "mobile": mobile or None,
+        "city": contact.get("city", ""),
+        "description": f"Subspecialty: {contact.get('subspecialty', '')}. {contact.get('notes', '')}".strip(),
     }
+    
+    # Remove None values
+    zoho_data = {k: v for k, v in zoho_data.items() if v}
     
     # Check if already synced
     if contact.get("zoho_contact_id"):
@@ -2988,15 +3001,26 @@ async def sync_contact_to_zoho(contact_id: str, auth: Dict[str, Any] = Depends(a
     if "error" in result:
         return {"ok": False, "error": result.get("error")}
     
-    # Save Zoho contact ID
+    # Save Zoho contact ID and web URL
     zoho_id = result.get("id") or contact.get("zoho_contact_id")
+    zoho_web_url = result.get("webUrl", "")
+    
     if zoho_id:
         await db.crm_contacts.update_one(
             {"id": contact_id},
-            {"$set": {"zoho_contact_id": zoho_id, "updated_at": now_iso()}}
+            {"$set": {
+                "zoho_contact_id": zoho_id, 
+                "zoho_web_url": zoho_web_url,
+                "updated_at": now_iso()
+            }}
         )
     
-    return {"ok": True, "zoho_contact_id": zoho_id}
+    return {
+        "ok": True, 
+        "zoho_contact_id": zoho_id,
+        "zoho_web_url": zoho_web_url,
+        "desk_url": f"https://desk.zoho.in/support/agileortho/ShowHomePage.do#Contacts/dv/{zoho_id}"
+    }
 
 
 @api_router.post("/admin/crm/zoho/create-ticket/{contact_id}")
