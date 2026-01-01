@@ -2534,6 +2534,146 @@ async def get_whatsapp_link(contact_id: str, auth: Dict[str, Any] = Depends(admi
     return {"whatsapp_url": whatsapp_url, "message": message}
 
 
+@api_router.post("/admin/outreach/clean")
+async def clean_invalid_emails(auth: Dict[str, Any] = Depends(admin_dep)):
+    """Remove invalid email addresses from outreach and CRM"""
+    import re as regex_module
+    
+    invalid_patterns = [
+        r'\.com\.$',  # ends with .com.
+        r'\s',        # contains spaces
+        r'@.*@',      # multiple @
+        r'^[^@]+$',   # no @ at all
+        r'@\.',       # @ followed by .
+        r'\.\.',      # double dots
+        r'@$',        # ends with @
+        r'^@',        # starts with @
+    ]
+    
+    invalid_domains = ['example.com', 'test.com', 'null', 'na', 'n/a']
+    
+    outreach_removed = 0
+    crm_removed = 0
+    
+    # Clean outreach contacts
+    contacts = await db.outreach_contacts.find({}).to_list(None)
+    for contact in contacts:
+        email = contact.get('email', '').strip().lower()
+        should_remove = False
+        
+        if email:
+            for pattern in invalid_patterns:
+                if regex_module.search(pattern, email):
+                    should_remove = True
+                    break
+            
+            domain = email.split('@')[-1] if '@' in email else ''
+            if domain in invalid_domains:
+                should_remove = True
+        
+        if should_remove:
+            await db.outreach_contacts.delete_one({"id": contact["id"]})
+            outreach_removed += 1
+    
+    # Clean CRM contacts
+    crm_contacts = await db.crm_contacts.find({}).to_list(None)
+    for contact in crm_contacts:
+        email = contact.get('email', '').strip().lower()
+        should_remove = False
+        
+        if email:
+            for pattern in invalid_patterns:
+                if regex_module.search(pattern, email):
+                    should_remove = True
+                    break
+            
+            domain = email.split('@')[-1] if '@' in email else ''
+            if domain in invalid_domains:
+                should_remove = True
+        
+        if should_remove:
+            await db.crm_contacts.delete_one({"id": contact["id"]})
+            crm_removed += 1
+    
+    return {
+        "outreach_removed": outreach_removed,
+        "crm_removed": crm_removed,
+        "message": f"Removed {outreach_removed} invalid emails from outreach, {crm_removed} from CRM"
+    }
+
+
+class BulkSendRequest(BaseModel):
+    template_type: str = "invitation"
+    city: Optional[str] = None
+    batch_size: int = 100
+
+
+@api_router.post("/admin/outreach/send-bulk")
+async def send_bulk_campaign(
+    payload: BulkSendRequest,
+    auth: Dict[str, Any] = Depends(admin_dep)
+):
+    """Send bulk email campaign to all new contacts (with optional city filter)"""
+    query = {"status": "new", "email": {"$ne": "", "$exists": True, "$regex": "@"}}
+    
+    if payload.city:
+        query["city"] = {"$regex": payload.city, "$options": "i"}
+    
+    contacts = await db.outreach_contacts.find(query).limit(payload.batch_size).to_list(payload.batch_size)
+    
+    sent = 0
+    failed = 0
+    bounced = 0
+    
+    for contact in contacts:
+        tracking_id = str(uuid.uuid4())
+        subject, html = get_email_template(payload.template_type, contact, tracking_id)
+        
+        success, error_code = send_email_with_bounce_detection(contact["email"], subject, html)
+        
+        if success:
+            await db.outreach_contacts.update_one(
+                {"id": contact["id"]},
+                {
+                    "$set": {
+                        "status": "invited",
+                        "last_email_sent": now_iso(),
+                        "updated_at": now_iso(),
+                    },
+                    "$inc": {"emails_sent": 1}
+                }
+            )
+            
+            await db.email_tracking.insert_one({
+                "id": tracking_id,
+                "contact_id": contact["id"],
+                "email": contact["email"],
+                "template_type": payload.template_type,
+                "sent_at": now_iso(),
+                "opened": False,
+                "clicked": False,
+            })
+            
+            sent += 1
+        elif error_code in [550, 551, 552, 553, 554]:
+            # Hard bounce - delete the contact
+            await db.outreach_contacts.delete_one({"id": contact["id"]})
+            await db.crm_contacts.delete_one({"email": contact["email"]})
+            bounced += 1
+        else:
+            failed += 1
+    
+    remaining = await db.outreach_contacts.count_documents(query)
+    
+    return {
+        "sent": sent,
+        "failed": failed,
+        "bounced_removed": bounced,
+        "remaining": remaining,
+        "message": f"Sent {sent}, Bounced {bounced}, Failed {failed}. {remaining} remaining."
+    }
+
+
 @api_router.get("/admin/outreach/export")
 async def export_outreach_contacts(auth: Dict[str, Any] = Depends(admin_dep)):
     """Export outreach contacts as CSV"""
