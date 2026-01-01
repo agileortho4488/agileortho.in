@@ -296,10 +296,25 @@ export default function AdminSurgeonDiscovery() {
           >
             <ArrowLeft className="w-4 h-4 mr-1" /> Back to Dashboard
           </Link>
-          <h1 className="text-2xl font-bold text-slate-900">Surgeon Discovery</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-slate-900">Surgeon Discovery</h1>
+            {stats.serpapi_configured ? (
+              <Badge className="bg-emerald-100 text-emerald-700 text-xs">SerpAPI Active</Badge>
+            ) : (
+              <Badge className="bg-amber-100 text-amber-700 text-xs">Basic Mode</Badge>
+            )}
+          </div>
           <p className="mt-1 text-slate-600">
             Search and import orthopaedic surgeons from multiple sources
           </p>
+          {!stats.serpapi_configured && (
+            <div className="mt-3 p-3 rounded-lg bg-amber-50 border border-amber-200 text-sm text-amber-800">
+              <strong>Tip:</strong> Add SERPAPI_KEY to backend/.env for enhanced search results from Google Maps, Practo & JustDial.
+              <a href="https://serpapi.com" target="_blank" rel="noopener noreferrer" className="ml-1 text-amber-900 underline">
+                Get API Key
+              </a>
+            </div>
+          )}
         </div>
 
         {/* Stats */}
