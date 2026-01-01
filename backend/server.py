@@ -802,6 +802,28 @@ async def profiles_search(
     return await search_profiles(location=location, radius_km=radius_km, subspecialty=subspecialty)
 
 
+@api_router.get("/profiles/all", response_model=List[SurgeonSearchResult])
+async def profiles_all():
+    """Get all approved surgeon profiles (for surgeons listing page)"""
+    docs = await db.surgeons.find({"status": "approved"}, {"_id": 0}).limit(500).to_list(500)
+    out: List[SurgeonSearchResult] = []
+    for d in docs:
+        locs = _ensure_locations(d)
+        out.append(
+            SurgeonSearchResult(
+                id=d["id"],
+                slug=d["slug"],
+                name=d.get("name", ""),
+                qualifications=d.get("qualifications", ""),
+                subspecialties=d.get("subspecialties", []),
+                locations=[Location(**x) for x in locs],
+                clinic=_clinic_from_locations(locs),
+                distance_km=None,
+            )
+        )
+    return out
+
+
 @api_router.get("/profiles/smart-search", response_model=List[SurgeonSearchResult])
 async def profiles_smart_search(q: Optional[str] = None, radius_km: float = 10.0):
     query = (q or "").strip()
