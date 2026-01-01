@@ -89,10 +89,9 @@ function SurgeonCard({ surgeon }) {
         {/* CTA */}
         <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
           <span className="text-xs text-slate-400">View Profile</span>
-          <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-teal-600 group-hover:translate-x-1 transition-all" />
+          <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-teal-600 group-hover:translate-x-1 transition-transform" />
         </div>
       </Link>
-    </motion.div>
   );
 }
 
