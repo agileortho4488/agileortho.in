@@ -73,6 +73,7 @@ OrthoConnect is an ethical, patient-first orthopaedic healthcare platform for In
 - Profile editing (even after approval)
 - WhatsApp contact button on profile
 - **Mandatory Document Upload**: Surgeons must upload at least one document (registration proof or degree certificate) before submitting profile
+- **Mandatory Email**: Email address is required for profile creation
 - **Existing Documents Display**: Green box showing previously uploaded documents
 - **Referral System**:
   - Generate unique referral code
