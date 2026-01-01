@@ -132,6 +132,7 @@ export default function JoinSurgeon() {
         setProfileExists(true);
         setStatus(res.data.status);
         setProfile({
+          name: res.data.name || "",
           qualifications: res.data.qualifications || "",
           registration_number: res.data.registration_number || "",
           about: res.data.about || "",
