@@ -176,7 +176,7 @@ export default function Home() {
               data-testid="home-hero-subtext"
               className="mx-auto mt-5 max-w-2xl text-base text-slate-600 sm:text-lg"
             >
-              Search like you would on Google. We'll match you with verified surgeons in your area.
+              Search like you would on Google. We&apos;ll match you with verified surgeons in your area.
               <span className="font-medium text-slate-900"> No ads. No rankings. No paid listings.</span>
             </p>
           </div>
