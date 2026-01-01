@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card } from "@/components/ui/card";
 import ProfilePhotoBlock from "@/components/profile/ProfilePhotoBlock";
+import { toast } from "@/components/ui/sonner";
 
 function emptyLocation() {
   const id = globalThis.crypto?.randomUUID?.() || String(Date.now());
