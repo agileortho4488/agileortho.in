@@ -214,6 +214,7 @@ export default function JoinSurgeon() {
       }
 
       setStatus("pending");
+      setProfileExists(true); // Enable photo upload after profile submission
     } catch (e) {
       setError(e?.response?.data?.detail || "Submission failed");
     } finally {
