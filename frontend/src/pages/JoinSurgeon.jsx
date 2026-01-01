@@ -254,6 +254,16 @@ export default function JoinSurgeon() {
     setLoading(true);
     setError("");
     
+    // Validate required email
+    if (!profile.email || !profile.email.includes("@")) {
+      setError("Please provide a valid email address.");
+      toast.error("Email Required", {
+        description: "A valid email address is required for your profile.",
+      });
+      setLoading(false);
+      return;
+    }
+    
     // Validate required documents (either new uploads or existing docs)
     if (docFiles.length === 0 && existingDocs.length === 0) {
       setError("Please upload at least one document (registration proof or degree certificate) for verification.");
