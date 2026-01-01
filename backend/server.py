@@ -3072,23 +3072,15 @@ async def create_zoho_ticket(
 
 @api_router.post("/admin/crm/zoho/bulk-sync")
 async def bulk_sync_to_zoho(
-    contact_ids: List[str] = None,
     limit: int = 50,
     auth: Dict[str, Any] = Depends(admin_dep)
 ):
     """Bulk sync contacts to Zoho Desk"""
-    # Get contacts to sync
-    if contact_ids:
-        contacts = await db.crm_contacts.find(
-            {"id": {"$in": contact_ids}, "zoho_contact_id": {"$exists": False}},
-            {"_id": 0}
-        ).to_list(limit)
-    else:
-        # Get unsynced contacts with mobile numbers
-        contacts = await db.crm_contacts.find(
-            {"zoho_contact_id": {"$exists": False}, "mobile": {"$ne": ""}},
-            {"_id": 0}
-        ).limit(limit).to_list(limit)
+    # Get unsynced contacts with mobile numbers
+    contacts = await db.crm_contacts.find(
+        {"zoho_contact_id": {"$exists": False}, "mobile": {"$ne": ""}},
+        {"_id": 0}
+    ).limit(limit).to_list(limit)
     
     synced = 0
     failed = 0
