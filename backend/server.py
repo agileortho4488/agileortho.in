@@ -985,6 +985,7 @@ async def surgeon_get_profile(auth: Dict[str, Any] = Depends(surgeon_dep)):
         "status": doc.get("status"),
         "slug": doc.get("slug"),
         "name": doc.get("name", ""),
+        "email": doc.get("email", ""),
         "qualifications": doc.get("qualifications", ""),
         "registration_number": doc.get("registration_number", ""),
         "subspecialties": doc.get("subspecialties", []),
