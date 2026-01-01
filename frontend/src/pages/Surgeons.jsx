@@ -32,22 +32,30 @@ function SurgeonCardSkeleton() {
 
 function SurgeonCard({ surgeon }) {
   const city = surgeon.locations?.[0]?.city || surgeon.clinic?.city || "";
+  const isUnclaimed = surgeon.status === "unclaimed";
   
   return (
     <Link
       to={`/doctor/${surgeon.slug}`}
       data-testid={`surgeon-card-${surgeon.slug}`}
-      className="group block rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-lg hover:border-teal-200 transition-shadow duration-200"
+      className={`group block rounded-2xl border ${isUnclaimed ? 'border-amber-200 bg-amber-50/30' : 'border-slate-200 bg-white'} p-5 shadow-sm hover:shadow-lg hover:border-teal-200 transition-shadow duration-200`}
     >
         {/* Header */}
         <div className="flex items-start gap-4">
-          <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-teal-500/20">
+          <div className={`flex-shrink-0 w-14 h-14 rounded-xl ${isUnclaimed ? 'bg-gradient-to-br from-amber-400 to-orange-500' : 'bg-gradient-to-br from-teal-500 to-emerald-600'} flex items-center justify-center text-white font-bold text-lg shadow-lg ${isUnclaimed ? 'shadow-amber-500/20' : 'shadow-teal-500/20'}`}>
             {surgeon.name?.split(' ').map(n => n[0]).join('').slice(0, 2) || 'DR'}
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-slate-900 group-hover:text-teal-700 transition-colors truncate">
-              {surgeon.name}
-            </h3>
+            <div className="flex items-center gap-2">
+              <h3 className="font-semibold text-slate-900 group-hover:text-teal-700 transition-colors truncate">
+                {surgeon.name}
+              </h3>
+              {isUnclaimed && (
+                <Badge className="rounded-full bg-amber-100 text-amber-700 border-0 text-[10px] px-2 py-0">
+                  Unclaimed
+                </Badge>
+              )}
+            </div>
             <p className="text-sm text-slate-500 truncate mt-0.5">
               {surgeon.qualifications}
             </p>
