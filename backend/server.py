@@ -669,7 +669,7 @@ def get_email_template(template_type: str, contact: Dict[str, Any], tracking_id:
                     <li>✅ <strong>Verification Badges</strong> — Build trust with verified credentials</li>
                 </ul>
                 
-                {f'<p>We noticed you practice in <strong>{city}</strong>' + (f' specializing in <strong>{subspecialty}</strong>' if subspecialty else '') + '. We'd love to have you as a founding member.</p>' if city else '<p>We'd love to have you as a founding member of our platform.</p>'}
+                <p>{"We noticed you practice in <strong>" + city + "</strong>. " if city else ""}We would love to have you as a founding member of our platform.</p>
                 
                 <p style="margin: 30px 0;">
                     <a href="{join_url}" style="background-color: #0d9488; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block;">
