@@ -2230,7 +2230,7 @@ async def claim_request_otp(payload: OtpRequest):
         raise HTTPException(status_code=404, detail="No unclaimed profile found for this mobile number")
     
     # Send OTP via 2Factor
-    otp = str(random.randint(100000, 999999))
+    otp = generate_otp()
     await db.otp_codes.update_one(
         {"mobile": mobile},
         {"$set": {"code": otp, "created_at": now_iso(), "purpose": "claim"}},
