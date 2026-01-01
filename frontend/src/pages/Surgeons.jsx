@@ -192,7 +192,7 @@ export default function Surgeons() {
       setLoading(true);
       try {
         // Load all approved surgeons
-        const res = await api.get("/profiles/search?location=india&radius_km=5000");
+        const res = await api.get("/profiles/all");
         setSurgeons(res.data || []);
       } catch (e) {
         console.error("Failed to load surgeons:", e);
