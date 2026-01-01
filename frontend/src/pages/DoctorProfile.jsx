@@ -461,7 +461,18 @@ export default function DoctorProfile() {
                       Call Clinic
                     </a>
                     <a
-                      href={`https://wa.me/${locations[0].phone.replace(/\D/g, "").replace(/^0+/, "91")}?text=${encodeURIComponent(`Hi Dr. ${data.name}, I found your profile on OrthoConnect and would like to consult regarding my orthopaedic concern.`)}`}
+                      href={(() => {
+                        // Clean the phone number - remove all non-digits
+                        let phone = locations[0].phone.replace(/\D/g, "");
+                        // If it starts with 0, remove it
+                        if (phone.startsWith("0")) phone = phone.slice(1);
+                        // If it's 10 digits (Indian mobile), add 91
+                        if (phone.length === 10) phone = "91" + phone;
+                        // If it starts with 91 and is 12 digits, it's correct
+                        // Build the WhatsApp URL
+                        const message = encodeURIComponent(`Hi Dr. ${data.name}, I found your profile on OrthoConnect and would like to consult regarding my orthopaedic concern.`);
+                        return `https://api.whatsapp.com/send?phone=${phone}&text=${message}`;
+                      })()}
                       target="_blank"
                       rel="noreferrer"
                       data-testid="doctor-profile-whatsapp-cta"
