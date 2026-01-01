@@ -53,7 +53,9 @@ export default function App() {
             <Route path="/conditions/:slug" element={<ConditionDetail />} />
             <Route path="/doctor/:slug" element={<DoctorProfile />} />
             <Route path="/join" element={<JoinSurgeon />} />
+            <Route path="/claim" element={<ClaimProfile />} />
             <Route path="/surgeons" element={<Surgeons />} />
+            <Route path="/surgeons/:city" element={<CitySurgeons />} />
             <Route path="/events" element={<Events />} />
             <Route path="/blog" element={<BlogList />} />
             <Route path="/blog/:slug" element={<BlogArticle />} />
@@ -62,6 +64,7 @@ export default function App() {
             <Route path="/admin" element={<AdminLogin />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/analytics" element={<AdminAnalytics />} />
+            <Route path="/admin/bulk-import" element={<AdminBulkImport />} />
           <Route path="/admin/outreach" element={<AdminOutreach />} />
           <Route path="/admin/crm" element={<AdminCRM />} />
           
