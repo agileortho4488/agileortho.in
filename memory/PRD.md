@@ -158,6 +158,15 @@ Email: Zoho Mail SMTP (info@agileortho.in)
 | `/api/surgeon/me/referral-code` | POST | Generate referral code |
 | `/api/surgeon/apply-referral` | POST | Apply referral code |
 | `/api/surgeon/me/referrals` | GET | Get referral list |
+| `/api/admin/outreach/contacts` | GET | List outreach contacts |
+| `/api/admin/outreach/contacts/import` | POST | Import contacts from CSV |
+| `/api/admin/outreach/contacts` | POST | Add single contact |
+| `/api/admin/outreach/send` | POST | Send email campaign |
+| `/api/admin/outreach/stats` | GET | Outreach statistics |
+| `/api/admin/outreach/whatsapp/{id}` | GET | Get WhatsApp link |
+| `/api/admin/outreach/export` | GET | Export contacts CSV |
+| `/api/outreach/track/open/{id}` | GET | Track email open |
+| `/api/outreach/track/click/{id}` | GET | Track link click |
 
 ## Completed This Session (January 1, 2026)
 - ✅ Admin Analytics page with charts
