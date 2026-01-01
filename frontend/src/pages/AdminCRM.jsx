@@ -156,7 +156,7 @@ export default function AdminCRM() {
         return;
       }
       
-      const res = await api.post(`/campaigns/add-contacts?sync_all=false`, {
+      const res = await api.post(`/admin/zoho-campaigns/add-contacts?sync_all=false`, {
         contact_ids: [contactId]
       }, {
         headers: { Authorization: `Bearer ${token}` }
@@ -181,7 +181,7 @@ export default function AdminCRM() {
     
     setSyncing(true);
     try {
-      const res = await api.post("/campaigns/add-contacts?sync_all=false", 
+      const res = await api.post("/admin/zoho-campaigns/add-contacts?sync_all=false", 
         { contact_ids: Array.from(selectedIds) },
         { headers: { Authorization: `Bearer ${token}` } }
       );
