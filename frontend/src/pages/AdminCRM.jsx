@@ -298,14 +298,14 @@ export default function AdminCRM() {
               <h1 className="text-2xl sm:text-3xl font-semibold text-slate-900">
                 Surgeon CRM
               </h1>
-              <p className="text-sm text-slate-500 mt-1 flex items-center gap-2">
+              <div className="text-sm text-slate-500 mt-1 flex items-center gap-2">
                 Manage surgeon relationships & communication
                 {zohoConnected !== null && (
                   <Badge className={zohoConnected ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}>
                     {zohoConnected ? "Zoho Connected" : "Zoho Disconnected"}
                   </Badge>
                 )}
-              </p>
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-2">
