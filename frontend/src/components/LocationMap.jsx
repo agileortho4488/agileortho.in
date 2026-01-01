@@ -79,14 +79,6 @@ export function LocationMap({
     );
   }
 
-  // Filter locations with valid coordinates
-  const validLocations = locations.filter(loc => 
-    loc.geo?.coordinates && 
-    loc.geo.coordinates.length === 2 &&
-    !isNaN(loc.geo.coordinates[0]) &&
-    !isNaN(loc.geo.coordinates[1])
-  );
-
   if (validLocations.length === 0) {
     return (
       <div className={`rounded-2xl bg-slate-100 p-6 text-center ${className}`}>
@@ -117,33 +109,30 @@ export function LocationMap({
           ],
         }}
       >
-        {validLocations.map((location, index) => (
-          <Marker
-            key={location.id || index}
-            position={{
-              lat: location.geo.coordinates[1],
-              lng: location.geo.coordinates[0],
-            }}
-            onClick={() => onMarkerClick(location)}
-            icon={{
-              url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="40" viewBox="0 0 32 40">
-                  <path fill="#0d9488" d="M16 0C7.163 0 0 7.163 0 16c0 12 16 24 16 24s16-12 16-24c0-8.837-7.163-16-16-16z"/>
-                  <circle fill="#ffffff" cx="16" cy="16" r="8"/>
-                </svg>
-              `),
-              scaledSize: new window.google.maps.Size(32, 40),
-              anchor: new window.google.maps.Point(16, 40),
-            }}
-          />
-        ))}
+        {validLocations.map((location, index) => {
+          const pos = getLatLng(location.geo);
+          return (
+            <Marker
+              key={location.id || index}
+              position={pos}
+              onClick={() => onMarkerClick(location)}
+              icon={{
+                url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="40" viewBox="0 0 32 40">
+                    <path fill="#0d9488" d="M16 0C7.163 0 0 7.163 0 16c0 12 16 24 16 24s16-12 16-24c0-8.837-7.163-16-16-16z"/>
+                    <circle fill="#ffffff" cx="16" cy="16" r="8"/>
+                  </svg>
+                `),
+                scaledSize: new window.google.maps.Size(32, 40),
+                anchor: new window.google.maps.Point(16, 40),
+              }}
+            />
+          );
+        })}
 
         {showInfoWindow && selectedMarker && (
           <InfoWindow
-            position={{
-              lat: selectedMarker.geo.coordinates[1],
-              lng: selectedMarker.geo.coordinates[0],
-            }}
+            position={getLatLng(selectedMarker.geo)}
             onCloseClick={onInfoWindowClose}
           >
             <div className="p-2 max-w-[200px]">
