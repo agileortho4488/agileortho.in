@@ -1395,8 +1395,12 @@ async def profiles_search(
 
 @api_router.get("/profiles/all", response_model=List[SurgeonSearchResult])
 async def profiles_all():
-    """Get all approved surgeon profiles (for surgeons listing page)"""
-    docs = await db.surgeons.find({"status": "approved"}, {"_id": 0}).limit(500).to_list(500)
+    """Get all approved AND unclaimed surgeon profiles (for surgeons listing page)"""
+    # Include both approved and unclaimed profiles so unclaimed ones can be claimed
+    docs = await db.surgeons.find(
+        {"status": {"$in": ["approved", "unclaimed"]}}, 
+        {"_id": 0}
+    ).limit(500).to_list(500)
     out: List[SurgeonSearchResult] = []
     for d in docs:
         locs = _ensure_locations(d)
@@ -1410,6 +1414,7 @@ async def profiles_all():
                 locations=[Location(**x) for x in locs],
                 clinic=_clinic_from_locations(locs),
                 distance_km=None,
+                status=d.get("status", "approved"),  # Include status so frontend knows if claimable
             )
         )
     return out
