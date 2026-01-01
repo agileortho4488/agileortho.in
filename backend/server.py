@@ -3076,9 +3076,15 @@ async def bulk_sync_to_zoho(
     auth: Dict[str, Any] = Depends(admin_dep)
 ):
     """Bulk sync contacts to Zoho Desk"""
-    # Get unsynced contacts with mobile numbers
+    # Get unsynced contacts with mobile numbers (zoho_contact_id is None or doesn't exist)
     contacts = await db.crm_contacts.find(
-        {"zoho_contact_id": {"$exists": False}, "mobile": {"$ne": ""}},
+        {
+            "$or": [
+                {"zoho_contact_id": {"$exists": False}},
+                {"zoho_contact_id": None}
+            ],
+            "mobile": {"$ne": ""}
+        },
         {"_id": 0}
     ).limit(limit).to_list(limit)
     
