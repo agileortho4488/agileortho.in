@@ -812,21 +812,43 @@ export default function JoinSurgeon() {
                     </div>
 
                     <div className="mt-4 space-y-1.5">
-                      <div className="text-xs font-semibold text-slate-700">Address</div>
-                      <Textarea
+                      <div className="flex items-center gap-2 text-xs font-semibold text-slate-700">
+                        <MapPin className="w-3.5 h-3.5" />
+                        Address (Search like Google Maps)
+                      </div>
+                      <AddressAutocomplete
                         data-testid={`surgeon-location-address-${idx}`}
                         value={l.address}
-                        onChange={(e) =>
+                        onChange={(val) =>
                           setLocations((ls) =>
                             ls.map((x) =>
                               x.id === l.id
-                                ? { ...x, address: e.target.value }
+                                ? { ...x, address: val }
                                 : x,
                             ),
                           )
                         }
-                        className="min-h-[90px] rounded-2xl border-slate-200 bg-slate-50/60"
+                        onPlaceSelect={(place) => {
+                          setLocations((ls) =>
+                            ls.map((x) =>
+                              x.id === l.id
+                                ? { 
+                                    ...x, 
+                                    address: place.address,
+                                    city: place.city || x.city,
+                                    pincode: place.pincode || x.pincode,
+                                    facility_name: place.facilityName || x.facility_name,
+                                    geo: place.lat && place.lng ? { lat: place.lat, lng: place.lng } : x.geo,
+                                  }
+                                : x,
+                            ),
+                          );
+                          toast.success("Address auto-filled from Google Maps");
+                        }}
+                        placeholder="Start typing hospital/clinic name or address..."
+                        className="h-11 rounded-xl border-slate-200 bg-slate-50/60"
                       />
+                      <p className="text-[10px] text-slate-400">Type to search - like Swiggy/Uber. City & pincode will auto-fill.</p>
                     </div>
 
                     <div className="mt-4 grid gap-4 md:grid-cols-3">
