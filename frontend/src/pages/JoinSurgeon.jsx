@@ -586,7 +586,7 @@ export default function JoinSurgeon() {
 
               <div className="mt-4 space-y-1.5">
                 <div className="text-xs font-semibold text-slate-700">
-                  Email Address (for conference invites & updates)
+                  Email Address <span className="text-rose-500">*</span> (required for conference invites & updates)
                 </div>
                 <Input
                   data-testid="surgeon-email-input"
@@ -597,6 +597,7 @@ export default function JoinSurgeon() {
                   }
                   placeholder="doctor@example.com"
                   className="h-11 rounded-xl border-slate-200 bg-slate-50/60"
+                  required
                 />
               </div>
 
