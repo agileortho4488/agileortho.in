@@ -18,10 +18,13 @@ import ConditionDetail from "@/pages/ConditionDetail";
 import DoctorProfile from "@/pages/DoctorProfile";
 import JoinSurgeon from "@/pages/JoinSurgeon";
 import Surgeons from "@/pages/Surgeons";
+import Events from "@/pages/Events";
+import { BlogList, BlogArticle } from "@/pages/Blog";
 import About from "@/pages/About";
 import Contact from "@/pages/Contact";
 import AdminLogin from "@/pages/AdminLogin";
 import AdminDashboard from "@/pages/AdminDashboard";
+import AdminAnalytics from "@/pages/AdminAnalytics";
 import NotFound from "@/pages/NotFound";
 import CityLanding, { CITIES } from "@/pages/CityLanding";
 
@@ -45,10 +48,14 @@ export default function App() {
           <Route path="/doctor/:slug" element={<DoctorProfile />} />
           <Route path="/join" element={<JoinSurgeon />} />
           <Route path="/surgeons" element={<Surgeons />} />
+          <Route path="/events" element={<Events />} />
+          <Route path="/blog" element={<BlogList />} />
+          <Route path="/blog/:slug" element={<BlogArticle />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/admin" element={<AdminLogin />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/analytics" element={<AdminAnalytics />} />
           
           {/* SEO City Landing Pages */}
           {CITIES.map((city) => (
