@@ -275,6 +275,7 @@ class SurgeonMeResponse(BaseModel):
 
 class SurgeonProfileUpsert(BaseModel):
     name: str = ""
+    email: str = ""
     qualifications: str
     registration_number: str
     subspecialties: List[str] = Field(default_factory=list)
