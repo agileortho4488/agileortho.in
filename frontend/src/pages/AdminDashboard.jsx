@@ -314,7 +314,20 @@ export default function AdminDashboard() {
                 </div>
 
                 <div>
-                  <div className="text-sm font-semibold text-slate-900">Review</div>
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm font-semibold text-slate-900">Review</div>
+                    {selected && (
+                      <Button
+                        data-testid="admin-edit-toggle"
+                        variant={editMode ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setEditMode(!editMode)}
+                        className="h-8 rounded-full text-xs"
+                      >
+                        {editMode ? "Cancel Edit" : "✏️ Edit Profile"}
+                      </Button>
+                    )}
+                  </div>
 
                   {!selected ? (
                     <div
@@ -329,15 +342,79 @@ export default function AdminDashboard() {
                       className="mt-3 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
                     >
                       <div className="flex flex-wrap items-start justify-between gap-3">
-                        <div>
-                          <div
-                            data-testid="admin-review-name"
-                            className="text-lg font-semibold text-slate-900"
-                          >
-                            {selected.name}
-                          </div>
-                          <div
-                            data-testid="admin-review-qualifications"
+                        <div className="flex-1">
+                          {editMode ? (
+                            <div className="space-y-3">
+                              <div>
+                                <label className="text-xs font-semibold text-slate-700">Name *</label>
+                                <Input
+                                  data-testid="admin-edit-name"
+                                  value={editName}
+                                  onChange={(e) => setEditName(e.target.value)}
+                                  placeholder="Dr. Full Name"
+                                  className="mt-1 h-10 rounded-xl border-slate-200 bg-slate-50/60"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-xs font-semibold text-slate-700">Email *</label>
+                                <Input
+                                  data-testid="admin-edit-email"
+                                  type="email"
+                                  value={editEmail}
+                                  onChange={(e) => setEditEmail(e.target.value)}
+                                  placeholder="doctor@email.com"
+                                  className="mt-1 h-10 rounded-xl border-slate-200 bg-slate-50/60"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-xs font-semibold text-slate-700">Qualifications</label>
+                                <Input
+                                  data-testid="admin-edit-qualifications"
+                                  value={editQualifications}
+                                  onChange={(e) => setEditQualifications(e.target.value)}
+                                  placeholder="MBBS, MS Ortho"
+                                  className="mt-1 h-10 rounded-xl border-slate-200 bg-slate-50/60"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-xs font-semibold text-slate-700">Registration No.</label>
+                                <Input
+                                  data-testid="admin-edit-regno"
+                                  value={editRegNo}
+                                  onChange={(e) => setEditRegNo(e.target.value)}
+                                  placeholder="Medical Council Reg No"
+                                  className="mt-1 h-10 rounded-xl border-slate-200 bg-slate-50/60"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-xs font-semibold text-slate-700">Website</label>
+                                <Input
+                                  data-testid="admin-edit-website"
+                                  value={editWebsite}
+                                  onChange={(e) => setEditWebsite(e.target.value)}
+                                  placeholder="https://..."
+                                  className="mt-1 h-10 rounded-xl border-slate-200 bg-slate-50/60"
+                                />
+                              </div>
+                              <Button
+                                data-testid="admin-save-edits"
+                                onClick={saveEdits}
+                                disabled={saving}
+                                className="mt-2 h-10 rounded-full bg-teal-600 hover:bg-teal-700"
+                              >
+                                {saving ? "Saving..." : "💾 Save Changes"}
+                              </Button>
+                            </div>
+                          ) : (
+                            <>
+                              <div
+                                data-testid="admin-review-name"
+                                className="text-lg font-semibold text-slate-900"
+                              >
+                                {selected.name}
+                              </div>
+                              <div
+                                data-testid="admin-review-qualifications"
                             className="mt-1 text-sm text-slate-600"
                           >
                             {selected.qualifications}
