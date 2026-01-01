@@ -68,12 +68,19 @@ OrthoConnect is a fully-featured, ethical, patient-first orthopaedic healthcare 
 
 ## Pages
 - `/` - Homepage
+- `/about` - About OrthoConnect & AgileOrtho ✅ (New)
+- `/contact` - Contact page with form & details ✅ (New)
 - `/education` - Education Hub
 - `/education/:category` - Category listing
 - `/education/:category/:topic` - Topic page
 - `/doctor/:slug` - Doctor profile
 - `/join` - Surgeon registration
+- `/admin` - Admin login
 - `/admin/dashboard` - Admin review
+
+## External Links
+- Shop: https://www.agileortho.shop (opens in new tab)
+- AgileOrtho: https://www.agileortho.in
 
 ## Test Credentials
 - Admin: password `admin`
