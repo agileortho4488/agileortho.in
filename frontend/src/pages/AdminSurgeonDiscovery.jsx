@@ -128,7 +128,7 @@ export default function AdminSurgeonDiscovery() {
   const [searchQuery, setSearchQuery] = useState("orthopaedic surgeon");
   
   const [discoveredSurgeons, setDiscoveredSurgeons] = useState([]);
-  const [stats, setStats] = useState({ total: 0, imported: 0, matched: 0, new: 0 });
+  const [stats, setStats] = useState({ total: 0, imported: 0, matched: 0, new: 0, serpapi_configured: false });
   const [searchHistory, setSearchHistory] = useState([]);
 
   const loadStats = useCallback(async () => {
