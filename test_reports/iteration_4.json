@@ -65,8 +65,8 @@
     }
   },
   "test_environment": {
-    "backend_url": "https://orthoconnect.preview.emergentagent.com",
-    "frontend_url": "https://orthoconnect.preview.emergentagent.com",
+    "backend_url": "https://jointsmart.preview.emergentagent.com",
+    "frontend_url": "https://jointsmart.preview.emergentagent.com",
     "test_mobile": "9876543210",
     "admin_password": "admin"
   }

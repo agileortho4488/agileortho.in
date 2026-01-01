@@ -7,7 +7,7 @@ import time
 from datetime import datetime
 
 class OTPFlowTester:
-    def __init__(self, base_url="https://orthoconnect.preview.emergentagent.com"):
+    def __init__(self, base_url="https://jointsmart.preview.emergentagent.com"):
         self.base_url = base_url
         self.surgeon_token = None
         self.admin_token = None
