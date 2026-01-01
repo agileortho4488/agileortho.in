@@ -915,6 +915,110 @@ export default function JoinSurgeon() {
               </div>
             </div>
 
+            {/* Referral System */}
+            {profileExists && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
+              >
+                <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+                  <Share2 className="h-4 w-4 text-teal-600" />
+                  Refer a Colleague
+                </div>
+                <div className="mt-2 text-xs text-slate-500">
+                  Invite fellow orthopaedic surgeons to join OrthoConnect and grow our community.
+                </div>
+
+                {referralCode ? (
+                  <div className="mt-4 space-y-4">
+                    {/* Referral Code Display */}
+                    <div className="rounded-xl bg-teal-50 border border-teal-200 p-4">
+                      <div className="text-xs text-teal-600 mb-1">Your Referral Code</div>
+                      <div className="flex items-center gap-3">
+                        <code className="text-xl font-bold text-teal-800 tracking-wider">
+                          {referralCode}
+                        </code>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(referralCode);
+                            toast.success("Code copied!");
+                          }}
+                          className="p-2 rounded-lg bg-teal-100 hover:bg-teal-200 transition-colors"
+                        >
+                          <Copy className="h-4 w-4 text-teal-700" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Share Buttons */}
+                    <div className="flex gap-3">
+                      <button
+                        type="button"
+                        onClick={shareOnWhatsApp}
+                        className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-green-600 py-3 text-sm font-medium text-white hover:bg-green-700 transition-colors"
+                      >
+                        <MessageCircle className="h-4 w-4" />
+                        WhatsApp
+                      </button>
+                      <button
+                        type="button"
+                        onClick={shareViaEmail}
+                        className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-slate-700 py-3 text-sm font-medium text-white hover:bg-slate-800 transition-colors"
+                      >
+                        <Mail className="h-4 w-4" />
+                        Email
+                      </button>
+                    </div>
+
+                    {/* Stats */}
+                    {referralCount > 0 && (
+                      <div className="flex items-center gap-2 text-sm text-slate-600">
+                        <Users className="h-4 w-4 text-slate-400" />
+                        <span>You've referred <strong>{referralCount}</strong> colleague{referralCount > 1 ? "s" : ""}</span>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="mt-4 space-y-4">
+                    <Button
+                      type="button"
+                      onClick={generateReferralCode}
+                      className="w-full rounded-xl bg-teal-600 hover:bg-teal-700"
+                    >
+                      <Share2 className="h-4 w-4 mr-2" />
+                      Generate My Referral Code
+                    </Button>
+
+                    {/* Apply Referral Code */}
+                    <div className="pt-4 border-t border-slate-200">
+                      <div className="text-xs font-semibold text-slate-700 mb-2">
+                        Have a referral code?
+                      </div>
+                      <div className="flex gap-2">
+                        <Input
+                          value={applyReferralCode}
+                          onChange={(e) => setApplyReferralCode(e.target.value.toUpperCase())}
+                          placeholder="Enter code"
+                          className="h-10 rounded-xl border-slate-200 bg-slate-50/60 font-mono uppercase"
+                        />
+                        <Button
+                          type="button"
+                          onClick={handleApplyReferral}
+                          disabled={!applyReferralCode.trim()}
+                          variant="outline"
+                          className="rounded-xl border-slate-200"
+                        >
+                          Apply
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            )}
+
             <div className="flex items-center justify-end">
               <Button
                 data-testid="surgeon-submit-profile"
