@@ -799,6 +799,9 @@ def get_email_template(template_type: str, contact: Dict[str, Any], tracking_id:
 def get_whatsapp_message(contact: Dict[str, Any]) -> str:
     """Generate WhatsApp invitation message"""
     name = contact.get("name", "Doctor")
+    # Remove "Dr." prefix if already present to avoid "Dr. Dr."
+    if name.lower().startswith("dr."):
+        name = name[3:].strip()
     return f"""Dear Dr. {name},
 
 We're inviting you to join *OrthoConnect* — India's ethical, patient-first orthopaedic surgeon directory.
