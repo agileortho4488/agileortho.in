@@ -169,6 +169,13 @@ Email: Zoho Mail SMTP (info@agileortho.in)
 - ✅ Referral system with unique codes
 - ✅ PWA support (manifest + service worker)
 - ✅ Fixed route registration bug (routes after app.include_router)
+- ✅ **Outreach & Marketing Automation System** (`/admin/outreach`)
+  - Import contacts from CSV
+  - Add contacts manually
+  - Send automated email campaigns (4 templates)
+  - Track opens, clicks, conversions
+  - WhatsApp integration with pre-filled messages
+  - Export contacts as CSV
 
 ## Upcoming Tasks
 - Loading Skeletons for better UX
