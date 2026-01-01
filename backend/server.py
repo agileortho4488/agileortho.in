@@ -577,6 +577,42 @@ def send_email(to_email: str, subject: str, html_content: str) -> bool:
         return False
 
 
+def send_email_with_bounce_detection(to_email: str, subject: str, html_content: str) -> Tuple[bool, int]:
+    """Send email via Zoho SMTP with bounce detection. Returns (success, error_code)"""
+    if not all([SMTP_HOST, SMTP_EMAIL, SMTP_PASSWORD]):
+        logger.warning("SMTP not configured, email not sent")
+        return False, 0
+    
+    try:
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = subject
+        msg["From"] = f"{SMTP_FROM_NAME} <{SMTP_EMAIL}>"
+        msg["To"] = to_email
+        
+        part = MIMEText(html_content, "html")
+        msg.attach(part)
+        
+        context = ssl.create_default_context()
+        with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, context=context) as server:
+            server.login(SMTP_EMAIL, SMTP_PASSWORD)
+            server.sendmail(SMTP_EMAIL, to_email, msg.as_string())
+        
+        logger.info("Email sent successfully to %s", to_email[:5] + "***")
+        return True, 0
+    except smtplib.SMTPRecipientsRefused as e:
+        # Extract error code from recipient errors
+        for recipient, (code, msg) in e.recipients.items():
+            logger.warning("Bounce detected for %s: %d %s", to_email[:5] + "***", code, msg)
+            return False, code
+        return False, 550
+    except smtplib.SMTPDataError as e:
+        logger.warning("SMTP data error for %s: %d %s", to_email[:5] + "***", e.smtp_code, e.smtp_error)
+        return False, e.smtp_code
+    except Exception as e:
+        logger.error("Failed to send email to %s: %s", to_email[:5] + "***", e)
+        return False, 0
+
+
 def send_status_notification(surgeon_email: str, surgeon_name: str, new_status: str, reason: str = None):
     """Send email notification when surgeon profile status changes"""
     if not surgeon_email:
