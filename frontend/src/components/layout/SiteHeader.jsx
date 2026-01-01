@@ -135,6 +135,16 @@ export default function SiteHeader() {
             >
               Contact
             </NavItem>
+            <a
+              data-testid="nav-shop-link-mobile"
+              href="https://www.agileortho.shop"
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => setMobileMenuOpen(false)}
+              className="text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
+            >
+              Shop
+            </a>
             <Button
               data-testid="join-as-surgeon-button-mobile"
               onClick={() => {
