@@ -4381,61 +4381,165 @@ async def search_google_maps(city: str, query: str) -> List[Dict[str, Any]]:
 
 
 async def search_practo(city: str, query: str) -> List[Dict[str, Any]]:
-    """Search Practo for orthopaedic surgeons"""
+    """Search Practo for orthopaedic surgeons using SerpAPI"""
     results = []
+    serpapi_key = os.environ.get("SERPAPI_KEY")
     
-    try:
-        # Practo API simulation - in production, use their actual API or web scraping
-        city_slug = city.lower().replace(" ", "-")
-        url = f"https://www.practo.com/{city_slug}/doctors-for-orthopaedic-problems"
-        
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-        }
-        resp = requests.get(url, headers=headers, timeout=15)
-        
-        # Basic HTML parsing - in production use BeautifulSoup
-        if resp.status_code == 200:
-            content = resp.text
-            # Extract doctor cards - simplified
-            import re
-            doctor_pattern = r'data-qa-id="doctor_name"[^>]*>([^<]+)<'
-            matches = re.findall(doctor_pattern, content)
+    if serpapi_key:
+        try:
+            from serpapi import GoogleSearch
             
-            for match in matches[:20]:
-                name = match.strip()
-                if name:
+            # Search Google for Practo listings
+            params = {
+                "engine": "google",
+                "q": f"site:practo.com orthopaedic surgeon {city}",
+                "hl": "en",
+                "gl": "in",
+                "num": 20,
+                "api_key": serpapi_key
+            }
+            
+            search = GoogleSearch(params)
+            data = search.get_dict()
+            
+            organic_results = data.get("organic_results", [])
+            for result in organic_results:
+                title = result.get("title", "")
+                link = result.get("link", "")
+                snippet = result.get("snippet", "")
+                
+                # Extract doctor name from title
+                if "/doctor/" in link or "orthopaedic" in title.lower() or "orthopedic" in title.lower():
+                    # Clean up title
+                    name = title.split("-")[0].strip() if "-" in title else title.split("|")[0].strip()
+                    
+                    # Extract qualifications from snippet
+                    quals = ""
+                    if "MBBS" in snippet:
+                        qual_match = re.search(r'(MBBS[^.]*)', snippet)
+                        if qual_match:
+                            quals = qual_match.group(1).strip()
+                    
                     results.append({
-                        "name": f"Dr. {name}" if not name.lower().startswith("dr") else name,
-                        "source": "practo",
+                        "name": name,
+                        "qualifications": quals or "MBBS, MS Ortho",
                         "city": city,
-                        "profile_url": f"https://www.practo.com/{city_slug}/doctor/{name.lower().replace(' ', '-')}",
-                        "qualifications": "MBBS, MS Ortho",  # Would need to scrape this
+                        "source": "practo",
+                        "profile_url": link,
+                        "description": snippet[:200] if snippet else "",
                     })
-    except Exception as e:
-        logger.error("Practo search failed: %s", e)
+                    
+            logger.info(f"SerpAPI Practo found {len(results)} results for {city}")
+            
+        except Exception as e:
+            logger.error("SerpAPI Practo search failed: %s", e)
+    else:
+        # Fallback to direct scraping
+        try:
+            city_slug = city.lower().replace(" ", "-")
+            url = f"https://www.practo.com/{city_slug}/doctors-for-orthopaedic-problems"
+            
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            }
+            resp = requests.get(url, headers=headers, timeout=15)
+            
+            if resp.status_code == 200:
+                content = resp.text
+                doctor_pattern = r'data-qa-id="doctor_name"[^>]*>([^<]+)<'
+                matches = re.findall(doctor_pattern, content)
+                
+                for match in matches[:20]:
+                    name = match.strip()
+                    if name:
+                        results.append({
+                            "name": f"Dr. {name}" if not name.lower().startswith("dr") else name,
+                            "source": "practo",
+                            "city": city,
+                            "profile_url": f"https://www.practo.com/{city_slug}/doctor/{name.lower().replace(' ', '-')}",
+                            "qualifications": "MBBS, MS Ortho",
+                        })
+        except Exception as e:
+            logger.error("Practo fallback search failed: %s", e)
     
     return results
 
 
 async def search_justdial(city: str, query: str) -> List[Dict[str, Any]]:
-    """Search JustDial for orthopaedic surgeons"""
+    """Search JustDial for orthopaedic surgeons using SerpAPI"""
     results = []
+    serpapi_key = os.environ.get("SERPAPI_KEY")
     
-    try:
-        url = f"https://www.justdial.com/{city}/Orthopaedic-Doctors"
-        
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-        }
-        resp = requests.get(url, headers=headers, timeout=15)
-        
-        if resp.status_code == 200:
-            content = resp.text
-            # Extract business names - simplified
-            import re
-            name_pattern = r'font-r[^>]*>([^<]*(?:Dr|Hospital|Clinic)[^<]*)<'
-            matches = re.findall(name_pattern, content, re.IGNORECASE)
+    if serpapi_key:
+        try:
+            from serpapi import GoogleSearch
+            
+            # Search Google for JustDial listings
+            params = {
+                "engine": "google",
+                "q": f"site:justdial.com orthopaedic doctors {city}",
+                "hl": "en",
+                "gl": "in",
+                "num": 20,
+                "api_key": serpapi_key
+            }
+            
+            search = GoogleSearch(params)
+            data = search.get_dict()
+            
+            organic_results = data.get("organic_results", [])
+            for result in organic_results:
+                title = result.get("title", "")
+                link = result.get("link", "")
+                snippet = result.get("snippet", "")
+                
+                if "orthopaedic" in title.lower() or "orthopedic" in title.lower() or "bone" in title.lower():
+                    name = title.split("-")[0].strip() if "-" in title else title.split("|")[0].strip()
+                    
+                    # Try to extract phone from snippet
+                    phone = ""
+                    phone_match = re.search(r'\b(\d{10})\b', snippet)
+                    if phone_match:
+                        phone = phone_match.group(1)
+                    
+                    results.append({
+                        "name": name,
+                        "city": city,
+                        "phone": phone,
+                        "source": "justdial",
+                        "profile_url": link,
+                        "description": snippet[:200] if snippet else "",
+                    })
+                    
+            logger.info(f"SerpAPI JustDial found {len(results)} results for {city}")
+            
+        except Exception as e:
+            logger.error("SerpAPI JustDial search failed: %s", e)
+    else:
+        # Fallback to direct scraping
+        try:
+            url = f"https://www.justdial.com/{city}/Orthopaedic-Doctors"
+            
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            }
+            resp = requests.get(url, headers=headers, timeout=15)
+            
+            if resp.status_code == 200:
+                content = resp.text
+                name_pattern = r'font-r[^>]*>([^<]*(?:Dr|Hospital|Clinic)[^<]*)<'
+                matches = re.findall(name_pattern, content, re.IGNORECASE)
+                
+                for match in matches[:20]:
+                    name = match.strip()
+                    if name and len(name) > 5:
+                        results.append({
+                            "name": name,
+                            "source": "justdial",
+                            "city": city,
+                        })
+        except Exception as e:
+            logger.error("JustDial fallback search failed: %s", e)
             
             for match in matches[:20]:
                 name = match.strip()
