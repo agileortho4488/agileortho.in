@@ -1,0 +1,125 @@
+{
+  "project_context": {
+    "app_type": "hybrid_fullstack",
+    "target_audience": "Hospital procurement managers, clinic owners, doctors, dealers in Telangana, India",
+    "aesthetic": "Clinical, high-trust, fast-loading medical aesthetic. Not consumer/startup."
+  },
+  "typography": {
+    "fonts": {
+      "headings": "Chivo",
+      "body": "Manrope",
+      "mono": "IBM Plex Mono",
+      "forbidden": ["Inter", "Space Grotesk"]
+    },
+    "rules": {
+      "headings": "Tracking tight, use font-light or font-black for radical weight contrast.",
+      "body": "Use leading-relaxed for long-form, leading-tight for UI elements.",
+      "labels": "Uppercase, tracking-[0.2em] for table headers and overlines."
+    }
+  },
+  "colors": {
+    "archetype": "Swiss & High-Contrast (Authority, Clarity, Truth) + Medical Precision",
+    "palette": {
+      "background": "#FAFAFA",
+      "surface": "#FFFFFF",
+      "border": "#E2E8F0",
+      "text_primary": "#0F172A",
+      "text_secondary": "#64748B",
+      "primary": "#059669",
+      "primary_hover": "#047857",
+      "secondary": "#1E3A8A",
+      "whatsapp": "#25D366",
+      "whatsapp_hover": "#1DA851"
+    },
+    "forbidden_colors": ["#1B93A4", "Teal for dashboard", "Purple", "#000000 pure black", "Muddy gray glassmorphism"]
+  },
+  "layouts": {
+    "marketing_pages": {
+      "mode": "Mode A: The 'Tetris' Grid",
+      "spacing": "Generous (p-8, p-12, p-16). Containers with borders must have internal padding.",
+      "alignment": "Optical alignment. Left-align paragraphs and dense content."
+    },
+    "crm_dashboard": {
+      "mode": "Mode B: High Density Grid",
+      "spacing": "Tight (gap-4, gap-6). Use h-full to stretch items. Every pixel must be utilized."
+    }
+  },
+  "grids": {
+    "technical_rules": [
+      "Grid items must be direct children of grid containers.",
+      "Use 'display: grid; grid-template-columns: subgrid' when nesting is unavoidable.",
+      "Override stretch with 'align-items: start' if needed."
+    ]
+  },
+  "components": {
+    "buttons": {
+      "primary": "Solid Surgical Green, sharp edges (rounded-sm).",
+      "whatsapp_cta": "WhatsApp Green, white text, Phosphor WhatsApp icon.",
+      "secondary": "Outline button with Deep Blue text and border. Use for 'Download Brochure'."
+    },
+    "mega_menu": "Hierarchical structure, clear typography, dark hover states for high contrast.",
+    "cards": "Flat solid surfaces. 1px solid strokes (border-slate-200) instead of soft shadows. NO glassmorphism for medical data.",
+    "crm_pipeline": "Kanban board style using strict grid hierarchy. Color coded statuses using subtle background tints.",
+    "trust_footer": "MUST include MD-42 Wholesale License, GST number, and ISO details visible."
+  },
+  "motion": {
+    "hover": "Explicit color shifts (e.g., hover:bg-slate-900 hover:text-white). Focus states must have higher contrast.",
+    "transitions": "Use specific properties (transition-transform, transition-colors). Never transition-all.",
+    "entrance": "Staggered fade-up for grid items. Minimal animations in CRM to favor speed."
+  },
+  "accessibility": {
+    "contrast": "Minimum 4.5:1 ratio for normal text. Avoid gray-on-gray.",
+    "testing": "All interactive and key elements MUST include data-testid (e.g., data-testid='whatsapp-chat-btn').",
+    "motion": "Respect prefers-reduced-motion."
+  },
+  "media": {
+    "strategy": "High-fidelity clinical imagery. Zoom in on close-ups to create intimacy.",
+    "image_urls": [
+      {
+        "category": "Hero / Surgery",
+        "url": "https://images.pexels.com/photos/12104186/pexels-photo-12104186.jpeg",
+        "description": "State-of-the-art operating room, highly clinical. Use for homepage hero."
+      },
+      {
+        "category": "Diagnostics / Lab",
+        "url": "https://images.unsplash.com/photo-1631556760585-2e846196d5a9",
+        "description": "Lab tech looking through microscope. Use for Diagnostics division."
+      },
+      {
+        "category": "Logistics / Warehouse",
+        "url": "https://images.pexels.com/photos/221047/pexels-photo-221047.jpeg",
+        "description": "Large warehouse interior, docked truck. Use for about page / supply chain trust."
+      },
+      {
+        "category": "Consultation / Doctor",
+        "url": "https://images.pexels.com/photos/8376212/pexels-photo-8376212.jpeg",
+        "description": "Online medical consultation with tablet. Use for CRM mock data or Contact page."
+      }
+    ]
+  },
+  "visual_enhancers": {
+    "icons": "Use @phosphor-icons/react for marketing grids. Lucide-react for standard Shadcn UI.",
+    "textures": "Subtle noise or grain overlays in dark footer to kill digital flatness.",
+    "3d_libraries": "Skip 3D for this clinical B2B context. Focus on 2D precision and fast loading."
+  },
+  "instructions_to_main_agent": [
+    "Build standard Shadcn components in /app/frontend/src/components/ui/ but strip the generic 'Vercel-look'.",
+    "Use pure HTML + Tailwind for marketing layouts. Do not use Shadcn 'Card' for complex overlapping marketing layouts.",
+    "Include 8 specific medical divisions in navigation: Orthopedics, Trauma, Cardiovascular, Diagnostics, ENT, Endo-surgical, Infection Prevention, Peripheral Intervention.",
+    "Never use generic HTML elements for complex inputs (use Shadcn Select, Calendar, Dialog).",
+    "Ensure Footer strictly shows MD-42 Wholesale License and GST."
+  ],
+  "UNIVERSAL GUIDELINES FOR MAIN AGENT": [
+    "You tend to converge toward generic, 'on distribution' outputs. Avoid this.",
+    "Dark colors look good when used independently without gradients. DO NOT use dark colors as gradients.",
+    "Don't make generic centered layouts. Create depth through layered design elements.",
+    "You MUST NOT apply universal transition (transition: all).",
+    "You MUST NOT center align the app container (.App { text-align: center; }).",
+    "Always use modern pill-shaped or sharp button styles with interaction animations.",
+    "NEVER use AI assistant Emoji characters (\ud83e\udd16, \ud83e\udde0, etc.) for icons.",
+    "Every interaction needs micro-animations - hover states, transitions.",
+    "Use 2-3x more spacing than feels comfortable.",
+    "Components MUST use named exports. Pages MUST use default exports.",
+    "Use 'sonner' for toasts, located in /app/frontend/src/components/ui/sonner.jsx."
+  ]
+}
