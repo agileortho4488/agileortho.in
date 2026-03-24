@@ -2,11 +2,13 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "sonner";
 import { Layout } from "./components/layout/Layout";
 import { AdminLayout } from "./components/layout/AdminLayout";
+import ChatWidget from "./components/ChatWidget";
 import Home from "./pages/Home";
 import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
+import Chat from "./pages/Chat";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminPipeline from "./pages/AdminPipeline";
@@ -28,6 +30,7 @@ function App() {
           <Route path="/products/:id" element={<ProductDetail />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/chat" element={<Chat />} />
         </Route>
 
         {/* Admin login (no layout) */}
@@ -54,6 +57,7 @@ function App() {
           </div>
         } />
       </Routes>
+      <ChatWidget />
     </BrowserRouter>
   );
 }
