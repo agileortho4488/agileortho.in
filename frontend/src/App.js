@@ -16,6 +16,7 @@ import AdminLeads from "./pages/AdminLeads";
 import AdminAnalytics from "./pages/AdminAnalytics";
 import AdminProducts from "./pages/AdminProducts";
 import AdminImports from "./pages/AdminImports";
+import AdminWhatsApp from "./pages/AdminWhatsApp";
 import "./App.css";
 
 function App() {
@@ -44,6 +45,7 @@ function App() {
           <Route path="/admin/analytics" element={<AdminAnalytics />} />
           <Route path="/admin/products" element={<AdminProducts />} />
           <Route path="/admin/imports" element={<AdminImports />} />
+          <Route path="/admin/whatsapp" element={<AdminWhatsApp />} />
         </Route>
 
         {/* 404 */}

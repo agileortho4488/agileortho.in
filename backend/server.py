@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 load_dotenv()
 
-from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, Query, Form
+from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, Query, Form, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import Optional, List
@@ -1458,3 +1458,288 @@ async def chat_suggestions():
         ]
     }
 
+
+
+# ============================================================
+#  PHASE 5: INTERAKT WHATSAPP INTEGRATION
+# ============================================================
+
+INTERAKT_API_KEY = os.environ.get("INTERAKT_API_KEY", "")
+INTERAKT_API_URL = "https://api.interakt.ai/v1/public/message/"
+INTERAKT_TRACK_URL = "https://api.interakt.ai/v1/public/track/users/"
+WHATSAPP_NUMBER = os.environ.get("WHATSAPP_BUSINESS_NUMBER", "+917416521222")
+
+wa_conversations_col = db["wa_conversations"]
+
+
+def interakt_auth_header():
+    return f"Basic {INTERAKT_API_KEY}"
+
+
+async def send_whatsapp_message(phone: str, text: str, country_code: str = "+91"):
+    """Send a text message via Interakt WhatsApp API (session message)."""
+    import requests as req
+    headers = {
+        "Authorization": interakt_auth_header(),
+        "Content-Type": "application/json",
+    }
+    # Clean phone number
+    clean_phone = phone.replace("+", "").replace(" ", "").replace("-", "")
+    if clean_phone.startswith("91") and len(clean_phone) > 10:
+        clean_phone = clean_phone[2:]
+    payload = {
+        "countryCode": country_code,
+        "phoneNumber": clean_phone,
+        "callbackData": "wa_bot_reply",
+        "type": "Text",
+        "data": {
+            "message": text
+        }
+    }
+    try:
+        resp = req.post(INTERAKT_API_URL, json=payload, headers=headers, timeout=15)
+        result = resp.json()
+        return {"success": resp.status_code == 200, "data": result}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+async def handle_wa_incoming(phone: str, message_text: str, customer_name: str = ""):
+    """Process incoming WhatsApp message through RAG AI and send reply."""
+    # Create/get WhatsApp conversation session
+    session_id = f"wa-{phone}"
+    conv = await wa_conversations_col.find_one({"phone": phone})
+
+    if not conv:
+        # New WhatsApp contact — create conversation and auto-create lead
+        await wa_conversations_col.insert_one({
+            "phone": phone,
+            "session_id": session_id,
+            "customer_name": customer_name or phone,
+            "messages": [],
+            "status": "active",
+            "unread": 0,
+            "lead_created": False,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        })
+        conv = await wa_conversations_col.find_one({"phone": phone})
+
+    # Save incoming message
+    incoming_msg = {
+        "role": "customer",
+        "content": message_text,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "channel": "whatsapp",
+    }
+
+    # Use RAG AI to generate response
+    from emergentintegrations.llm.chat import LlmChat, UserMessage
+    relevant_products = await search_relevant_products(message_text)
+    product_context = format_product_context(relevant_products)
+    system_prompt = CHATBOT_SYSTEM_PROMPT.replace("{product_context}", product_context)
+
+    # Build history from conversation
+    history = conv.get("messages", [])
+    initial_msgs = [{"role": "system", "content": system_prompt}]
+    for h in history[-8:]:
+        role = "user" if h["role"] == "customer" else "assistant"
+        initial_msgs.append({"role": role, "content": h["content"]})
+
+    chat = LlmChat(
+        api_key=EMERGENT_LLM_KEY,
+        session_id=f"wa-chat-{phone}",
+        system_message=system_prompt,
+        initial_messages=initial_msgs,
+    ).with_model("anthropic", "claude-sonnet-4-20250514")
+
+    try:
+        ai_response = await chat.send_message(UserMessage(text=message_text))
+    except Exception:
+        ai_response = "Thank you for your message. Our team will get back to you shortly. For urgent queries, call us at +917416521222."
+
+    # Save both messages
+    outgoing_msg = {
+        "role": "assistant",
+        "content": ai_response,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "channel": "whatsapp",
+    }
+
+    await wa_conversations_col.update_one(
+        {"phone": phone},
+        {
+            "$push": {"messages": {"$each": [incoming_msg, outgoing_msg]}},
+            "$set": {
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "customer_name": customer_name or conv.get("customer_name", phone),
+            },
+            "$inc": {"unread": 1},
+        }
+    )
+
+    # Auto-create lead if not already created
+    if not conv.get("lead_created"):
+        lead = {
+            "name": customer_name or f"WhatsApp {phone}",
+            "phone_whatsapp": phone,
+            "hospital_clinic": "",
+            "email": "",
+            "district": "",
+            "inquiry_type": "WhatsApp Chat",
+            "product_interest": "",
+            "source": "whatsapp",
+            "score": "warm",
+            "score_value": 30,
+            "status": "new",
+            "notes": f"Auto-created from WhatsApp conversation",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        }
+        await leads_col.insert_one(lead)
+        await wa_conversations_col.update_one(
+            {"phone": phone},
+            {"$set": {"lead_created": True}}
+        )
+
+    # Send reply via Interakt
+    await send_whatsapp_message(phone, ai_response)
+
+    return ai_response
+
+
+# --- Webhook endpoint for Interakt ---
+@app.post("/api/webhook/whatsapp")
+async def whatsapp_webhook(request: Request):
+    """Receive incoming WhatsApp messages and status updates from Interakt."""
+    try:
+        raw_body = await request.body()
+        payload = json.loads(raw_body)
+    except Exception:
+        return {"status": "error", "message": "Invalid payload"}
+
+    event_type = payload.get("type", "")
+    data = payload.get("data", {})
+
+    if event_type == "message_received":
+        customer = data.get("customer", {})
+        message = data.get("message", {})
+        phone = customer.get("channel_phone_number", "")
+        customer_name = customer.get("traits", {}).get("name", "")
+        message_text = message.get("message", "")
+
+        if phone and message_text:
+            # Check if conversation is in human takeover mode
+            conv = await wa_conversations_col.find_one({"phone": phone})
+            if conv and conv.get("status") == "human":
+                # Just store the message, don't auto-reply
+                incoming_msg = {
+                    "role": "customer",
+                    "content": message_text,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "channel": "whatsapp",
+                }
+                await wa_conversations_col.update_one(
+                    {"phone": phone},
+                    {
+                        "$push": {"messages": incoming_msg},
+                        "$set": {"updated_at": datetime.now(timezone.utc).isoformat()},
+                        "$inc": {"unread": 1},
+                    }
+                )
+            else:
+                # Process with AI in background
+                asyncio.create_task(handle_wa_incoming(phone, message_text, customer_name))
+
+    return {"status": "success", "code": 200}
+
+
+# --- Admin WhatsApp inbox endpoints ---
+@app.get("/api/admin/whatsapp/conversations")
+async def get_wa_conversations(_=Depends(admin_required)):
+    """Get all WhatsApp conversations for the CRM inbox."""
+    cursor = wa_conversations_col.find(
+        {},
+        {"_id": 0}
+    ).sort("updated_at", -1).limit(100)
+    conversations = []
+    async for doc in cursor:
+        # Get last message preview
+        msgs = doc.get("messages", [])
+        last_msg = msgs[-1] if msgs else None
+        conversations.append({
+            "phone": doc["phone"],
+            "session_id": doc.get("session_id", ""),
+            "customer_name": doc.get("customer_name", doc["phone"]),
+            "status": doc.get("status", "active"),
+            "unread": doc.get("unread", 0),
+            "message_count": len(msgs),
+            "last_message": last_msg.get("content", "")[:100] if last_msg else "",
+            "last_message_role": last_msg.get("role", "") if last_msg else "",
+            "last_message_time": last_msg.get("timestamp", "") if last_msg else "",
+            "lead_created": doc.get("lead_created", False),
+            "created_at": doc.get("created_at", ""),
+            "updated_at": doc.get("updated_at", ""),
+        })
+    return {"conversations": conversations, "total": len(conversations)}
+
+
+@app.get("/api/admin/whatsapp/conversations/{phone}")
+async def get_wa_conversation(phone: str, _=Depends(admin_required)):
+    """Get a specific WhatsApp conversation with full messages."""
+    doc = await wa_conversations_col.find_one({"phone": phone}, {"_id": 0})
+    if not doc:
+        raise HTTPException(404, "Conversation not found")
+    # Mark as read
+    await wa_conversations_col.update_one({"phone": phone}, {"$set": {"unread": 0}})
+    return doc
+
+
+@app.post("/api/admin/whatsapp/send")
+async def admin_send_wa_message(request: Request, _=Depends(admin_required)):
+    """Admin sends a manual reply to a WhatsApp conversation."""
+    body = await request.json()
+    phone = body.get("phone", "")
+    message = body.get("message", "")
+    if not phone or not message:
+        raise HTTPException(400, "Phone and message are required")
+
+    # Send via Interakt
+    result = await send_whatsapp_message(phone, message)
+
+    # Save to conversation
+    admin_msg = {
+        "role": "admin",
+        "content": message,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "channel": "whatsapp",
+    }
+    await wa_conversations_col.update_one(
+        {"phone": phone},
+        {
+            "$push": {"messages": admin_msg},
+            "$set": {"updated_at": datetime.now(timezone.utc).isoformat()},
+        },
+        upsert=True,
+    )
+
+    return {"success": result.get("success", False), "message": "Reply sent"}
+
+
+@app.post("/api/admin/whatsapp/conversations/{phone}/takeover")
+async def admin_takeover_conversation(phone: str, _=Depends(admin_required)):
+    """Admin takes over a conversation from the AI bot."""
+    await wa_conversations_col.update_one(
+        {"phone": phone},
+        {"$set": {"status": "human", "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    return {"message": "Conversation switched to human mode"}
+
+
+@app.post("/api/admin/whatsapp/conversations/{phone}/automate")
+async def admin_automate_conversation(phone: str, _=Depends(admin_required)):
+    """Switch conversation back to AI bot."""
+    await wa_conversations_col.update_one(
+        {"phone": phone},
+        {"$set": {"status": "active", "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    return {"message": "Conversation switched back to AI mode"}
