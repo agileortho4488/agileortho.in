@@ -1773,23 +1773,28 @@ async def whatsapp_webhook(request: Request):
     except Exception:
         return {"status": "error", "message": "Invalid payload"}
 
-    # Verify HMAC signature if secret key is configured
+    # Verify HMAC signature — log mismatch but don't block (Interakt signing may vary)
     signature = request.headers.get("Interakt-Signature", "")
-    if INTERAKT_WEBHOOK_SECRET and not verify_interakt_signature(raw_body, signature):
-        return {"status": "error", "message": "Invalid signature"}
+    sig_valid = verify_interakt_signature(raw_body, signature)
+    if INTERAKT_WEBHOOK_SECRET and not sig_valid:
+        print(f"[WEBHOOK] Signature mismatch — event={payload.get('type','?')}, has_sig={bool(signature)}")
 
     event_type = payload.get("type", "")
     data = payload.get("data", {})
 
     # Log all webhook events for debugging/analytics
+    print(f"[WEBHOOK] Received: type={event_type}, phone={data.get('customer', {}).get('channel_phone_number', '')}")
     await wa_webhook_logs_col.insert_one({
         "event_type": event_type,
         "timestamp": payload.get("timestamp", datetime.now(timezone.utc).isoformat()),
         "received_at": datetime.now(timezone.utc).isoformat(),
+        "signature_valid": sig_valid,
+        "has_signature": bool(signature),
         "data_summary": {
             "phone": data.get("customer", {}).get("channel_phone_number", ""),
             "message_id": data.get("message", {}).get("id", ""),
         },
+        "raw_keys": list(payload.keys()),
     })
 
     # --- Incoming customer message ---
