@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
-import { Upload, FileText, Check, X, Clock, AlertCircle, ChevronDown, ChevronUp, Edit2, Trash2, CheckCircle2, RefreshCw } from "lucide-react";
+import { Upload, FileText, Check, X, Clock, AlertCircle, ChevronDown, ChevronUp, Edit2, Trash2, CheckCircle2, RefreshCw, Copy, AlertTriangle } from "lucide-react";
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -252,18 +252,29 @@ export default function AdminImports() {
                     <h2 className="text-base font-bold text-slate-900" style={{ fontFamily: "Chivo" }}>{selectedImport.filename}</h2>
                     <p className="text-xs text-slate-500 mt-0.5">
                       {selectedImport.total_count} products extracted | {selectedImport.approved_count} approved
+                      {(() => {
+                        const dupes = (selectedImport.extracted_products || []).filter(p => p._dup_status === "duplicate" && !p.approved).length;
+                        const possible = (selectedImport.extracted_products || []).filter(p => p._dup_status === "possible_duplicate" && !p.approved).length;
+                        const parts = [];
+                        if (dupes > 0) parts.push(`${dupes} duplicates`);
+                        if (possible > 0) parts.push(`${possible} possible duplicates`);
+                        return parts.length > 0 ? ` | ${parts.join(", ")}` : "";
+                      })()}
                     </p>
                   </div>
-                  {selectedImport.status === "completed" && selectedImport.total_count > selectedImport.approved_count && (
-                    <button
-                      onClick={handleApproveAll}
-                      disabled={approving}
-                      className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-sm hover:bg-emerald-700 disabled:opacity-50 transition-colors"
-                      data-testid="approve-all-btn"
-                    >
-                      <Check size={16} /> {approving ? "Approving..." : "Approve All & Publish"}
-                    </button>
-                  )}
+                  {selectedImport.status === "completed" && (() => {
+                    const approvable = (selectedImport.extracted_products || []).filter(p => !p.approved && p._dup_status !== "duplicate").length;
+                    return approvable > 0 ? (
+                      <button
+                        onClick={handleApproveAll}
+                        disabled={approving}
+                        className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-sm hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+                        data-testid="approve-all-btn"
+                      >
+                        <Check size={16} /> {approving ? "Approving..." : `Approve ${approvable} & Publish`}
+                      </button>
+                    ) : null;
+                  })()}
                 </div>
                 {selectedImport.status === "processing" && (
                   <div className="mt-3 flex items-center gap-2 px-3 py-2 bg-yellow-50 border border-yellow-200 rounded-sm">
@@ -287,7 +298,7 @@ export default function AdminImports() {
                     return (
                       <div
                         key={product._temp_id || idx}
-                        className={`${product.approved ? "bg-emerald-50/30" : ""}`}
+                        className={`${product.approved ? "bg-emerald-50/30" : product._dup_status === "duplicate" ? "bg-red-50/30" : product._dup_status === "possible_duplicate" ? "bg-amber-50/30" : ""}`}
                         data-testid={`extracted-product-${product._temp_id}`}
                       >
                         {/* Row header */}
@@ -296,11 +307,26 @@ export default function AdminImports() {
                             {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                           </button>
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <p className="text-sm font-semibold text-slate-900 truncate">{product.product_name}</p>
-                              {product.approved && (
+                              {product.approved && !product._dup_skipped && (
                                 <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
                                   Published
+                                </span>
+                              )}
+                              {product._dup_skipped && (
+                                <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200" data-testid="dup-skipped-badge">
+                                  Skipped (Duplicate)
+                                </span>
+                              )}
+                              {!product.approved && product._dup_status === "duplicate" && (
+                                <span className="text-[10px] font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded border border-red-200 flex items-center gap-0.5" data-testid="dup-badge">
+                                  <Copy size={9} /> Duplicate
+                                </span>
+                              )}
+                              {!product.approved && product._dup_status === "possible_duplicate" && (
+                                <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 flex items-center gap-0.5" data-testid="possible-dup-badge">
+                                  <AlertTriangle size={9} /> Possible Duplicate
                                 </span>
                               )}
                             </div>
@@ -309,9 +335,14 @@ export default function AdminImports() {
                               {product.category && <span className="text-xs text-slate-400">| {product.category}</span>}
                               {product.sku_code && <span className="text-xs font-mono text-slate-400">| {product.sku_code}</span>}
                             </div>
+                            {product._dup_match && !product.approved && (
+                              <p className="text-[10px] text-red-500 mt-0.5">
+                                Matches: {product._dup_match}
+                              </p>
+                            )}
                           </div>
                           <div className="flex items-center gap-1 shrink-0">
-                            {!product.approved && (
+                            {!product.approved && product._dup_status !== "duplicate" && (
                               <>
                                 <button
                                   onClick={() => handleApproveSelected([product._temp_id])}
@@ -327,14 +358,16 @@ export default function AdminImports() {
                                 >
                                   <Edit2 size={14} />
                                 </button>
-                                <button
-                                  onClick={() => handleDeleteProduct(product._temp_id)}
-                                  className="p-1.5 text-red-500 hover:bg-red-50 rounded"
-                                  title="Remove"
-                                >
-                                  <Trash2 size={14} />
-                                </button>
                               </>
+                            )}
+                            {!product.approved && (
+                              <button
+                                onClick={() => handleDeleteProduct(product._temp_id)}
+                                className="p-1.5 text-red-500 hover:bg-red-50 rounded"
+                                title="Remove"
+                              >
+                                <Trash2 size={14} />
+                              </button>
                             )}
                           </div>
                         </div>

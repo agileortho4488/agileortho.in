@@ -693,6 +693,12 @@ async def upload_pdf(file: UploadFile = File(...), _=Depends(admin_required)):
     return {"import_id": import_id, "status": "processing", "filename": file.filename}
 
 
+import re
+
+def _escape_regex(text):
+    return re.escape(text)
+
+
 async def process_pdf_import(import_id: str, file_path: str):
     try:
         # Extract text
@@ -727,6 +733,42 @@ async def process_pdf_import(import_id: str, file_path: str):
                 pass
             p["approved"] = False
             p["_temp_id"] = uuid.uuid4().hex[:8]
+            
+            # --- Deduplication check ---
+            sku = p.get("sku_code", "").strip()
+            name = p.get("product_name", "").strip()
+            p["_dup_status"] = "new"  # new | duplicate | possible_duplicate
+            p["_dup_match"] = None    # existing product name if matched
+
+            # 1. Exact SKU match
+            if sku:
+                existing_sku = await products_col.find_one(
+                    {"sku_code": sku, "status": "published"},
+                    {"_id": 0, "product_name": 1, "sku_code": 1}
+                )
+                if existing_sku:
+                    p["_dup_status"] = "duplicate"
+                    p["_dup_match"] = f"{existing_sku['product_name']} (SKU: {existing_sku['sku_code']})"
+                    enriched.append(p)
+                    continue
+
+            # 2. Name similarity check (case-insensitive exact or substring)
+            if name:
+                name_lower = name.lower()
+                existing_name = await products_col.find_one(
+                    {"$or": [
+                        {"product_name": {"$regex": f"^{_escape_regex(name)}$", "$options": "i"}},
+                        {"product_name": {"$regex": _escape_regex(name_lower), "$options": "i"}},
+                    ], "status": "published"},
+                    {"_id": 0, "product_name": 1, "sku_code": 1}
+                )
+                if existing_name:
+                    if existing_name["product_name"].lower() == name_lower:
+                        p["_dup_status"] = "duplicate"
+                    else:
+                        p["_dup_status"] = "possible_duplicate"
+                    p["_dup_match"] = f"{existing_name['product_name']} (SKU: {existing_name.get('sku_code', 'N/A')})"
+            
             enriched.append(p)
         
         await imports_col.update_one(
@@ -774,12 +816,25 @@ async def approve_import_products(import_id: str, body: dict = {}, _=Depends(adm
     # Get list of temp_ids to approve (or approve all if empty)
     approve_ids = body.get("approve_ids", [])
     products_to_add = []
+    skipped_dupes = 0
     
     for p in doc.get("extracted_products", []):
         if approve_ids and p.get("_temp_id") not in approve_ids:
             continue
         if p.get("approved"):
             continue
+        # Skip confirmed duplicates
+        if p.get("_dup_status") == "duplicate":
+            skipped_dupes += 1
+            continue
+        
+        # Final dedup check at approval time (SKU uniqueness)
+        sku = p.get("sku_code", "").strip()
+        if sku:
+            exists = await products_col.find_one({"sku_code": sku, "status": "published"})
+            if exists:
+                skipped_dupes += 1
+                continue
         
         product_doc = {
             "product_name": p.get("product_name", "Unknown"),
@@ -801,18 +856,28 @@ async def approve_import_products(import_id: str, body: dict = {}, _=Depends(adm
             "created_at": datetime.now(timezone.utc).isoformat(),
             "updated_at": datetime.now(timezone.utc).isoformat(),
         }
-        products_to_add.append(product_doc)
+        products_to_add.append((p.get("_temp_id"), product_doc))
     
     added = 0
+    added_ids = set()
     if products_to_add:
-        await products_col.insert_many(products_to_add)
-        added = len(products_to_add)
+        docs_to_insert = [doc for _, doc in products_to_add]
+        await products_col.insert_many(docs_to_insert)
+        added = len(docs_to_insert)
+        added_ids = {tid for tid, _ in products_to_add}
     
     # Mark products as approved in the import record
     updated_products = []
     for p in doc.get("extracted_products", []):
-        if not approve_ids or p.get("_temp_id") in approve_ids:
+        tid = p.get("_temp_id")
+        if tid in added_ids:
             p["approved"] = True
+        elif not approve_ids and p.get("_dup_status") == "duplicate":
+            p["approved"] = True  # Mark dupes as "handled"
+            p["_dup_skipped"] = True
+        elif approve_ids and tid in approve_ids and p.get("_dup_status") == "duplicate":
+            p["approved"] = True
+            p["_dup_skipped"] = True
         updated_products.append(p)
     
     await imports_col.update_one(
@@ -823,7 +888,10 @@ async def approve_import_products(import_id: str, body: dict = {}, _=Depends(adm
         }}
     )
     
-    return {"message": f"{added} products published to catalog", "added": added}
+    msg = f"{added} products published to catalog"
+    if skipped_dupes > 0:
+        msg += f", {skipped_dupes} duplicates skipped"
+    return {"message": msg, "added": added, "skipped_duplicates": skipped_dupes}
 
 
 @app.put("/api/admin/imports/{import_id}/product/{temp_id}")
@@ -989,6 +1057,7 @@ async def startup():
     await products_col.create_index("category")
     await products_col.create_index("slug")
     await products_col.create_index("status")
+    await products_col.create_index("sku_code", unique=True, sparse=True)
     await leads_col.create_index("score")
     await leads_col.create_index("status")
     await leads_col.create_index("created_at")
