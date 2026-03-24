@@ -1483,10 +1483,12 @@ INTERAKT_API_KEY = os.environ.get("INTERAKT_API_KEY", "")
 INTERAKT_API_URL = "https://api.interakt.ai/v1/public/message/"
 INTERAKT_TRACK_URL = "https://api.interakt.ai/v1/public/track/users/"
 INTERAKT_EVENT_URL = "https://api.interakt.ai/v1/public/track/events/"
+INTERAKT_WEBHOOK_SECRET = os.environ.get("INTERAKT_WEBHOOK_SECRET", "")
 WHATSAPP_NUMBER = os.environ.get("WHATSAPP_BUSINESS_NUMBER", "+917416521222")
 
 wa_conversations_col = db["wa_conversations"]
 wa_message_status_col = db["wa_message_status"]
+wa_webhook_logs_col = db["wa_webhook_logs"]
 
 
 def interakt_auth_header():
@@ -1750,6 +1752,18 @@ async def handle_wa_incoming(phone: str, message_text: str, customer_name: str =
 
 
 # --- Webhook endpoint for Interakt ---
+def verify_interakt_signature(raw_body: bytes, signature: str) -> bool:
+    """Verify HMAC SHA256 signature from Interakt webhook."""
+    if not INTERAKT_WEBHOOK_SECRET or not signature:
+        return not INTERAKT_WEBHOOK_SECRET  # Skip if no secret configured
+    import hmac as hmac_mod
+    from hashlib import sha256
+    expected = "sha256=" + hmac_mod.new(
+        INTERAKT_WEBHOOK_SECRET.encode("utf-8"), raw_body, sha256
+    ).hexdigest()
+    return hmac_mod.compare_digest(expected, signature)
+
+
 @app.post("/api/webhook/whatsapp")
 async def whatsapp_webhook(request: Request):
     """Receive incoming WhatsApp messages and status updates from Interakt."""
@@ -1759,9 +1773,26 @@ async def whatsapp_webhook(request: Request):
     except Exception:
         return {"status": "error", "message": "Invalid payload"}
 
+    # Verify HMAC signature if secret key is configured
+    signature = request.headers.get("Interakt-Signature", "")
+    if INTERAKT_WEBHOOK_SECRET and not verify_interakt_signature(raw_body, signature):
+        return {"status": "error", "message": "Invalid signature"}
+
     event_type = payload.get("type", "")
     data = payload.get("data", {})
 
+    # Log all webhook events for debugging/analytics
+    await wa_webhook_logs_col.insert_one({
+        "event_type": event_type,
+        "timestamp": payload.get("timestamp", datetime.now(timezone.utc).isoformat()),
+        "received_at": datetime.now(timezone.utc).isoformat(),
+        "data_summary": {
+            "phone": data.get("customer", {}).get("channel_phone_number", ""),
+            "message_id": data.get("message", {}).get("id", ""),
+        },
+    })
+
+    # --- Incoming customer message ---
     if event_type == "message_received":
         customer = data.get("customer", {})
         message = data.get("message", {})
@@ -1770,10 +1801,8 @@ async def whatsapp_webhook(request: Request):
         message_text = message.get("message", "")
 
         if phone and message_text:
-            # Check if conversation is in human takeover mode
             conv = await wa_conversations_col.find_one({"phone": phone})
             if conv and conv.get("status") == "human":
-                # Just store the message, don't auto-reply
                 incoming_msg = {
                     "role": "customer",
                     "content": message_text,
@@ -1789,28 +1818,89 @@ async def whatsapp_webhook(request: Request):
                     }
                 )
             else:
-                # Process with AI in background
                 asyncio.create_task(handle_wa_incoming(phone, message_text, customer_name))
 
-    elif event_type in ("message_sent", "message_delivered", "message_read", "message_failed"):
-        # Track message delivery status
-        msg_id = data.get("id", "") or data.get("message_id", "")
+    # --- API message delivery statuses ---
+    elif event_type in ("message_api_sent", "message_api_delivered", "message_api_read",
+                        "message_api_failed", "message_api_clicked"):
+        message = data.get("message", {})
+        msg_id = message.get("id", "")
         status_map = {
-            "message_sent": "sent",
-            "message_delivered": "delivered",
-            "message_read": "read",
-            "message_failed": "failed",
+            "message_api_sent": "sent",
+            "message_api_delivered": "delivered",
+            "message_api_read": "read",
+            "message_api_failed": "failed",
+            "message_api_clicked": "clicked",
         }
         new_status = status_map.get(event_type, event_type)
+        update_fields = {
+            "status": new_status,
+            f"{new_status}_at": datetime.now(timezone.utc).isoformat(),
+            "phone": data.get("customer", {}).get("channel_phone_number", ""),
+        }
+        if event_type == "message_api_failed":
+            update_fields["failure_reason"] = message.get("channel_failure_reason", "")
+            update_fields["error_code"] = message.get("channel_error_code", "")
+        if event_type == "message_api_clicked":
+            update_fields["click_type"] = data.get("event", {}).get("click_type", "")
+            update_fields["button_text"] = data.get("event", {}).get("button_text", "")
         if msg_id:
             await wa_message_status_col.update_one(
                 {"message_id": msg_id},
-                {"$set": {
-                    "status": new_status,
-                    f"{new_status}_at": datetime.now(timezone.utc).isoformat(),
-                }},
+                {"$set": update_fields},
                 upsert=True,
             )
+
+    # --- Campaign message delivery statuses ---
+    elif event_type in ("message_campaign_sent", "message_campaign_delivered",
+                        "message_campaign_read", "message_campaign_failed"):
+        message = data.get("message", {})
+        msg_id = message.get("id", "")
+        status_map = {
+            "message_campaign_sent": "sent",
+            "message_campaign_delivered": "delivered",
+            "message_campaign_read": "read",
+            "message_campaign_failed": "failed",
+        }
+        new_status = status_map.get(event_type, event_type)
+        update_fields = {
+            "status": new_status,
+            "source": "campaign",
+            f"{new_status}_at": datetime.now(timezone.utc).isoformat(),
+            "phone": data.get("customer", {}).get("channel_phone_number", ""),
+            "campaign_id": message.get("campaign_id", ""),
+        }
+        if event_type == "message_campaign_failed":
+            update_fields["failure_reason"] = message.get("channel_failure_reason", "")
+        if msg_id:
+            await wa_message_status_col.update_one(
+                {"message_id": msg_id},
+                {"$set": update_fields},
+                upsert=True,
+            )
+
+    # --- Template status updates (approved/rejected by Meta) ---
+    elif event_type == "message_template_status_update":
+        template_event = data.get("event", "")
+        template_name = data.get("message_template_name", "")
+        template_lang = data.get("message_template_language", "")
+        reason = data.get("reason")
+        await wa_webhook_logs_col.update_one(
+            {"event_type": event_type, "received_at": {"$exists": True}},
+            {"$set": {
+                "template_name": template_name,
+                "template_status": template_event,
+                "template_language": template_lang,
+                "rejection_reason": reason,
+            }},
+            upsert=False,
+        )
+
+    # --- Account alerts & events ---
+    elif event_type in ("account_alerts", "account_update", "account_review_update",
+                        "business_capability_update", "phone_number_quality_update",
+                        "template_performance_metrics", "messages"):
+        pass  # Already logged above
 
     return {"status": "success", "code": 200}
 
@@ -2091,3 +2181,13 @@ async def get_wa_analytics(_=Depends(admin_required)):
             "read_rate": round((read_msgs / total_msgs * 100) if total_msgs > 0 else 0, 1),
         },
     }
+
+
+@app.get("/api/admin/whatsapp/webhook-logs")
+async def get_wa_webhook_logs(_=Depends(admin_required)):
+    """Get recent webhook events for debugging and monitoring."""
+    cursor = wa_webhook_logs_col.find(
+        {}, {"_id": 0}
+    ).sort("received_at", -1).limit(50)
+    logs = await cursor.to_list(50)
+    return {"logs": logs, "total": len(logs)}
