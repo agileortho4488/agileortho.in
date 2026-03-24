@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 load_dotenv()
 
-from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, Query
+from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, Query, Form
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import Optional, List
@@ -13,6 +13,10 @@ import hashlib
 import motor.motor_asyncio
 import uuid
 import math
+import json
+import asyncio
+import pdfplumber
+import tempfile
 
 app = FastAPI(title="MedDevice Pro API")
 
@@ -29,6 +33,7 @@ MONGO_URL = os.environ.get("MONGO_URL")
 DB_NAME = os.environ.get("DB_NAME")
 JWT_SECRET = os.environ.get("JWT_SECRET")
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
+EMERGENT_LLM_KEY = os.environ.get("EMERGENT_LLM_KEY")
 
 client = motor.motor_asyncio.AsyncIOMotorClient(MONGO_URL)
 db = client[DB_NAME]
@@ -38,6 +43,7 @@ products_col = db["products"]
 leads_col = db["leads"]
 conversations_col = db["conversations"]
 admins_col = db["admins"]
+imports_col = db["pdf_imports"]
 
 
 # --- Pydantic Models ---
@@ -559,6 +565,315 @@ async def admin_list_products(
         "page": page,
         "pages": math.ceil(total / limit) if total > 0 else 1
     }
+
+
+# --- PDF Import & Claude Extraction ---
+
+def extract_pdf_text(file_path: str) -> str:
+    text = ""
+    with pdfplumber.open(file_path) as pdf:
+        for page in pdf.pages:
+            page_text = page.extract_text()
+            if page_text:
+                text += page_text + "\n\n"
+    return text.strip()
+
+async def claude_extract_products(pdf_text: str) -> list:
+    from emergentintegrations.llm.chat import LlmChat, UserMessage
+    chat = LlmChat(
+        api_key=EMERGENT_LLM_KEY,
+        session_id=f"pdf-extract-{uuid.uuid4().hex[:8]}",
+        system_message="""You are a medical device product data extraction specialist. 
+Extract structured product information from the given text. For each product found, return a JSON array of objects with these fields:
+- product_name: Full product name
+- sku_code: SKU or product code (generate one like MRL-XXX-NNN if not found)
+- division: One of: Orthopedics, Trauma, Cardiovascular, Diagnostics, ENT, Endo-surgical, Infection Prevention, Peripheral Intervention
+- category: Sub-category within the division
+- description: 2-3 sentence description of the product
+- technical_specifications: Object with key technical specs
+- material: Primary material
+- manufacturer: Manufacturer name (default: Meril Life Sciences)
+- size_variables: Array of available sizes if mentioned
+- pack_size: Pack size if mentioned
+
+Return ONLY a valid JSON array. No markdown, no explanation, just the JSON array."""
+    ).with_model("anthropic", "claude-sonnet-4-20250514")
+
+    prompt = f"""Extract all medical device products from this catalog text and return as a JSON array:
+
+---
+{pdf_text[:15000]}
+---
+
+Return ONLY a valid JSON array of product objects."""
+
+    response = await chat.send_message(UserMessage(text=prompt))
+    
+    try:
+        # Try to parse the response as JSON
+        response_text = response.strip()
+        if response_text.startswith("```"):
+            response_text = response_text.split("```")[1]
+            if response_text.startswith("json"):
+                response_text = response_text[4:]
+            response_text = response_text.strip()
+        products = json.loads(response_text)
+        if isinstance(products, list):
+            return products
+        return []
+    except json.JSONDecodeError:
+        return []
+
+async def claude_generate_seo(product: dict) -> dict:
+    from emergentintegrations.llm.chat import LlmChat, UserMessage
+    chat = LlmChat(
+        api_key=EMERGENT_LLM_KEY,
+        session_id=f"seo-gen-{uuid.uuid4().hex[:8]}",
+        system_message="""You are an SEO content specialist for B2B medical devices in India. 
+Generate SEO-optimized content for medical device product pages targeting hospital procurement managers in Telangana, India.
+Return ONLY a valid JSON object with these fields:
+- description: SEO-optimized 3-4 sentence product description (include medical terms, benefits, specifications)
+- seo_meta_title: 50-60 char title with product name, division, and "Telangana Distributor"
+- seo_meta_description: 150-160 char meta description for Google search results
+No markdown, no explanation, just the JSON object."""
+    ).with_model("anthropic", "claude-sonnet-4-20250514")
+
+    prompt = f"""Generate SEO content for this medical device product:
+Name: {product.get('product_name', '')}
+Division: {product.get('division', '')}
+Category: {product.get('category', '')}
+Material: {product.get('material', '')}
+Specs: {json.dumps(product.get('technical_specifications', {}))}
+
+Return ONLY a valid JSON object with description, seo_meta_title, seo_meta_description."""
+
+    response = await chat.send_message(UserMessage(text=prompt))
+    
+    try:
+        response_text = response.strip()
+        if response_text.startswith("```"):
+            response_text = response_text.split("```")[1]
+            if response_text.startswith("json"):
+                response_text = response_text[4:]
+            response_text = response_text.strip()
+        return json.loads(response_text)
+    except json.JSONDecodeError:
+        return {}
+
+
+@app.post("/api/admin/import/pdf")
+async def upload_pdf(file: UploadFile = File(...), _=Depends(admin_required)):
+    if not file.filename.lower().endswith(".pdf"):
+        raise HTTPException(400, "Only PDF files are accepted")
+    
+    # Save uploaded file
+    os.makedirs("/app/backend/uploads", exist_ok=True)
+    file_path = f"/app/backend/uploads/{uuid.uuid4().hex}_{file.filename}"
+    content = await file.read()
+    with open(file_path, "wb") as f:
+        f.write(content)
+    
+    # Create import record
+    import_doc = {
+        "filename": file.filename,
+        "file_path": file_path,
+        "upload_date": datetime.now(timezone.utc).isoformat(),
+        "status": "processing",
+        "extracted_products": [],
+        "approved_count": 0,
+        "total_count": 0,
+        "error": None,
+    }
+    result = await imports_col.insert_one(import_doc)
+    import_id = str(result.inserted_id)
+    
+    # Start extraction in background
+    asyncio.create_task(process_pdf_import(import_id, file_path))
+    
+    return {"import_id": import_id, "status": "processing", "filename": file.filename}
+
+
+async def process_pdf_import(import_id: str, file_path: str):
+    try:
+        # Extract text
+        pdf_text = extract_pdf_text(file_path)
+        if not pdf_text or len(pdf_text) < 50:
+            await imports_col.update_one(
+                {"_id": ObjectId(import_id)},
+                {"$set": {"status": "failed", "error": "Could not extract text from PDF"}}
+            )
+            return
+        
+        # Claude extraction
+        products = await claude_extract_products(pdf_text)
+        
+        if not products:
+            await imports_col.update_one(
+                {"_id": ObjectId(import_id)},
+                {"$set": {"status": "failed", "error": "Claude could not extract product data from the PDF"}}
+            )
+            return
+        
+        # Generate SEO for each product
+        enriched = []
+        for p in products:
+            try:
+                seo = await claude_generate_seo(p)
+                if seo:
+                    p["description"] = seo.get("description", p.get("description", ""))
+                    p["seo_meta_title"] = seo.get("seo_meta_title", "")
+                    p["seo_meta_description"] = seo.get("seo_meta_description", "")
+            except Exception:
+                pass
+            p["approved"] = False
+            p["_temp_id"] = uuid.uuid4().hex[:8]
+            enriched.append(p)
+        
+        await imports_col.update_one(
+            {"_id": ObjectId(import_id)},
+            {"$set": {
+                "status": "completed",
+                "extracted_products": enriched,
+                "total_count": len(enriched),
+            }}
+        )
+    except Exception as e:
+        await imports_col.update_one(
+            {"_id": ObjectId(import_id)},
+            {"$set": {"status": "failed", "error": str(e)}}
+        )
+
+
+@app.get("/api/admin/imports")
+async def list_imports(_=Depends(admin_required)):
+    cursor = imports_col.find().sort("upload_date", -1)
+    docs = await cursor.to_list(50)
+    return {"imports": serialize_docs(docs)}
+
+
+@app.get("/api/admin/imports/{import_id}")
+async def get_import(import_id: str, _=Depends(admin_required)):
+    try:
+        doc = await imports_col.find_one({"_id": ObjectId(import_id)})
+    except Exception:
+        raise HTTPException(400, "Invalid import ID")
+    if not doc:
+        raise HTTPException(404, "Import not found")
+    return serialize_doc(doc)
+
+
+@app.post("/api/admin/imports/{import_id}/approve")
+async def approve_import_products(import_id: str, body: dict = {}, _=Depends(admin_required)):
+    try:
+        doc = await imports_col.find_one({"_id": ObjectId(import_id)})
+    except Exception:
+        raise HTTPException(400, "Invalid import ID")
+    if not doc:
+        raise HTTPException(404, "Import not found")
+    
+    # Get list of temp_ids to approve (or approve all if empty)
+    approve_ids = body.get("approve_ids", [])
+    products_to_add = []
+    
+    for p in doc.get("extracted_products", []):
+        if approve_ids and p.get("_temp_id") not in approve_ids:
+            continue
+        if p.get("approved"):
+            continue
+        
+        product_doc = {
+            "product_name": p.get("product_name", "Unknown"),
+            "sku_code": p.get("sku_code", f"IMP-{uuid.uuid4().hex[:6].upper()}"),
+            "division": p.get("division", ""),
+            "category": p.get("category", ""),
+            "description": p.get("description", ""),
+            "technical_specifications": p.get("technical_specifications", {}),
+            "material": p.get("material", ""),
+            "manufacturer": p.get("manufacturer", "Meril Life Sciences"),
+            "size_variables": p.get("size_variables", []),
+            "pack_size": p.get("pack_size", ""),
+            "seo_meta_title": p.get("seo_meta_title", ""),
+            "seo_meta_description": p.get("seo_meta_description", ""),
+            "brochure_url": "",
+            "images": [],
+            "slug": p.get("product_name", "").lower().replace(" ", "-").replace("/", "-"),
+            "status": "published",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        }
+        products_to_add.append(product_doc)
+    
+    added = 0
+    if products_to_add:
+        await products_col.insert_many(products_to_add)
+        added = len(products_to_add)
+    
+    # Mark products as approved in the import record
+    updated_products = []
+    for p in doc.get("extracted_products", []):
+        if not approve_ids or p.get("_temp_id") in approve_ids:
+            p["approved"] = True
+        updated_products.append(p)
+    
+    await imports_col.update_one(
+        {"_id": ObjectId(import_id)},
+        {"$set": {
+            "extracted_products": updated_products,
+            "approved_count": sum(1 for p in updated_products if p.get("approved")),
+        }}
+    )
+    
+    return {"message": f"{added} products published to catalog", "added": added}
+
+
+@app.put("/api/admin/imports/{import_id}/product/{temp_id}")
+async def update_import_product(import_id: str, temp_id: str, body: dict = {}, _=Depends(admin_required)):
+    try:
+        doc = await imports_col.find_one({"_id": ObjectId(import_id)})
+    except Exception:
+        raise HTTPException(400, "Invalid import ID")
+    if not doc:
+        raise HTTPException(404, "Import not found")
+    
+    updated = []
+    found = False
+    for p in doc.get("extracted_products", []):
+        if p.get("_temp_id") == temp_id:
+            for k, v in body.items():
+                if k != "_temp_id" and k != "approved":
+                    p[k] = v
+            found = True
+        updated.append(p)
+    
+    if not found:
+        raise HTTPException(404, "Product not found in import")
+    
+    await imports_col.update_one(
+        {"_id": ObjectId(import_id)},
+        {"$set": {"extracted_products": updated}}
+    )
+    return {"message": "Product updated"}
+
+
+@app.delete("/api/admin/imports/{import_id}/product/{temp_id}")
+async def delete_import_product(import_id: str, temp_id: str, _=Depends(admin_required)):
+    try:
+        doc = await imports_col.find_one({"_id": ObjectId(import_id)})
+    except Exception:
+        raise HTTPException(400, "Invalid import ID")
+    if not doc:
+        raise HTTPException(404, "Import not found")
+    
+    updated = [p for p in doc.get("extracted_products", []) if p.get("_temp_id") != temp_id]
+    
+    await imports_col.update_one(
+        {"_id": ObjectId(import_id)},
+        {"$set": {
+            "extracted_products": updated,
+            "total_count": len(updated),
+        }}
+    )
+    return {"message": "Product removed from import"}
 
 
 # --- Seed Data ---

@@ -1,6 +1,6 @@
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
-import { LayoutDashboard, Users, Package, LogOut, ChevronRight, BarChart3, Kanban } from "lucide-react";
+import { LayoutDashboard, Users, Package, LogOut, ChevronRight, BarChart3, Kanban, FileUp } from "lucide-react";
 
 export const AdminLayout = () => {
   const location = useLocation();
@@ -22,6 +22,7 @@ export const AdminLayout = () => {
     { to: "/admin/leads", icon: Users, label: "Leads" },
     { to: "/admin/analytics", icon: BarChart3, label: "Analytics" },
     { to: "/admin/products", icon: Package, label: "Products" },
+    { to: "/admin/imports", icon: FileUp, label: "PDF Import" },
   ];
 
   const isActive = (path) => {

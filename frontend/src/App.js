@@ -13,6 +13,7 @@ import AdminPipeline from "./pages/AdminPipeline";
 import AdminLeads from "./pages/AdminLeads";
 import AdminAnalytics from "./pages/AdminAnalytics";
 import AdminProducts from "./pages/AdminProducts";
+import AdminImports from "./pages/AdminImports";
 import "./App.css";
 
 function App() {
@@ -39,6 +40,7 @@ function App() {
           <Route path="/admin/leads" element={<AdminLeads />} />
           <Route path="/admin/analytics" element={<AdminAnalytics />} />
           <Route path="/admin/products" element={<AdminProducts />} />
+          <Route path="/admin/imports" element={<AdminImports />} />
         </Route>
 
         {/* 404 */}
