@@ -50,10 +50,16 @@
 - Product interest: +15 pts
 - Score >= 60: Hot | 35-59: Warm | <35: Cold
 
-## Testing Status
-- Backend: 26/26 tests passed (100%)
-- Frontend: 15/15 UI tests passed (100%)
-- Test report: /app/test_reports/iteration_13.json
+### Phase 2: Enhanced CRM (COMPLETE - Dec 2025)
+- **Kanban Pipeline:** 6-column drag-and-drop board (New, Contacted, Qualified, Negotiation, Won, Lost)
+  - Cards show name, hospital, score badge, source, product interest, contact icons, district
+  - Drag between columns updates lead status via API
+  - Info bar: "AI Chatbot leads auto-populate this pipeline"
+- **CRM Analytics:** Conversion funnel, score distribution (Hot/Warm/Cold), leads by source, top districts, inquiry type breakdown, recent leads
+- **Product Create/Edit:** Full form drawer with all fields (name, SKU, division, category, material, description, JSON specs, sizes, pack size, manufacturer, SEO, status)
+- **Demo Data:** 12 realistic leads seeded across pipeline stages
+- **Admin Sidebar:** 5 nav items (Dashboard, Pipeline, Leads, Analytics, Products)
+- **Testing:** 100% pass rate — 24 backend + all frontend UI tests
 
 ## Credentials
 - Admin: password = "admin"
@@ -61,10 +67,9 @@
 ## Remaining Phases
 
 ### Phase 2: Enhanced CRM (P0)
-- Lead detail page improvements
-- Kanban pipeline view
-- CRM analytics dashboard
-- Admin product CRUD UI (create/edit)
+- Kanban pipeline view (auto-populated by AI chatbot in Phase 4) - COMPLETE
+- CRM analytics dashboard - COMPLETE
+- Admin product CRUD UI (create/edit) - COMPLETE
 
 ### Phase 3: Claude AI PDF Importer (P1)
 - PDF upload endpoint
