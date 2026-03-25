@@ -111,3 +111,5 @@ frontend/node_modules/.cache/default-development/10.pack
 *.env
 *.env.*
 frontend/node_modules/.cache/default-development/11.pack
+brochures/Diagnostics/Instruments/Biochemistry
+Analyzers/CliniQuant_Brochure.pdf
