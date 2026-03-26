@@ -30,11 +30,11 @@ async def admin_login(body: AdminLogin):
 
 @router.get("/api/admin/stats")
 async def admin_stats(_=Depends(admin_required)):
-    total_products = await products_col.count_documents({"status": "published"})
+    total_products = await products_col.count_documents({})
     total_leads = await leads_col.count_documents({})
-    hot_leads = await leads_col.count_documents({"score": "Hot"})
-    warm_leads = await leads_col.count_documents({"score": "Warm"})
-    cold_leads = await leads_col.count_documents({"score": "Cold"})
+    hot_leads = await leads_col.count_documents({"score": {"$in": ["hot", "Hot"]}})
+    warm_leads = await leads_col.count_documents({"score": {"$in": ["warm", "Warm"]}})
+    cold_leads = await leads_col.count_documents({"score": {"$in": ["cold", "Cold"]}})
     new_leads = await leads_col.count_documents({"status": "new"})
 
     pipeline = [

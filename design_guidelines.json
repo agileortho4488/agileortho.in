@@ -1,125 +1,123 @@
 {
-  "project_context": {
-    "app_type": "hybrid_fullstack",
-    "target_audience": "Hospital procurement managers, clinic owners, doctors, dealers in Telangana, India",
-    "aesthetic": "Clinical, high-trust, fast-loading medical aesthetic. Not consumer/startup."
+  "project_name": "Agile Ortho B2B Homepage",
+  "theme": "light",
+  "archetype": "1_and_4_hybrid_medical_authority",
+  "brand_identity": {
+    "primary_color": "#0F172A",
+    "accent_color": "#0D9488",
+    "background_color": "#F8FAFC",
+    "text_color": "#0F172A",
+    "muted_text_color": "#64748B",
+    "surface_color": "#FFFFFF",
+    "border_color": "#E2E8F0"
   },
   "typography": {
-    "fonts": {
-      "headings": "Chivo",
-      "body": "Manrope",
-      "mono": "IBM Plex Mono",
-      "forbidden": ["Inter", "Space Grotesk"]
-    },
+    "heading_font": "Satoshi, sans-serif",
+    "body_font": "Manrope, sans-serif",
     "rules": {
-      "headings": "Tracking tight, use font-light or font-black for radical weight contrast.",
-      "body": "Use leading-relaxed for long-form, leading-tight for UI elements.",
-      "labels": "Uppercase, tracking-[0.2em] for table headers and overlines."
+      "h1": "text-5xl lg:text-6xl font-bold tracking-tight text-slate-900 (or white on dark hero)",
+      "h2": "text-3xl lg:text-4xl font-bold tracking-tight text-slate-900",
+      "h3": "text-xl font-semibold tracking-tight text-slate-900",
+      "body": "text-base leading-relaxed text-slate-600",
+      "overline": "text-xs font-bold uppercase tracking-[0.2em] text-teal-600"
     }
   },
-  "colors": {
-    "archetype": "Swiss & High-Contrast (Authority, Clarity, Truth) + Medical Precision",
-    "palette": {
-      "background": "#FAFAFA",
-      "surface": "#FFFFFF",
-      "border": "#E2E8F0",
-      "text_primary": "#0F172A",
-      "text_secondary": "#64748B",
-      "primary": "#059669",
-      "primary_hover": "#047857",
-      "secondary": "#1E3A8A",
-      "whatsapp": "#25D366",
-      "whatsapp_hover": "#1DA851"
-    },
-    "forbidden_colors": ["#1B93A4", "Teal for dashboard", "Purple", "#000000 pure black", "Muddy gray glassmorphism"]
-  },
-  "layouts": {
-    "marketing_pages": {
-      "mode": "Mode A: The 'Tetris' Grid",
-      "spacing": "Generous (p-8, p-12, p-16). Containers with borders must have internal padding.",
-      "alignment": "Optical alignment. Left-align paragraphs and dense content."
-    },
-    "crm_dashboard": {
-      "mode": "Mode B: High Density Grid",
-      "spacing": "Tight (gap-4, gap-6). Use h-full to stretch items. Every pixel must be utilized."
-    }
-  },
-  "grids": {
-    "technical_rules": [
-      "Grid items must be direct children of grid containers.",
-      "Use 'display: grid; grid-template-columns: subgrid' when nesting is unavoidable.",
-      "Override stretch with 'align-items: start' if needed."
-    ]
+  "spacing_and_layout": {
+    "section_padding": "py-24",
+    "container_width": "max-w-7xl mx-auto px-6",
+    "grid_gap": "gap-8"
   },
   "components": {
-    "buttons": {
-      "primary": "Solid Surgical Green, sharp edges (rounded-sm).",
-      "whatsapp_cta": "WhatsApp Green, white text, Phosphor WhatsApp icon.",
-      "secondary": "Outline button with Deep Blue text and border. Use for 'Download Brochure'."
+    "button_primary": "bg-teal-600 text-white hover:bg-teal-700 px-6 py-3 rounded-lg font-semibold transition-colors shadow-sm",
+    "button_secondary": "bg-white text-slate-900 border border-slate-200 hover:border-slate-300 px-6 py-3 rounded-lg font-semibold transition-colors",
+    "card_base": "bg-white rounded-2xl p-8 border border-slate-100 shadow-sm",
+    "trust_badge": "inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-50 text-teal-700 text-sm font-medium"
+  },
+  "sections": [
+    {
+      "name": "utility_bar",
+      "description": "Thin strip at the top. Background: slate-900. Text: white/slate-300.",
+      "layout": "flex justify-between items-center py-2 px-6 text-sm"
     },
-    "mega_menu": "Hierarchical structure, clear typography, dark hover states for high contrast.",
-    "cards": "Flat solid surfaces. 1px solid strokes (border-slate-200) instead of soft shadows. NO glassmorphism for medical data.",
-    "crm_pipeline": "Kanban board style using strict grid hierarchy. Color coded statuses using subtle background tints.",
-    "trust_footer": "MUST include MD-42 Wholesale License, GST number, and ISO details visible."
-  },
-  "motion": {
-    "hover": "Explicit color shifts (e.g., hover:bg-slate-900 hover:text-white). Focus states must have higher contrast.",
-    "transitions": "Use specific properties (transition-transform, transition-colors). Never transition-all.",
-    "entrance": "Staggered fade-up for grid items. Minimal animations in CRM to favor speed."
-  },
-  "accessibility": {
-    "contrast": "Minimum 4.5:1 ratio for normal text. Avoid gray-on-gray.",
-    "testing": "All interactive and key elements MUST include data-testid (e.g., data-testid='whatsapp-chat-btn').",
-    "motion": "Respect prefers-reduced-motion."
-  },
+    {
+      "name": "header",
+      "description": "Sticky header with nav. Background: white/90 backdrop-blur-md. Border-bottom.",
+      "layout": "flex justify-between items-center py-4 px-6 sticky top-0 z-50"
+    },
+    {
+      "name": "hero",
+      "description": "Dark hero section. Background: slate-900 with subtle background image overlay (opacity-20).",
+      "layout": "py-24 lg:py-32 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center",
+      "visuals": "Dark navy background, large white typography, teal accents for buttons/badges."
+    },
+    {
+      "name": "trust_metrics",
+      "description": "Stats strip immediately below hero or overlapping hero bottom.",
+      "layout": "grid grid-cols-2 md:grid-cols-4 gap-4 p-8 bg-white rounded-2xl shadow-lg -mt-12 relative z-10 border border-slate-100"
+    },
+    {
+      "name": "who_we_serve",
+      "description": "5 audience cards. B2B focus.",
+      "layout": "grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6 mt-24"
+    },
+    {
+      "name": "product_divisions",
+      "description": "10 divisions with subtle pastel card backgrounds.",
+      "layout": "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6",
+      "visuals": "Cards use very light tints (e.g., slate-50, teal-50, blue-50) for background, no heavy borders."
+    },
+    {
+      "name": "why_agile_ortho",
+      "description": "6 value prop cards.",
+      "layout": "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+    },
+    {
+      "name": "featured_products",
+      "description": "High demand products grid.",
+      "layout": "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+    },
+    {
+      "name": "how_ordering_works",
+      "description": "4-step process.",
+      "layout": "grid grid-cols-1 md:grid-cols-4 gap-8 relative"
+    },
+    {
+      "name": "compliance_band",
+      "description": "Trust band for certifications and compliance.",
+      "layout": "py-16 bg-slate-50 border-y border-slate-200 text-center"
+    },
+    {
+      "name": "final_cta",
+      "description": "Final action driving band.",
+      "layout": "py-24 bg-slate-900 text-white rounded-3xl my-24 text-center mx-6"
+    }
+  ],
   "media": {
-    "strategy": "High-fidelity clinical imagery. Zoom in on close-ups to create intimacy.",
-    "image_urls": [
-      {
-        "category": "Hero / Surgery",
-        "url": "https://images.pexels.com/photos/12104186/pexels-photo-12104186.jpeg",
-        "description": "State-of-the-art operating room, highly clinical. Use for homepage hero."
+    "images": {
+      "hero_background": {
+        "url": "https://images.unsplash.com/photo-1761639935303-67b032fe5fcf?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA3MDB8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBob3NwaXRhbCUyMGFyY2hpdGVjdHVyZSUyMGNsZWFuJTIwaW50ZXJpb3J8ZW58MHx8fHwxNzc0NTA2OTE4fDA&ixlib=rb-4.1.0&q=85",
+        "description": "Modern clean hospital interior to be used as dark overlaid background."
       },
-      {
-        "category": "Diagnostics / Lab",
-        "url": "https://images.unsplash.com/photo-1631556760585-2e846196d5a9",
-        "description": "Lab tech looking through microscope. Use for Diagnostics division."
+      "who_we_serve_team": {
+        "url": "https://images.pexels.com/photos/6129507/pexels-photo-6129507.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "description": "Diverse team of doctors and nurses."
       },
-      {
-        "category": "Logistics / Warehouse",
-        "url": "https://images.pexels.com/photos/221047/pexels-photo-221047.jpeg",
-        "description": "Large warehouse interior, docked truck. Use for about page / supply chain trust."
+      "medical_devices": {
+        "url": "https://images.unsplash.com/photo-1728102197400-0648e058fddd?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njd8MHwxfHNlYXJjaHw0fHxzdXJnaWNhbCUyMHRvb2xzJTIwbWVkaWNhbCUyMGRldmljZXN8ZW58MHx8fHwxNzc0NTA2OTE0fDA&ixlib=rb-4.1.0&q=85",
+        "description": "Surgical instruments on a table."
       },
-      {
-        "category": "Consultation / Doctor",
-        "url": "https://images.pexels.com/photos/8376212/pexels-photo-8376212.jpeg",
-        "description": "Online medical consultation with tablet. Use for CRM mock data or Contact page."
+      "medical_lab": {
+        "url": "https://images.pexels.com/photos/6627667/pexels-photo-6627667.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "description": "Lab tech operating centrifuge."
       }
-    ]
-  },
-  "visual_enhancers": {
-    "icons": "Use @phosphor-icons/react for marketing grids. Lucide-react for standard Shadcn UI.",
-    "textures": "Subtle noise or grain overlays in dark footer to kill digital flatness.",
-    "3d_libraries": "Skip 3D for this clinical B2B context. Focus on 2D precision and fast loading."
+    }
   },
   "instructions_to_main_agent": [
-    "Build standard Shadcn components in /app/frontend/src/components/ui/ but strip the generic 'Vercel-look'.",
-    "Use pure HTML + Tailwind for marketing layouts. Do not use Shadcn 'Card' for complex overlapping marketing layouts.",
-    "Include 8 specific medical divisions in navigation: Orthopedics, Trauma, Cardiovascular, Diagnostics, ENT, Endo-surgical, Infection Prevention, Peripheral Intervention.",
-    "Never use generic HTML elements for complex inputs (use Shadcn Select, Calendar, Dialog).",
-    "Ensure Footer strictly shows MD-42 Wholesale License and GST."
-  ],
-  "UNIVERSAL GUIDELINES FOR MAIN AGENT": [
-    "You tend to converge toward generic, 'on distribution' outputs. Avoid this.",
-    "Dark colors look good when used independently without gradients. DO NOT use dark colors as gradients.",
-    "Don't make generic centered layouts. Create depth through layered design elements.",
-    "You MUST NOT apply universal transition (transition: all).",
-    "You MUST NOT center align the app container (.App { text-align: center; }).",
-    "Always use modern pill-shaped or sharp button styles with interaction animations.",
-    "NEVER use AI assistant Emoji characters (\ud83e\udd16, \ud83e\udde0, etc.) for icons.",
-    "Every interaction needs micro-animations - hover states, transitions.",
-    "Use 2-3x more spacing than feels comfortable.",
-    "Components MUST use named exports. Pages MUST use default exports.",
-    "Use 'sonner' for toasts, located in /app/frontend/src/components/ui/sonner.jsx."
+    "Strictly adhere to the dark navy (#0F172A) and teal (#0D9488) palette. The hero MUST be dark.",
+    "Use Phosphor icons (via @phosphor-icons/react or lucide-react) for medical specialties (Bone, Heart, Lungs, etc).",
+    "Divisions should have subtle pastel backgrounds (e.g. bg-slate-50, bg-teal-50/50, bg-blue-50/50).",
+    "Make sure all components use generous padding (e.g., p-8 or p-12) as per the spacing system.",
+    "The Hero background image MUST have a heavy dark overlay (e.g. bg-slate-900/80 or bg-slate-900/90) so it looks like a subtle texture, not a distracting bright image.",
+    "Ensure all interactive elements have data-testid attributes."
   ]
 }
