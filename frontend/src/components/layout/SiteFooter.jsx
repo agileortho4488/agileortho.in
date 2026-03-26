@@ -6,7 +6,7 @@ export default function SiteFooter() {
   return (
     <footer data-testid="site-footer" className="border-t border-slate-200 bg-[#0B1F3F]">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
-        <div className="grid gap-10 md:grid-cols-4">
+        <div className="grid gap-10 md:grid-cols-5">
           {/* Brand */}
           <div className="md:col-span-2">
             <img src="/ao_logo_white.png" alt="Agile Ortho" className="h-12 w-auto" />
@@ -37,10 +37,24 @@ export default function SiteFooter() {
             <div className="text-sm font-semibold text-white mb-4">Quick Links</div>
             <ul className="space-y-2.5">
               <li><Link to="/products" className="text-sm text-slate-400 hover:text-white transition-colors">Products</Link></li>
+              <li><Link to="/districts" className="text-sm text-slate-400 hover:text-white transition-colors">Districts</Link></li>
               <li><Link to="/about" className="text-sm text-slate-400 hover:text-white transition-colors">About Us</Link></li>
               <li><Link to="/contact" className="text-sm text-slate-400 hover:text-white transition-colors">Contact</Link></li>
               <li><Link to="/chat" className="text-sm text-slate-400 hover:text-white transition-colors">AI Assistant</Link></li>
               <li><a href="https://www.agileortho.shop" target="_blank" rel="noreferrer" className="text-sm text-slate-400 hover:text-white transition-colors">Online Shop</a></li>
+            </ul>
+          </div>
+
+          {/* Key Districts */}
+          <div>
+            <div className="text-sm font-semibold text-white mb-4">Key Districts</div>
+            <ul className="space-y-2.5">
+              <li><Link to="/districts/hyderabad" className="text-sm text-slate-400 hover:text-white transition-colors">Hyderabad</Link></li>
+              <li><Link to="/districts/warangal" className="text-sm text-slate-400 hover:text-white transition-colors">Warangal</Link></li>
+              <li><Link to="/districts/karimnagar" className="text-sm text-slate-400 hover:text-white transition-colors">Karimnagar</Link></li>
+              <li><Link to="/districts/nizamabad" className="text-sm text-slate-400 hover:text-white transition-colors">Nizamabad</Link></li>
+              <li><Link to="/districts/khammam" className="text-sm text-slate-400 hover:text-white transition-colors">Khammam</Link></li>
+              <li><Link to="/districts" className="text-sm text-teal-400 hover:text-teal-300 transition-colors font-medium">All 33 Districts →</Link></li>
             </ul>
           </div>
 

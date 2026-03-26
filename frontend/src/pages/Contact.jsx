@@ -2,6 +2,7 @@ import { useState } from "react";
 import { submitLead } from "../lib/api";
 import { toast } from "sonner";
 import { Phone, Mail, MapPin, MessageCircle, Clock, Send } from "lucide-react";
+import { SEO, buildBreadcrumbSchema } from "../components/SEO";
 
 const DISTRICTS = ["Hyderabad","Rangareddy","Medchal-Malkajgiri","Sangareddy","Nalgonda","Warangal","Karimnagar","Khammam","Nizamabad","Adilabad","Mahabubnagar","Medak","Siddipet","Suryapet","Jagtial","Peddapalli","Kamareddy","Mancherial","Wanaparthy","Nagarkurnool","Vikarabad","Jogulamba Gadwal","Rajanna Sircilla","Kumuram Bheem","Mulugu","Narayanpet","Mahabubabad","Jayashankar","Jangaon","Nirmal","Yadadri","Bhadradri","Hanumakonda"];
 
@@ -32,6 +33,12 @@ export default function Contact() {
 
   return (
     <div className="min-h-screen bg-[#FAFAFA]">
+      <SEO
+        title="Contact Us - Request Bulk Quote for Medical Devices"
+        description="Contact Agile Ortho for bulk medical device pricing, product samples, and technical consultation. Authorized Meril distributor in Telangana. Response within 24 hours."
+        canonical="/contact"
+        jsonLd={buildBreadcrumbSchema([{ name: "Home", url: "/" }, { name: "Contact" }])}
+      />
       {/* Header */}
       <section className="bg-slate-900 py-16" data-testid="contact-hero">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center">

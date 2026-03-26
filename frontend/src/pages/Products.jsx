@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Search, SlidersHorizontal, Package, Grid3X3, List, ChevronLeft, ChevronRight, ChevronDown, X, Bone, HeartPulse, Microscope, Stethoscope, Scissors, Shield, Activity, Syringe, Scan, CircuitBoard } from "lucide-react";
 import { getProducts, getDivisions } from "../lib/api";
+import { SEO, buildBreadcrumbSchema, buildItemListSchema } from "../components/SEO";
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -98,9 +99,24 @@ export default function Products() {
   const hasActiveFilters = division || category || search;
   const totalDivisionProducts = Object.values(divisionCounts).reduce((a, b) => a + b, 0);
 
+  const seoTitle = division ? `${division} Medical Devices` : "Medical Device Catalog";
+  const seoDesc = division
+    ? `Browse ${division} medical devices from Meril Life Sciences. Authorized distributor for hospitals and clinics in Telangana. ${total} products available.`
+    : "Browse 814+ medical devices across 10 divisions. Orthopedics, cardiovascular, diagnostics, ENT, endo-surgical devices for hospitals in Telangana.";
+  const breadcrumbs = [{ name: "Home", url: "/" }, { name: "Products" }];
+  if (division) breadcrumbs.push({ name: division });
+
   return (
     <div className="min-h-screen bg-white font-[Manrope]">
-      {/* ===== DARK HERO BANNER ===== */}
+      <SEO
+        title={seoTitle}
+        description={seoDesc}
+        canonical={division ? `/products?division=${encodeURIComponent(division)}` : "/products"}
+        jsonLd={[
+          buildBreadcrumbSchema(breadcrumbs),
+          ...(products.length > 0 ? [buildItemListSchema(products, division)] : [])
+        ]}
+      />      {/* ===== DARK HERO BANNER ===== */}
       <section className="bg-slate-900 relative overflow-hidden" data-testid="products-hero">
         <div className="absolute inset-0 opacity-10">
           <div className="w-full h-full bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-teal-500 via-transparent to-transparent" />

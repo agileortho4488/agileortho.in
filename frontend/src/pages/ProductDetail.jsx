@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { getProduct, getProducts, submitLead } from "../lib/api";
 import { toast } from "sonner";
+import { SEO, buildProductSchema, buildBreadcrumbSchema } from "../components/SEO";
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -95,6 +96,17 @@ export default function ProductDetail() {
   const specEntries = Object.entries(specs).filter(([, v]) => v !== null && v !== "" && !/^\d+$/.test(String(v)));
   const hasSizes = product.size_variables && product.size_variables.length > 0;
 
+  const imageUrl = product.images && product.images.length > 0
+    ? `${API}/api/files/${product.images[0].storage_path}`
+    : undefined;
+
+  const breadcrumbs = [
+    { name: "Home", url: "/" },
+    { name: "Products", url: "/products" },
+    { name: product.division, url: `/products?division=${encodeURIComponent(product.division)}` },
+    { name: product.product_name },
+  ];
+
   const fullSpecRows = [
     ["Product Name", product.product_name],
     product.sku_code ? ["SKU / Catalog No.", product.sku_code] : null,
@@ -114,6 +126,17 @@ export default function ProductDetail() {
 
   return (
     <div className="min-h-screen bg-white font-[Manrope]">
+      <SEO
+        title={product.product_name}
+        description={product.description || `${product.product_name} from ${product.manufacturer}. ${product.division} medical device available from authorized Meril distributor in Telangana.`}
+        canonical={`/products/${id}`}
+        image={imageUrl}
+        type="product"
+        jsonLd={[
+          buildProductSchema(product, imageUrl),
+          buildBreadcrumbSchema(breadcrumbs)
+        ]}
+      />
       {/* ===== DARK HERO BANNER ===== */}
       <section className="bg-slate-900 relative overflow-hidden" data-testid="product-detail-hero">
         <div className="absolute inset-0 opacity-10">

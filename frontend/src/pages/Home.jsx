@@ -7,6 +7,7 @@ import {
   ClipboardList, Send, ChevronRight, Zap, Globe, CircuitBoard
 } from "lucide-react";
 import { getProducts, getDivisions } from "../lib/api";
+import { SEO, buildOrganizationSchema, buildLocalBusinessSchema } from "../components/SEO";
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -38,7 +39,12 @@ export default function Home() {
 
   return (
     <div className="font-[Manrope]">
-      {/* ===== 1. UTILITY BAR ===== */}
+      <SEO
+        title="Authorized Meril Life Sciences Distributor - Medical Devices for Hospitals in Telangana"
+        description="Agile Ortho is the authorized Meril Life Sciences master distributor for Telangana. Orthopedic implants, cardiovascular stents, diagnostic analyzers, endo-surgical instruments, ENT devices, and infection prevention products for hospitals and clinics across all 33 districts."
+        canonical="/"
+        jsonLd={[buildOrganizationSchema(), buildLocalBusinessSchema()]}
+      />      {/* ===== 1. UTILITY BAR ===== */}
       <div className="bg-slate-900 text-white border-b border-slate-800" data-testid="utility-bar">
         <div className="max-w-7xl mx-auto px-6 py-2 flex flex-wrap justify-between items-center text-xs">
           <span className="text-slate-300 hidden sm:block">

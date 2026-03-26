@@ -1,9 +1,16 @@
 import { Shield, Users, Globe, Award, Truck, HeartPulse } from "lucide-react";
 import { Link } from "react-router-dom";
+import { SEO, buildBreadcrumbSchema } from "../components/SEO";
 
 export default function About() {
   return (
     <div className="min-h-screen bg-[#FAFAFA]">
+      <SEO
+        title="About Us - Authorized Meril Life Sciences Distributor"
+        description="Agile Ortho is the authorized Meril Life Sciences master franchise distributor for Telangana, India. Serving hospitals, clinics, and diagnostic centers across all 33 districts with 814+ medical devices."
+        canonical="/about"
+        jsonLd={buildBreadcrumbSchema([{ name: "Home", url: "/" }, { name: "About" }])}
+      />
       {/* Hero */}
       <section className="relative bg-slate-900 py-16 sm:py-20 overflow-hidden">
         <div className="absolute inset-0 opacity-15">
