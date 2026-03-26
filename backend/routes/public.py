@@ -77,6 +77,23 @@ async def list_products(
     }
 
 
+@router.get("/api/products/featured/homepage")
+async def get_featured_products():
+    """Get diverse featured products across divisions for homepage."""
+    divisions = await products_col.distinct("division")
+    featured = []
+    for div in divisions:
+        prods = await products_col.find(
+            {"division": div, "images.0": {"$exists": True}},
+            {"_id": 1, "product_name": 1, "division": 1, "category": 1,
+             "description": 1, "images": {"$slice": 1}, "sku_code": 1}
+        ).limit(1).to_list(1)
+        if prods:
+            featured.append(prods[0])
+    from helpers import serialize_docs
+    return {"products": serialize_docs(featured)[:8]}
+
+
 @router.get("/api/products/{product_id}")
 async def get_product(product_id: str):
     try:
