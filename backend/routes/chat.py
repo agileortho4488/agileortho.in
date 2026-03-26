@@ -37,7 +37,7 @@ RULES:
 ABOUT AGILE ORTHO:
 - Authorized Meril Life Sciences Master Distributor for Telangana
 - Serves hospitals, clinics, and diagnostic centers across all 33 districts of Telangana
-- Specializes in: Orthopedics, Cardiovascular, Diagnostics, ENT, Endo-surgical, Infection Prevention, Critical Care, Cardiac Surgery, Peripheral Intervention, Urology, Robotics devices
+- Specializes in: Orthopedics, Cardiovascular, Diagnostics, ENT, Endo-surgical, Infection Prevention, Critical Care, Peripheral Intervention, Urology, Robotics devices
 - 300+ products in our catalog across 15+ medical divisions
 - ISO 13485 certified supply chain
 - Offers bulk pricing, quick delivery, and after-sales support

@@ -13,7 +13,7 @@ import {
 const DIVISIONS = [
   "Orthopedics", "Cardiovascular", "Diagnostics",
   "ENT", "Endo-surgical", "Infection Prevention", "Peripheral Intervention",
-  "Cardiac Surgery", "Critical Care", "Urology", "Robotics",
+  "Critical Care", "Urology", "Robotics",
 ];
 
 const EMPTY_FORM = {
