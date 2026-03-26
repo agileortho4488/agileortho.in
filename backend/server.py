@@ -17,6 +17,7 @@ from routes.whatsapp import router as whatsapp_router
 from routes.bulk_upload import router as bulk_upload_router
 from routes.image_extract import router as image_extract_router
 from routes.automation import router as automation_router
+from routes.chatbot import router as chatbot_router
 
 app = FastAPI(title="Agile Ortho API")
 
@@ -37,6 +38,7 @@ app.include_router(whatsapp_router)
 app.include_router(bulk_upload_router)
 app.include_router(image_extract_router)
 app.include_router(automation_router)
+app.include_router(chatbot_router)
 
 
 @app.on_event("startup")

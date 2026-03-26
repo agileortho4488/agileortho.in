@@ -15,3 +15,8 @@ imports_col = db["pdf_imports"]
 wa_conversations_col = db["wa_conversations"]
 wa_message_status_col = db["wa_message_status"]
 wa_webhook_logs_col = db["wa_webhook_logs"]
+
+shadow_products_col = db["shadow_products"]
+shadow_skus_col = db["shadow_skus"]
+shadow_brands_col = db["shadow_brands"]
+shadow_chunks_col = db["shadow_chunks"]

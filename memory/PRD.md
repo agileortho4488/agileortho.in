@@ -80,11 +80,16 @@ This file contains complete processing state, discovered patterns, and resume po
 - Download: `gdown 'https://drive.google.com/uc?id=191gs1CPG_MkcqWPtqC_GWIrPd1xvJlS_' -O /tmp/zoho_full.zip --fuzzy`
 
 ### Processing Status
-- Files processed: 5/200
-- Next file: #6 (AGFN Brochure.pdf)
-- Products extracted: 118
-- SKUs with codes: 82
-- Brands identified: 12 (KET, ARMAR, AURIC, MAIRA, MEVEL, MIREX, BAKTIO, MIDOR, CUTANEX, MIREY, MYSCAN, MYNOX, INVIRO, MyClip)
+- Files processed: 50/200
+- Next file: #51
+- Batch 1 (1-25): COMPLETE — audited, re-extracted (018-020,022,025), normalized, chunked, retrieval validated (10/10)
+- Batch 2 (26-50): COMPLETE — extracted, parsed, normalized, merged with Batch 1, shadow DB updated, retrieval validated (15/15)
+- Products extracted: 372
+- SKUs with codes: 1,353
+- Brands identified: 49
+- Divisions: 7 (Trauma, Diagnostics, Infection Prevention, Cardiovascular, ENT, Joint Replacement, Critical Care)
+- Shadow DB: LIVE (shadow_products, shadow_skus, shadow_brands, shadow_chunks)
+- Chatbot API: LIVE at /api/chatbot/query, /api/chatbot/brands, /api/chatbot/products, /api/chatbot/skus, /api/chatbot/stats
 
 ### Extraction Pipeline
 - Tier 1: pdfplumber/python-pptx/openpyxl (direct text)
@@ -98,15 +103,17 @@ This file contains complete processing state, discovered patterns, and resume po
 4. Only then merge into production
 
 ## Upcoming Tasks
-- P0: Continue brochure extraction (Files 6-200)
-- P1: First normalization batch after Files 1-10
-- P1: Push re-deployment to sync live database with 967 products
-- P2: WhatsApp Interactive Elements — Quick reply buttons, campaign management
-- P2: Facebook Developer Account Integration — CAPI and Lead Ads
+- P0: Continue brochure extraction (Files 51-200, in batches of 25)
+- P1: Deeper consolidation at File 75, 100
+- P1: Generate training chunks for each new batch
+- P1: Website chatbot frontend integration
+- P2: WhatsApp AI Chatbot (via Interakt)
+- P2: Website partial product update (high-confidence products only)
 
 ## Future/Backlog
 - P3: Product comparison feature
-- P4: MongoDB → PostgreSQL migration (if needed)
+- P3: Push re-deployment to sync shadow to production
+- P4: MongoDB to PostgreSQL migration (if needed)
 - P5: Image extraction from brochure pages
 - P6: AI chatbot training with extracted brochure knowledge
 
