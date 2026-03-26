@@ -1,100 +1,75 @@
+import json
+import os
 from datetime import datetime, timezone
 from db import products_col, leads_col
 
+DATA_DIR = os.path.dirname(os.path.abspath(__file__))
 
-SEED_PRODUCTS = [
-    {"product_name": "Destiknee Total Knee System", "sku_code": "MRL-ORTHO-001", "division": "Orthopedics", "category": "Knee Arthroplasty", "description": "Made in India total knee replacement system with CE & USFDA certification. Delivers excellent anatomical fit and high-flex motion for Indian patients.", "technical_specifications": {"certification": "CE & USFDA", "motion": "High-flex", "origin": "Made in India"}, "material": "Cobalt-Chromium Alloy", "manufacturer": "Meril Life Sciences"},
-    {"product_name": "Freedom Knee System", "sku_code": "MRL-ORTHO-002", "division": "Orthopedics", "category": "Knee Arthroplasty", "description": "High precision 7 radii design knee replacement system with proven long-term survivorship (~98% at 10 years). Advanced bone preservation technology.", "technical_specifications": {"design": "7 Radii", "survivorship": "~98% at 10 years", "feature": "Bone Preservation"}, "material": "Cobalt-Chromium Alloy", "manufacturer": "Meril Life Sciences"},
-    {"product_name": "Opulent Knee System", "sku_code": "MRL-ORTHO-003", "division": "Orthopedics", "category": "Knee Arthroplasty", "description": "Premium TKR with advanced TiNbN coating for greater strength and longevity (18-20 years). Global sizing matrix, hypoallergenic, and lowest wear rate.", "technical_specifications": {"coating": "TiNbN", "longevity": "18-20 years", "features": ["Hypoallergenic", "Lowest Wear", "Global Sizing"]}, "material": "TiNbN Coated Alloy", "manufacturer": "Meril Life Sciences"},
-    {"product_name": "Latitude Hip System", "sku_code": "MRL-ORTHO-004", "division": "Orthopedics", "category": "Hip Arthroplasty", "description": "Total hip replacement system with proximal porous coating for strong bone ingrowth. Triple tapered stem with reduced distal cross section for optimal fit.", "technical_specifications": {"coating": "Proximal Porous", "stem": "Triple Tapered", "feature": "Reduced Distal Cross Section"}, "material": "Titanium Alloy", "manufacturer": "Meril Life Sciences"},
-    {"product_name": "Bipolar Cup System", "sku_code": "MRL-ORTHO-005", "division": "Orthopedics", "category": "Hip Arthroplasty", "description": "Dual articulation hip system that reduces acetabular wear. Lightweight design ideal for elderly patients. UHMWPE liner with polished steel shell.", "technical_specifications": {"articulation": "Dual", "liner": "UHMWPE", "shell": "Polished Steel"}, "material": "UHMWPE + Steel", "manufacturer": "Meril Life Sciences"},
-    {"product_name": "Monomod Revision Stem", "sku_code": "MRL-ORTHO-006", "division": "Orthopedics", "category": "Hip Arthroplasty", "description": "Monobloc revision stem design that avoids modular junction failure. Optional proximal fixation with polished distal tip. Ideal for poor bone stock and complex revisions.", "technical_specifications": {"design": "Monobloc", "tip": "Polished Distal", "indication": "Complex Revisions"}, "material": "Titanium Alloy", "manufacturer": "Meril Life Sciences"},
-    {"product_name": "KET Plating System", "sku_code": "MRL-TRMA-001", "division": "Orthopedics", "category": "Plating Systems", "description": "LVM316 stainless steel trauma plating system with high strength and low carbon molecule composition. Anatomic contour for better fit, MRI safe up to 3 Tesla.", "technical_specifications": {"material_grade": "LVM316", "mri_safe": "Up to 3 Tesla", "contour": "Anatomic"}, "material": "LVM316 Stainless Steel", "manufacturer": "Meril Life Sciences"},
-    {"product_name": "ARMAR Titanium Plating System", "sku_code": "MRL-TRMA-002", "division": "Orthopedics", "category": "Plating Systems", "description": "Titanium trauma plating system offering excellent biocompatibility, corrosion resistance, and high strength-to-weight ratio for superior fixation.", "technical_specifications": {"biocompatibility": "Excellent", "corrosion_resistance": "High", "strength": "High strength-to-weight ratio"}, "material": "Titanium", "manufacturer": "Meril Life Sciences"},
-    {"product_name": "AURIC Gold-Coated Plating System", "sku_code": "MRL-TRMA-003", "division": "Orthopedics", "category": "Plating Systems", "description": "Premium gold-coated trauma plates with outstanding biocompatibility and allergy prevention. Better resistance to bacterial adhesion with hardness superior to TiNbN alloys.", "technical_specifications": {"coating": "Gold", "antibacterial": "Superior resistance", "hardness": "Better than TiNbN"}, "material": "Gold-Coated Plates", "manufacturer": "Meril Life Sciences"},
-    {"product_name": "PFIN/PFRN Nailing System", "sku_code": "MRL-TRMA-004", "division": "Orthopedics", "category": "Nailing Systems", "description": "Proximal femoral intramedullary nail system with multi-lock options for better stability. Compatible instrumentation for faster surgery with anatomical design.", "technical_specifications": {"locking": "Multi-lock Options", "design": "Anatomical", "surgery_time": "Faster"}, "material": "Titanium", "manufacturer": "Meril Life Sciences"},
-    {"product_name": "MBOSS Screw System", "sku_code": "MRL-TRMA-005", "division": "Orthopedics", "category": "Screw Systems", "description": "Precision-engineered screw system with self-tapping and self-drilling designs. Available in multiple diameters and lengths for versatile fixation options.", "technical_specifications": {"threading": "Precision", "self_tapping": True, "self_drilling": True}, "material": "Stainless Steel / Titanium", "manufacturer": "Meril Life Sciences"},
-    {"product_name": "Trent Bipolar Stem", "sku_code": "MRL-TRMA-006", "division": "Orthopedics", "category": "Bipolar Stems", "description": "Partial hip replacement system available in cemented, uncemented, and revision stem configurations for comprehensive trauma management.", "technical_specifications": {"variants": ["Cemented", "Uncemented", "Revision"], "type": "Partial Hip Replacement"}, "material": "Titanium Alloy", "manufacturer": "Meril Life Sciences"},
-    {"product_name": "Myval Transcatheter Aortic Valve", "sku_code": "MRL-CARD-001", "division": "Cardiovascular", "category": "Heart Valves", "description": "Balloon-expandable transcatheter heart valve (THV) with wide size matrix including intermediate sizes. CE marked and globally approved TAVR system.", "technical_specifications": {"type": "Balloon-expandable THV", "approval": "CE Marked, Global", "feature": "Intermediate Sizes Available"}, "material": "Nitinol Frame + Bovine Pericardium", "manufacturer": "Meril Life Sciences"},
-    {"product_name": "Myval Octacor Surgical Heart Valve", "sku_code": "MRL-CARD-002", "division": "Cardiovascular", "category": "Heart Valves", "description": "Advanced surgical heart valve with Octacor design for optimal hemodynamics and durability in aortic valve replacement procedures.", "technical_specifications": {"design": "Octacor", "application": "Surgical AVR"}, "material": "Pyrolytic Carbon", "manufacturer": "Meril Life Sciences"},
-    {"product_name": "Evermine50 Drug Eluting Stent", "sku_code": "MRL-CARD-003", "division": "Cardiovascular", "category": "Coronary Stents", "description": "Cobalt-Chromium coronary drug eluting stent with ultra-thin strut design for superior deliverability. Durable polymer ensures controlled drug release.", "technical_specifications": {"platform": "Cobalt-Chromium", "strut": "Ultra-thin", "polymer": "Durable"}, "material": "Cobalt-Chromium", "manufacturer": "Meril Life Sciences"},
-    {"product_name": "BioMime Drug Eluting Stent", "sku_code": "MRL-CARD-004", "division": "Cardiovascular", "category": "Coronary Stents", "description": "Next-generation sirolimus-eluting coronary stent system on Cobalt-Chromium platform. Proven clinical outcomes with extensive global data.", "technical_specifications": {"drug": "Sirolimus", "platform": "Cobalt-Chromium", "data": "Extensive Global Clinical"}, "material": "Cobalt-Chromium", "manufacturer": "Meril Life Sciences"},
-    {"product_name": "MeRes100 Bioresorbable Scaffold", "sku_code": "MRL-CARD-005", "division": "Cardiovascular", "category": "Bioresorbable Scaffolds", "description": "PLLA-based bioresorbable vascular scaffold with thin 100-micron struts. Fully bioresorbable design supports vessel healing and restores vasomotion.", "technical_specifications": {"material_base": "PLLA", "strut_thickness": "100 microns", "feature": "Fully Bioresorbable"}, "material": "PLLA", "manufacturer": "Meril Life Sciences"},
-    {"product_name": "Mozec PTCA Balloon Catheter", "sku_code": "MRL-CARD-006", "division": "Cardiovascular", "category": "Balloon Catheters", "description": "Over-the-wire PTCA balloon dilatation catheter with PEBA balloon material. Available up to 120mm length for complex coronary interventions.", "technical_specifications": {"design": "Over-the-wire", "max_length": "120mm", "balloon": "PEBA"}, "material": "PEBA", "manufacturer": "Meril Life Sciences"},
-    {"product_name": "Meriscreen HIV Rapid Test Kit", "sku_code": "MRL-DIAG-001", "division": "Diagnostics", "category": "Rapid Tests", "description": "WHO-prequalified HIV rapid diagnostic kit with high sensitivity and specificity. Easy-to-use format with room temperature storage for field deployment.", "technical_specifications": {"prequalification": "WHO", "storage": "Room Temperature", "format": "Rapid Test"}, "material": "Diagnostic Reagents", "manufacturer": "Meril Life Sciences"},
-    {"product_name": "AutoQuant 400 Clinical Chemistry Analyzer", "sku_code": "MRL-DIAG-002", "division": "Diagnostics", "category": "Clinical Chemistry", "description": "Fully automated clinical chemistry analyzer with high throughput capability. Saves time by completing work in minimum number of batches.", "technical_specifications": {"type": "Fully Automated", "throughput": "400 tests/hour", "automation": "Complete"}, "material": "Analytical Instrument", "manufacturer": "Meril Life Sciences"},
-    {"product_name": "CelQuant 5 Plus Hematology Analyzer", "sku_code": "MRL-DIAG-003", "division": "Diagnostics", "category": "Hematology", "description": "5-Part differential hematology analyzer based on tri-angle laser scatter, flow cytometry, and cytochemical staining. Available with autoloader option.", "technical_specifications": {"type": "5-Part Differential", "technology": ["Tri-angle Laser Scatter", "Flow Cytometry", "Cytochemical Staining"], "autoloader": "Optional"}, "material": "Analytical Instrument", "manufacturer": "Meril Life Sciences"},
-    {"product_name": "ClotQuant 4-Channel Coagulation Analyzer", "sku_code": "MRL-DIAG-004", "division": "Diagnostics", "category": "Coagulation", "description": "4-channel coagulation analyzer with 24 sample positions and 6 reagent positions for comprehensive coagulation testing in clinical laboratories.", "technical_specifications": {"channels": 4, "sample_positions": 24, "reagent_positions": 6}, "material": "Analytical Instrument", "manufacturer": "Meril Life Sciences"},
-    {"product_name": "LumiQuant e-CLIA Analyzer", "sku_code": "MRL-DIAG-005", "division": "Diagnostics", "category": "Immunoassay", "description": "Electro-chemiluminescence immunoassay analyzer with 86 tests per hour throughput. Advanced e-CLIA technology for sensitive immunodiagnostics.", "technical_specifications": {"technology": "Electro-chemiluminescence", "throughput": "86 tests/hour", "type": "Immunoassay"}, "material": "Analytical Instrument", "manufacturer": "Meril Life Sciences"},
-    {"product_name": "MERILISA HIV Gen 4 ELISA Kit", "sku_code": "MRL-DIAG-006", "division": "Diagnostics", "category": "ELISA", "description": "4th generation HIV ELISA diagnostic kit compatible with wide range of automated ELISA systems. Accurate optical density measurement for reliable results.", "technical_specifications": {"generation": "4th Gen", "type": "ELISA", "compatibility": "Wide Range Analyzers"}, "material": "Diagnostic Reagents", "manufacturer": "Meril Life Sciences"},
-    {"product_name": "Mesire Sinus Balloon Catheter", "sku_code": "MRL-ENT-001", "division": "ENT", "category": "Sinus Care", "description": "Non-compliant balloon catheter for controlled sinus ostia dilation. Guide catheters with multiple angles and light wire for accurate sinus localization in chronic sinusitis.", "technical_specifications": {"balloon": "Non-compliant", "guidance": "Multiple Angle Catheters", "localization": "Light Wire"}, "material": "Medical Grade Polymer", "manufacturer": "Meril Life Sciences"},
-    {"product_name": "MYRAC RF Plasma Generator", "sku_code": "MRL-ENT-002", "division": "ENT", "category": "RF Devices", "description": "Low-temperature plasma generator for precise tissue ablation with dual modes (Ablation & Coagulation). Integrated saline irrigation and suction for ENT procedures.", "technical_specifications": {"technology": "Low-temperature Plasma", "modes": ["Ablation", "Coagulation"], "features": ["Saline Irrigation", "Suction"]}, "material": "Surgical Instrument", "manufacturer": "Meril Life Sciences"},
-    {"product_name": "MESIC ENT Diode Laser", "sku_code": "MRL-ENT-003", "division": "ENT", "category": "Laser Systems", "description": "980nm radial fibre ENT diode laser system offering excellent cutting, coagulation, and vaporization. Compact and portable for otology, rhinology, and laryngology.", "technical_specifications": {"wavelength": "980nm", "fibre": "Radial", "functions": ["Cutting", "Coagulation", "Vaporization"]}, "material": "Laser System", "manufacturer": "Meril Life Sciences"},
-    {"product_name": "OTSIKO Video Otoscope", "sku_code": "MRL-ENT-004", "division": "ENT", "category": "Diagnostic Devices", "description": "HD video otoscope for visualization of ear canal and tympanic membrane. Portable and recordable with 32GB memory card and 5 probe tips included.", "technical_specifications": {"resolution": "HD", "memory": "32GB", "probes": 5, "recording": True}, "material": "Medical Device", "manufacturer": "Meril Life Sciences"},
-    {"product_name": "MUKICT Shaver Blades", "sku_code": "MRL-ENT-005", "division": "ENT", "category": "Surgical Consumables", "description": "Endoscopic shaver blades with wide angle range (0 to 120 degrees). M2 compatible for use with Medtronic debrider systems for precise tissue removal.", "technical_specifications": {"angle_range": "0-120 degrees", "compatibility": "M2 (Medtronic IPC)", "type": "Endoscopic Shaver"}, "material": "Surgical Steel", "manufacturer": "Meril Life Sciences"},
-    {"product_name": "Mitsu Absorbable Sutures", "sku_code": "MRL-ENDO-001", "division": "Endo-surgical", "category": "Sutures", "description": "Synthetic absorbable sutures providing reliable wound closure with predictable absorption profile. Available in multiple gauges and needle configurations.", "technical_specifications": {"type": "Synthetic Absorbable", "absorption": "Predictable Profile"}, "material": "Polyglactin", "manufacturer": "Meril Life Sciences"},
-    {"product_name": "Filamide Non-Absorbable Sutures", "sku_code": "MRL-ENDO-002", "division": "Endo-surgical", "category": "Sutures", "description": "High-quality synthetic non-absorbable sutures for permanent tissue approximation. Excellent knot security and handling characteristics.", "technical_specifications": {"type": "Synthetic Non-Absorbable", "knot_security": "Excellent"}, "material": "Nylon", "manufacturer": "Meril Life Sciences"},
-    {"product_name": "Mirus Powered Endocutter", "sku_code": "MRL-ENDO-003", "division": "Endo-surgical", "category": "Staplers", "description": "Powered endoscopic linear cutting stapler for precise tissue transection and stapling in minimally invasive procedures. Consistent staple formation.", "technical_specifications": {"type": "Powered Linear Endocutter", "stapling": "Consistent Formation", "approach": "Minimally Invasive"}, "material": "Surgical Steel + Polymer", "manufacturer": "Meril Life Sciences"},
-    {"product_name": "HandX Handheld Robotic System", "sku_code": "MRL-ENDO-004", "division": "Endo-surgical", "category": "Robotics", "description": "Revolutionary 5mm handheld robotic system for laparoscopic surgery. Provides robotic precision in a handheld form factor for enhanced surgical dexterity.", "technical_specifications": {"size": "5mm", "type": "Handheld Robotic", "application": "Laparoscopic Surgery"}, "material": "Surgical Instrument", "manufacturer": "Meril Life Sciences"},
-    {"product_name": "MISSO Orthopedic Robotic System", "sku_code": "MRL-ENDO-005", "division": "Endo-surgical", "category": "Robotics", "description": "Indigenous AI-driven orthopedic robotic system for knee replacement surgery. Combines artificial intelligence with robotic precision for optimal outcomes.", "technical_specifications": {"ai": "AI-driven", "application": "Knee Replacement", "origin": "Indigenous"}, "material": "Robotic System", "manufacturer": "Meril Life Sciences"},
-    {"product_name": "Merineum Hernia Mesh", "sku_code": "MRL-ENDO-006", "division": "Endo-surgical", "category": "Hernia Repair", "description": "Lightweight polypropylene mesh for hernia repair procedures. Available in flat and 3D configurations for inguinal, ventral, and incisional hernia repairs.", "technical_specifications": {"type": "Lightweight Mesh", "configurations": ["Flat", "3D"], "indications": ["Inguinal", "Ventral", "Incisional"]}, "material": "Polypropylene", "manufacturer": "Meril Life Sciences"},
-    {"product_name": "Maira Surgical Gowns", "sku_code": "MRL-IPC-001", "division": "Infection Prevention", "category": "Surgical Apparels", "description": "Sterile, water-repellent surgical gowns providing a perfect barrier for comfort and protection during surgical procedures. Single-use disposable design.", "technical_specifications": {"sterile": True, "water_repellent": True, "type": "Single-use Disposable"}, "material": "Non-woven Fabric", "manufacturer": "Meril Life Sciences"},
-    {"product_name": "Maira Surgical Drapes", "sku_code": "MRL-IPC-002", "division": "Infection Prevention", "category": "Surgical Apparels", "description": "Sterile surgical drapes that are highly absorbent yet impervious to fluids. Provides effective barrier protection for the surgical field.", "technical_specifications": {"sterile": True, "absorbency": "High", "fluid_barrier": "Impervious"}, "material": "Non-woven Fabric", "manufacturer": "Meril Life Sciences"},
-    {"product_name": "Myscan OPA Instrument Disinfectant", "sku_code": "MRL-IPC-003", "division": "Infection Prevention", "category": "Disinfection & Sterilization", "description": "Proven OPA (Ortho-Phthalaldehyde) efficacy for high-level instrument and endoscope disinfection. Fast-acting with broad-spectrum antimicrobial activity.", "technical_specifications": {"active_agent": "OPA", "level": "High-Level Disinfection", "spectrum": "Broad"}, "material": "Chemical Solution", "manufacturer": "Meril Life Sciences"},
-    {"product_name": "Baktio Hand Hygiene Solution", "sku_code": "MRL-IPC-004", "division": "Infection Prevention", "category": "Hand Hygiene", "description": "Dual-action hand hygiene formula combining CHG and 70% alcohol for effective hand sanitization. Skin-friendly with glycerol-based moisturization system.", "technical_specifications": {"active_agents": ["CHG", "70% Alcohol"], "moisturizer": "Glycerol-based", "action": "Dual"}, "material": "Antiseptic Solution", "manufacturer": "Meril Life Sciences"},
-    {"product_name": "IV Dressing with CHG", "sku_code": "MRL-IPC-005", "division": "Infection Prevention", "category": "Wound Care", "description": "Transparent CHG-impregnated IV dressing for catheter site protection and infection prevention. Clear window allows continuous site monitoring.", "technical_specifications": {"type": "Transparent", "antimicrobial": "CHG-impregnated", "monitoring": "Clear Window"}, "material": "Polyurethane Film", "manufacturer": "Meril Life Sciences"},
-    {"product_name": "Sterile Gauze Swabs", "sku_code": "MRL-IPC-006", "division": "Infection Prevention", "category": "Wound Care", "description": "Pre-sterilized gauze swabs for sterile wound dressing applications. High absorbency cotton gauze with consistent quality for clinical use.", "technical_specifications": {"sterile": True, "absorbency": "High", "type": "Pre-sterilized"}, "material": "Cotton Gauze", "manufacturer": "Meril Life Sciences"},
-    {"product_name": "Promesa Self-Expanding Peripheral Stent", "sku_code": "MRL-PERI-001", "division": "Peripheral Intervention", "category": "Peripheral Stents", "description": "Nickel-Titanium alloy self-expanding peripheral stent with 170-micron strut thickness. High flexibility for navigating tortuous peripheral anatomy.", "technical_specifications": {"expansion": "Self-Expanding", "strut": "170 microns", "flexibility": "High"}, "material": "Nickel-Titanium (Nitinol)", "manufacturer": "Meril Life Sciences"},
-    {"product_name": "Cogent Balloon-Expandable Peripheral Stent", "sku_code": "MRL-PERI-002", "division": "Peripheral Intervention", "category": "Peripheral Stents", "description": "Cobalt-Chromium balloon-expandable peripheral stent with 120-micron strut thickness. Optimized radial strength for iliac and renal interventions.", "technical_specifications": {"expansion": "Balloon-Expandable", "strut": "120 microns", "radial_strength": "Optimized"}, "material": "Cobalt-Chromium L605", "manufacturer": "Meril Life Sciences"},
-    {"product_name": "Mozec PTA Balloon Catheter", "sku_code": "MRL-PERI-003", "division": "Peripheral Intervention", "category": "Balloon Catheters", "description": "Over-the-wire PTA balloon dilatation catheter with PEBA balloon material. Available up to 120mm length with optional Paclitaxel coating for drug delivery.", "technical_specifications": {"design": "Over-the-wire", "max_length": "120mm", "drug_coating": "Optional Paclitaxel"}, "material": "PEBA", "manufacturer": "Meril Life Sciences"},
-    {"product_name": "Obtura Vascular Closure Device", "sku_code": "MRL-PERI-004", "division": "Peripheral Intervention", "category": "Vascular Closure", "description": "Effective femoral artery puncture closure device using bioresorbable materials for long-term safety. Quick hemostasis post catheterization procedures.", "technical_specifications": {"type": "Vascular Closure", "material_type": "Bioresorbable", "hemostasis": "Quick"}, "material": "Bioresorbable Polymer", "manufacturer": "Meril Life Sciences"},
-]
 
-SEED_LEADS = [
-    {"name": "Dr. Rajesh Sharma", "hospital_clinic": "Apollo Hospital", "phone_whatsapp": "+919876543001", "email": "rajesh@apollo.in", "district": "Hyderabad", "inquiry_type": "Bulk Quote", "source": "website", "product_interest": "Destiknee Total Knee System, Opulent Knee System", "message": "Need pricing for 50 units TKR implants for our joint replacement center.", "status": "qualified", "score": "Hot", "score_value": 90},
-    {"name": "Dr. Priya Reddy", "hospital_clinic": "Yashoda Hospital", "phone_whatsapp": "+919876543002", "email": "priya@yashoda.in", "district": "Hyderabad", "inquiry_type": "Bulk Quote", "source": "website", "product_interest": "BioMime Drug Eluting Stent, Evermine50", "message": "Require coronary stent pricing for our cath lab.", "status": "negotiation", "score": "Hot", "score_value": 90},
-    {"name": "Mr. Venkat Rao", "hospital_clinic": "District General Hospital", "phone_whatsapp": "+919876543003", "email": "venkat@dgh.gov.in", "district": "Warangal", "inquiry_type": "Bulk Quote", "source": "website", "product_interest": "Maira Surgical Gowns, Sterile Gauze", "message": "Government tender for infection prevention supplies.", "status": "new", "score": "Hot", "score_value": 90},
-    {"name": "Dr. Sunil Kumar", "hospital_clinic": "KIMS Hospital", "phone_whatsapp": "+919876543004", "email": "sunil@kims.in", "district": "Rangareddy", "inquiry_type": "Product Info", "source": "website", "product_interest": "MISSO Orthopedic Robotic System", "message": "Interested in robotic knee replacement system demo.", "status": "contacted", "score": "Warm", "score_value": 55},
-    {"name": "Dr. Meena Devi", "hospital_clinic": "Care Hospital", "phone_whatsapp": "+919876543005", "email": "meena@care.in", "district": "Hyderabad", "inquiry_type": "Product Info", "source": "whatsapp", "product_interest": "AutoQuant 400 Analyzer", "message": "Need specifications for clinical chemistry analyzer.", "status": "contacted", "score": "Warm", "score_value": 55},
-    {"name": "Mr. Ravi Teja", "hospital_clinic": "Sunshine Hospital", "phone_whatsapp": "+919876543006", "email": "", "district": "Karimnagar", "inquiry_type": "Brochure Download", "source": "website", "product_interest": "KET Plating System", "message": "", "status": "new", "score": "Warm", "score_value": 40},
-    {"name": "Dr. Lakshmi Prasad", "hospital_clinic": "Government ENT Hospital", "phone_whatsapp": "+919876543007", "email": "lakshmi@govhosp.in", "district": "Nizamabad", "inquiry_type": "Bulk Quote", "source": "website", "product_interest": "MYRAC RF Plasma Generator, MESIC ENT Diode Laser", "message": "Setting up new ENT OT. Need complete equipment list and pricing.", "status": "qualified", "score": "Hot", "score_value": 90},
-    {"name": "Mr. Satish Babu", "hospital_clinic": "City Clinic", "phone_whatsapp": "+919876543008", "email": "", "district": "Khammam", "inquiry_type": "General", "source": "website", "product_interest": "", "message": "Looking for medical supplies distributor.", "status": "new", "score": "Cold", "score_value": 25},
-    {"name": "Dr. Anitha Kumari", "hospital_clinic": "Continental Hospital", "phone_whatsapp": "+919876543009", "email": "anitha@continental.in", "district": "Hyderabad", "inquiry_type": "Bulk Quote", "source": "whatsapp", "product_interest": "Myval TAVR, Myclip TEER", "message": "Our cardiac surgery dept needs TAVR valves. Please share pricing for 20 units.", "status": "won", "score": "Hot", "score_value": 90},
-    {"name": "Dr. Naveen Reddy", "hospital_clinic": "Global Hospital", "phone_whatsapp": "+919876543010", "email": "naveen@global.in", "district": "Medchal-Malkajgiri", "inquiry_type": "Product Info", "source": "website", "product_interest": "Latitude Hip System, Bipolar Cup", "message": "Need hip replacement implant catalog.", "status": "contacted", "score": "Warm", "score_value": 55},
-    {"name": "Mr. Mahesh Kumar", "hospital_clinic": "Rural Health Center", "phone_whatsapp": "+919876543011", "email": "", "district": "Adilabad", "inquiry_type": "Brochure Download", "source": "website", "product_interest": "Baktio Hand Hygiene", "message": "", "status": "lost", "score": "Cold", "score_value": 30},
-    {"name": "Dr. Swathi Reddy", "hospital_clinic": "Star Hospital", "phone_whatsapp": "+919876543012", "email": "swathi@star.in", "district": "Hyderabad", "inquiry_type": "Bulk Quote", "source": "website", "product_interest": "Mirus Powered Endocutter, Mitsu Sutures", "message": "Need surgical consumables for our general surgery dept. Monthly requirement.", "status": "negotiation", "score": "Hot", "score_value": 90},
-]
+def load_json(filename):
+    path = os.path.join(DATA_DIR, filename)
+    if os.path.exists(path):
+        with open(path, "r") as f:
+            return json.load(f)
+    return []
 
 
 async def seed_database():
     count = await products_col.count_documents({})
-    if count == 0:
-        for p in SEED_PRODUCTS:
-            p["slug"] = p["product_name"].lower().replace(" ", "-").replace("/", "-")
-            p["status"] = "published"
-            p["images"] = []
-            p["size_variables"] = p.get("size_variables", [])
-            p["pack_size"] = p.get("pack_size", "")
-            p["brochure_url"] = ""
-            p["seo_meta_title"] = f"{p['product_name']} | Meril {p['division']} - Agile Ortho Telangana"
-            p["seo_meta_description"] = p["description"][:160]
-            p["created_at"] = datetime.now(timezone.utc).isoformat()
-            p["updated_at"] = datetime.now(timezone.utc).isoformat()
-        await products_col.insert_many(SEED_PRODUCTS)
-        print(f"Seeded {len(SEED_PRODUCTS)} products")
+    products = load_json("product_data.json")
+
+    if not products:
+        print("No product_data.json found, skipping product seed")
+        return
+
+    if count < len(products):
+        # Upsert all products by sku_code to avoid duplicates
+        inserted = 0
+        updated = 0
+        for p in products:
+            sku = p.get("sku_code")
+            if not sku:
+                continue
+            # Ensure required fields
+            p.setdefault("slug", p.get("product_name", "").lower().replace(" ", "-").replace("/", "-"))
+            p.setdefault("status", "published")
+            p.setdefault("images", [])
+            p.setdefault("size_variables", [])
+            p.setdefault("pack_size", "")
+            p.setdefault("brochure_url", "")
+            p.setdefault("created_at", datetime.now(timezone.utc).isoformat())
+            p.setdefault("updated_at", datetime.now(timezone.utc).isoformat())
+
+            result = await products_col.update_one(
+                {"sku_code": sku},
+                {"$set": p},
+                upsert=True
+            )
+            if result.upserted_id:
+                inserted += 1
+            elif result.modified_count > 0:
+                updated += 1
+
+        print(f"Product seed: {inserted} inserted, {updated} updated (total in file: {len(products)})")
     else:
-        print(f"Database already has {count} products, skipping seed")
+        print(f"Database already has {count} products (file has {len(products)}), skipping seed")
 
 
 async def seed_leads():
     count = await leads_col.count_documents({})
+    leads = load_json("lead_data.json")
+
+    if not leads:
+        print("No lead_data.json found, skipping lead seed")
+        return
+
     if count < 5:
-        for lead in SEED_LEADS:
-            lead["notes"] = []
-            lead["assigned_to"] = ""
-            lead["created_at"] = datetime.now(timezone.utc).isoformat()
-            lead["updated_at"] = datetime.now(timezone.utc).isoformat()
-        await leads_col.insert_many(SEED_LEADS)
-        print(f"Seeded {len(SEED_LEADS)} demo leads")
+        for lead in leads:
+            lead.setdefault("notes", [])
+            lead.setdefault("assigned_to", "")
+            lead.setdefault("created_at", datetime.now(timezone.utc).isoformat())
+            lead.setdefault("updated_at", datetime.now(timezone.utc).isoformat())
+        await leads_col.insert_many(leads)
+        print(f"Seeded {len(leads)} leads")
     else:
         print(f"Database already has {count} leads, skipping seed")
