@@ -1,13 +1,16 @@
 import { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Search, SlidersHorizontal, Package, Grid3X3, List, ChevronLeft, ChevronRight, ChevronDown, X, Bone, HeartPulse, Microscope, Stethoscope, Scissors, Shield, Activity, Syringe, Scan, CircuitBoard } from "lucide-react";
+import { Search, SlidersHorizontal, Package, Grid3X3, List, ChevronLeft, ChevronRight, ChevronDown, X, Bone, HeartPulse, Microscope, Stethoscope, Scissors, Shield, Activity, Syringe, Scan, CircuitBoard, Dumbbell, Disc, Replace } from "lucide-react";
 import { getProducts, getDivisions } from "../lib/api";
 import { SEO, buildBreadcrumbSchema, buildItemListSchema } from "../components/SEO";
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
 const DIVISION_ICONS = {
-  "Orthopedics": Bone,
+  "Joint Replacement": Replace,
+  "Trauma": Bone,
+  "Sports Medicine": Dumbbell,
+  "Spine": Disc,
   "Cardiovascular": HeartPulse,
   "Diagnostics": Microscope,
   "ENT": Stethoscope,
@@ -20,8 +23,9 @@ const DIVISION_ICONS = {
 };
 
 const DIVISIONS = [
-  "Orthopedics", "Cardiovascular", "Diagnostics",
-  "ENT", "Endo-surgical", "Infection Prevention", "Peripheral Intervention",
+  "Joint Replacement", "Trauma", "Sports Medicine", "Spine",
+  "Cardiovascular", "Diagnostics", "ENT", "Endo-surgical",
+  "Infection Prevention", "Peripheral Intervention",
   "Critical Care", "Urology", "Robotics"
 ];
 

@@ -3,13 +3,16 @@ import {
   ChevronRight, Phone, MessageSquare, MapPin, Building2,
   Bone, HeartPulse, Microscope, Stethoscope, Scissors, Shield,
   Activity, Syringe, Scan, CircuitBoard, Package, BadgeCheck,
-  ArrowRight, Mail
+  ArrowRight, Mail, Dumbbell, Disc, Replace
 } from "lucide-react";
 import { getDistrictBySlug, TELANGANA_DISTRICTS } from "../lib/districts";
 import { SEO, buildBreadcrumbSchema } from "../components/SEO";
 
 const DIVISION_ICONS = {
-  "Orthopedics": Bone,
+  "Joint Replacement": Replace,
+  "Trauma": Bone,
+  "Sports Medicine": Dumbbell,
+  "Spine": Disc,
   "Cardiovascular": HeartPulse,
   "Diagnostics": Microscope,
   "ENT": Stethoscope,

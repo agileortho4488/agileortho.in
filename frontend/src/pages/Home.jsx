@@ -4,7 +4,8 @@ import {
   ArrowRight, Shield, Truck, HeartPulse, Microscope, Bone, Stethoscope,
   Syringe, Activity, Phone, MessageSquare, Building2, Scan, Scissors,
   BadgeCheck, MapPin, Headphones, Package, Clock, FileCheck, Users,
-  ClipboardList, Send, ChevronRight, Zap, Globe, CircuitBoard, Search
+  ClipboardList, Send, ChevronRight, Zap, Globe, CircuitBoard, Search,
+  Dumbbell, Disc, Replace
 } from "lucide-react";
 import { getProducts, getDivisions } from "../lib/api";
 import { SEO, buildOrganizationSchema, buildLocalBusinessSchema } from "../components/SEO";
@@ -12,7 +13,10 @@ import { SEO, buildOrganizationSchema, buildLocalBusinessSchema } from "../compo
 const API = process.env.REACT_APP_BACKEND_URL;
 
 const DIVISION_META = {
-  "Orthopedics": { icon: Bone, desc: "Trauma, plating systems, nails, arthroplasty, and surgical support solutions for hospitals and OT teams.", bg: "bg-blue-50/70" },
+  "Joint Replacement": { icon: Replace, desc: "Hip and knee arthroplasty implants, revision systems, modular components, and positioning devices for total joint replacement.", bg: "bg-blue-50/70" },
+  "Trauma": { icon: Bone, desc: "Locking plates, intramedullary nails, screws, reconstruction nails, and fracture fixation systems for trauma surgery.", bg: "bg-amber-50/70" },
+  "Sports Medicine": { icon: Dumbbell, desc: "Arthroscopic anchors, suture systems, ACL/PCL reconstruction, meniscal repair, shavers, and endoscope camera systems.", bg: "bg-green-50/70" },
+  "Spine": { icon: Disc, desc: "Pedicle screws, interbody cages, cervical plates, and spinal fixation systems for spinal surgery.", bg: "bg-violet-50/70" },
   "Cardiovascular": { icon: HeartPulse, desc: "Coronary stents, heart valves, TAVI, TEER systems, and cardiac surgery devices for interventional and surgical cardiology.", bg: "bg-red-50/70" },
   "Diagnostics": { icon: Microscope, desc: "Rapid tests, ELISA, hematology analyzers, coagulation systems, and clinical chemistry solutions.", bg: "bg-purple-50/70" },
   "ENT": { icon: Stethoscope, desc: "Sinus, airway, nasal, and tracheostomy devices for ear, nose, and throat surgical procedures.", bg: "bg-teal-50/70" },
@@ -20,8 +24,8 @@ const DIVISION_META = {
   "Infection Prevention": { icon: Shield, desc: "Surgical gowns, drapes, hand hygiene, skin prepping, and hospital disinfection systems.", bg: "bg-emerald-50/70" },
   "Peripheral Intervention": { icon: Activity, desc: "Peripheral stents, PTA balloons, drug-coated balloons, and vascular closure devices.", bg: "bg-orange-50/70" },
   "Critical Care": { icon: Syringe, desc: "Vascular access, renal care, regional anesthesia, respiratory, and airway management devices.", bg: "bg-cyan-50/70" },
-  "Urology": { icon: Scan, desc: "Urological devices and solutions for diagnostic and interventional urology procedures.", bg: "bg-amber-50/70" },
-  "Robotics": { icon: CircuitBoard, desc: "Surgical robotics platforms and instrumentation for minimally invasive robotic procedures.", bg: "bg-violet-50/70" },
+  "Urology": { icon: Scan, desc: "Catheters, stents, stone baskets, guidewires, dilators, scopes, and laser systems for urological procedures.", bg: "bg-sky-50/70" },
+  "Robotics": { icon: CircuitBoard, desc: "Surgical robotics platforms and instrumentation for minimally invasive robotic procedures.", bg: "bg-rose-50/70" },
 };
 
 export default function Home() {
@@ -163,7 +167,7 @@ export default function Home() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-1 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
             {[
               { value: `${totalProducts > 0 ? totalProducts.toLocaleString() : "8,000"}+`, label: "SKUs Available" },
-              { value: "10", label: "Product Divisions" },
+              { value: "13", label: "Product Divisions" },
               { value: "33", label: "Districts in Telangana" },
               { value: "24/7", label: "Bulk Hospital Supply" },
             ].map((s, i) => (

@@ -6,7 +6,7 @@ export const TELANGANA_DISTRICTS = [
     description: "Hyderabad is the capital city and largest healthcare market in Telangana, home to world-class hospitals including NIMS, Osmania General Hospital, Gandhi Hospital, Apollo, KIMS, Yashoda, and Continental. As the primary medical device consumption center in the state, Hyderabad demands reliable, compliant, and fast-turnaround supply for orthopedic implants, cardiovascular stents, diagnostic analyzers, and surgical instruments.",
     hospitals: ["NIMS", "Osmania General Hospital", "Gandhi Hospital", "Apollo Hospitals", "KIMS Hospital", "Yashoda Hospital", "Continental Hospitals", "AIG Hospitals", "Sunshine Hospital"],
     population: "1.0 Cr+",
-    medicalFocus: ["Orthopedics", "Cardiovascular", "Diagnostics", "Endo-surgical", "Robotics"],
+    medicalFocus: ["Joint Replacement", "Trauma", "Sports Medicine", "Cardiovascular", "Diagnostics", "Endo-surgical", "Robotics"],
   },
   {
     name: "Rangareddy",
@@ -15,7 +15,7 @@ export const TELANGANA_DISTRICTS = [
     description: "Rangareddy district, surrounding Hyderabad, has rapidly growing healthcare infrastructure with major hospitals in areas like Shamshabad, LB Nagar, and Shadnagar. The district's proximity to the state capital makes it a key market for medical device distribution, serving both large corporate hospitals and growing secondary care centers.",
     hospitals: ["Aware Global Hospital", "Paras HMRI Hospital", "Kamineni Hospital", "District Hospital Shadnagar"],
     population: "58 Lakh+",
-    medicalFocus: ["Orthopedics", "Diagnostics", "Infection Prevention", "Endo-surgical"],
+    medicalFocus: ["Trauma", "Diagnostics", "Infection Prevention", "Endo-surgical"],
   },
   {
     name: "Medchal-Malkajgiri",
@@ -24,7 +24,7 @@ export const TELANGANA_DISTRICTS = [
     description: "Medchal-Malkajgiri is one of the fastest growing districts in Telangana with rapidly expanding healthcare facilities. Located adjacent to Hyderabad, it serves a large population requiring access to quality medical devices for hospitals, clinics, and diagnostic centers across Kompally, Secunderabad, and Alwal.",
     hospitals: ["Yashoda Hospital Secunderabad", "Citizens Hospital", "Preeti Hospital", "District Hospital Medchal"],
     population: "35 Lakh+",
-    medicalFocus: ["Orthopedics", "Cardiovascular", "Diagnostics", "ENT"],
+    medicalFocus: ["Trauma", "Cardiovascular", "Diagnostics", "ENT"],
   },
   {
     name: "Sangareddy",
@@ -33,7 +33,7 @@ export const TELANGANA_DISTRICTS = [
     description: "Sangareddy district, part of the Hyderabad-Mumbai industrial corridor, has growing healthcare needs driven by its industrial workforce. District and area hospitals require steady supply of trauma implants, surgical consumables, and diagnostic equipment.",
     hospitals: ["District Hospital Sangareddy", "Government Area Hospital Zaheerabad"],
     population: "16 Lakh+",
-    medicalFocus: ["Orthopedics", "Infection Prevention", "Critical Care"],
+    medicalFocus: ["Trauma", "Infection Prevention", "Critical Care"],
   },
   {
     name: "Nalgonda",
@@ -42,7 +42,7 @@ export const TELANGANA_DISTRICTS = [
     description: "Nalgonda, a major district in central Telangana, has a large network of government and private hospitals. The district hospital and area hospitals require orthopedic implants, diagnostic reagents, and surgical instruments to serve the region's healthcare needs.",
     hospitals: ["Government General Hospital Nalgonda", "District Hospital Miryalaguda", "Swarna Hospital"],
     population: "17 Lakh+",
-    medicalFocus: ["Orthopedics", "Diagnostics", "Infection Prevention"],
+    medicalFocus: ["Trauma", "Diagnostics", "Infection Prevention"],
   },
   {
     name: "Warangal",
@@ -51,7 +51,7 @@ export const TELANGANA_DISTRICTS = [
     description: "Warangal is the second-largest city in Telangana and the primary healthcare hub for the northern districts. MGM Hospital, Kakatiya Medical College, and several private multi-specialty hospitals create significant demand for orthopedic, cardiovascular, and surgical medical devices.",
     hospitals: ["MGM Hospital", "Kakatiya Medical College", "Star Hospital Warangal", "Anu Hospital"],
     population: "8 Lakh+",
-    medicalFocus: ["Orthopedics", "Cardiovascular", "Endo-surgical", "Diagnostics"],
+    medicalFocus: ["Trauma", "Cardiovascular", "Endo-surgical", "Diagnostics"],
   },
   {
     name: "Hanumakonda",
@@ -60,7 +60,7 @@ export const TELANGANA_DISTRICTS = [
     description: "Hanumakonda, forming the twin city with Warangal, has its own growing healthcare ecosystem. The district serves as a referral center for multiple surrounding districts and requires a wide range of medical devices across orthopedic, cardiac, and diagnostic categories.",
     hospitals: ["Government Hospital Hanumakonda", "Sri Sai Hospital", "Prathima Hospital"],
     population: "12 Lakh+",
-    medicalFocus: ["Orthopedics", "Diagnostics", "Critical Care"],
+    medicalFocus: ["Trauma", "Diagnostics", "Critical Care"],
   },
   {
     name: "Karimnagar",
@@ -69,7 +69,7 @@ export const TELANGANA_DISTRICTS = [
     description: "Karimnagar is a major healthcare center in northern Telangana, with a government general hospital and growing private hospital infrastructure. The district requires reliable supply of orthopedic implants, surgical consumables, and diagnostic equipment to serve its large catchment area.",
     hospitals: ["Government General Hospital Karimnagar", "Chalmeda Anand Rao Institute", "Aditya Hospital"],
     population: "11 Lakh+",
-    medicalFocus: ["Orthopedics", "Cardiovascular", "Diagnostics"],
+    medicalFocus: ["Trauma", "Cardiovascular", "Diagnostics"],
   },
   {
     name: "Khammam",
@@ -78,7 +78,7 @@ export const TELANGANA_DISTRICTS = [
     description: "Khammam is the primary healthcare hub for eastern Telangana, serving a large catchment area including bordering Andhra Pradesh districts. The district hospital and private hospitals require orthopedic, diagnostic, and surgical medical devices for their growing patient base.",
     hospitals: ["Government General Hospital Khammam", "Mamata Medical College", "SRR Hospital"],
     population: "15 Lakh+",
-    medicalFocus: ["Orthopedics", "Diagnostics", "Endo-surgical"],
+    medicalFocus: ["Trauma", "Diagnostics", "Endo-surgical"],
   },
   {
     name: "Nizamabad",
@@ -87,7 +87,7 @@ export const TELANGANA_DISTRICTS = [
     description: "Nizamabad serves as the major healthcare center for northwestern Telangana. With a government general hospital and growing private sector, the district demands reliable medical device supply for orthopedic surgeries, diagnostics, and infection prevention.",
     hospitals: ["Government General Hospital Nizamabad", "Suraksha Hospital", "Kamineni Hospital Nizamabad"],
     population: "16 Lakh+",
-    medicalFocus: ["Orthopedics", "Diagnostics", "Infection Prevention"],
+    medicalFocus: ["Trauma", "Diagnostics", "Infection Prevention"],
   },
   {
     name: "Adilabad",
@@ -96,7 +96,7 @@ export const TELANGANA_DISTRICTS = [
     description: "Adilabad, located at the northern tip of Telangana bordering Maharashtra, serves as a critical healthcare access point. Remote and tribal areas depend on the district hospital network for medical care, creating demand for trauma implants, basic surgical instruments, and diagnostic equipment.",
     hospitals: ["RIMS Adilabad", "Government Hospital Adilabad", "District Hospital"],
     population: "7 Lakh+",
-    medicalFocus: ["Orthopedics", "Critical Care", "Diagnostics"],
+    medicalFocus: ["Trauma", "Critical Care", "Diagnostics"],
   },
   {
     name: "Mahabubnagar",
@@ -105,7 +105,7 @@ export const TELANGANA_DISTRICTS = [
     description: "Mahabubnagar is the primary healthcare hub for southern Telangana. The district hospital and area hospitals serve a large rural population requiring orthopedic care, diagnostic services, and surgical procedures.",
     hospitals: ["Government General Hospital Mahabubnagar", "SVS Hospital", "District Hospital"],
     population: "14 Lakh+",
-    medicalFocus: ["Orthopedics", "Diagnostics", "Infection Prevention"],
+    medicalFocus: ["Trauma", "Diagnostics", "Infection Prevention"],
   },
   {
     name: "Medak",
@@ -114,7 +114,7 @@ export const TELANGANA_DISTRICTS = [
     description: "Medak district, known for its heritage sites, has growing healthcare infrastructure. Government and private hospitals in the district serve the local population with orthopedic, diagnostic, and general surgical needs.",
     hospitals: ["District Hospital Medak", "Government Area Hospital"],
     population: "8 Lakh+",
-    medicalFocus: ["Orthopedics", "Diagnostics", "Critical Care"],
+    medicalFocus: ["Trauma", "Diagnostics", "Critical Care"],
   },
   {
     name: "Siddipet",
@@ -123,7 +123,7 @@ export const TELANGANA_DISTRICTS = [
     description: "Siddipet, centrally located in Telangana, is experiencing rapid development including healthcare infrastructure upgrades. The district requires medical devices for its hospitals and clinics serving the growing urban and rural population.",
     hospitals: ["Government Hospital Siddipet", "District Hospital", "Area Hospital Gajwel"],
     population: "11 Lakh+",
-    medicalFocus: ["Orthopedics", "Diagnostics", "Infection Prevention"],
+    medicalFocus: ["Trauma", "Diagnostics", "Infection Prevention"],
   },
   {
     name: "Suryapet",
@@ -132,7 +132,7 @@ export const TELANGANA_DISTRICTS = [
     description: "Suryapet district serves as a healthcare access point for central-eastern Telangana. Hospitals in the district require orthopedic implants, surgical consumables, and diagnostic equipment for their growing patient population.",
     hospitals: ["District Hospital Suryapet", "Government Hospital Kodad"],
     population: "11 Lakh+",
-    medicalFocus: ["Orthopedics", "Diagnostics", "Infection Prevention"],
+    medicalFocus: ["Trauma", "Diagnostics", "Infection Prevention"],
   },
   {
     name: "Jagtial",
@@ -141,7 +141,7 @@ export const TELANGANA_DISTRICTS = [
     description: "Jagtial district in northern Telangana has healthcare facilities serving the local population. The district hospital requires reliable supply of medical devices including orthopedic implants and diagnostic equipment.",
     hospitals: ["District Hospital Jagtial", "Government Area Hospital"],
     population: "10 Lakh+",
-    medicalFocus: ["Orthopedics", "Diagnostics"],
+    medicalFocus: ["Trauma", "Diagnostics"],
   },
   {
     name: "Peddapalli",
@@ -150,7 +150,7 @@ export const TELANGANA_DISTRICTS = [
     description: "Peddapalli, part of the Singareni coal belt, has unique healthcare needs driven by its mining and industrial workforce. Trauma and orthopedic devices, along with diagnostic equipment, are in high demand.",
     hospitals: ["District Hospital Peddapalli", "Singareni Hospital", "Area Hospital Sultanabad"],
     population: "8 Lakh+",
-    medicalFocus: ["Orthopedics", "Critical Care", "Diagnostics"],
+    medicalFocus: ["Trauma", "Critical Care", "Diagnostics"],
   },
   {
     name: "Kamareddy",
@@ -159,7 +159,7 @@ export const TELANGANA_DISTRICTS = [
     description: "Kamareddy district in northwestern Telangana has healthcare facilities serving the agricultural community. District and area hospitals require orthopedic, diagnostic, and infection prevention medical devices.",
     hospitals: ["District Hospital Kamareddy", "Government Area Hospital Banswada"],
     population: "10 Lakh+",
-    medicalFocus: ["Orthopedics", "Diagnostics", "Infection Prevention"],
+    medicalFocus: ["Trauma", "Diagnostics", "Infection Prevention"],
   },
   {
     name: "Mancherial",
@@ -168,7 +168,7 @@ export const TELANGANA_DISTRICTS = [
     description: "Mancherial, an industrial town in northern Telangana, has healthcare needs driven by its industrial and coal mining workforce. Medical devices for trauma care, diagnostics, and general surgery are in consistent demand.",
     hospitals: ["District Hospital Mancherial", "Government Hospital Bellampalli", "Area Hospital"],
     population: "8 Lakh+",
-    medicalFocus: ["Orthopedics", "Critical Care", "Diagnostics"],
+    medicalFocus: ["Trauma", "Critical Care", "Diagnostics"],
   },
   {
     name: "Wanaparthy",
@@ -177,7 +177,7 @@ export const TELANGANA_DISTRICTS = [
     description: "Wanaparthy district in southern Telangana provides healthcare access to the local rural population. Hospitals require basic to advanced medical devices for orthopedic, diagnostic, and surgical procedures.",
     hospitals: ["District Hospital Wanaparthy", "Government Area Hospital"],
     population: "6 Lakh+",
-    medicalFocus: ["Orthopedics", "Diagnostics"],
+    medicalFocus: ["Trauma", "Diagnostics"],
   },
   {
     name: "Nagarkurnool",
@@ -186,7 +186,7 @@ export const TELANGANA_DISTRICTS = [
     description: "Nagarkurnool serves the southern Telangana population with healthcare through district hospitals and area hospitals. Medical device requirements span orthopedics, diagnostics, and infection prevention.",
     hospitals: ["District Hospital Nagarkurnool", "Government Hospital Kollapur", "Area Hospital Achampet"],
     population: "9 Lakh+",
-    medicalFocus: ["Orthopedics", "Diagnostics", "Infection Prevention"],
+    medicalFocus: ["Trauma", "Diagnostics", "Infection Prevention"],
   },
   {
     name: "Vikarabad",
@@ -195,7 +195,7 @@ export const TELANGANA_DISTRICTS = [
     description: "Vikarabad district serves as the gateway to southern Telangana, with healthcare facilities serving both urban and rural populations. The district requires medical devices for its growing hospital network.",
     hospitals: ["District Hospital Vikarabad", "Government Area Hospital Tandur"],
     population: "10 Lakh+",
-    medicalFocus: ["Orthopedics", "Diagnostics"],
+    medicalFocus: ["Trauma", "Diagnostics"],
   },
   {
     name: "Jogulamba Gadwal",
@@ -204,7 +204,7 @@ export const TELANGANA_DISTRICTS = [
     description: "Jogulamba Gadwal, at the southern border of Telangana, provides healthcare access to the local population. District hospitals require reliable medical device supply for orthopedic and diagnostic needs.",
     hospitals: ["District Hospital Gadwal", "Government Area Hospital"],
     population: "7 Lakh+",
-    medicalFocus: ["Orthopedics", "Diagnostics"],
+    medicalFocus: ["Trauma", "Diagnostics"],
   },
   {
     name: "Rajanna Sircilla",
@@ -213,7 +213,7 @@ export const TELANGANA_DISTRICTS = [
     description: "Rajanna Sircilla, famous for its textile industry, has healthcare facilities serving the working population. District hospitals require medical devices across orthopedics, diagnostics, and general surgery.",
     hospitals: ["District Hospital Sircilla", "Government Area Hospital Vemulawada"],
     population: "6 Lakh+",
-    medicalFocus: ["Orthopedics", "Diagnostics"],
+    medicalFocus: ["Trauma", "Diagnostics"],
   },
   {
     name: "Kumuram Bheem",
@@ -222,7 +222,7 @@ export const TELANGANA_DISTRICTS = [
     description: "Kumuram Bheem Asifabad, a tribal-majority district in northern Telangana, has critical healthcare access needs. Medical devices for trauma care, diagnostics, and basic surgery support the district's remote healthcare network.",
     hospitals: ["District Hospital Asifabad", "Government Area Hospital"],
     population: "5 Lakh+",
-    medicalFocus: ["Orthopedics", "Critical Care", "Diagnostics"],
+    medicalFocus: ["Trauma", "Critical Care", "Diagnostics"],
   },
   {
     name: "Mulugu",
@@ -231,7 +231,7 @@ export const TELANGANA_DISTRICTS = [
     description: "Mulugu, a forested tribal district in eastern Telangana, has healthcare facilities serving remote communities. Medical device supply for basic orthopedic, diagnostic, and surgical needs is essential.",
     hospitals: ["District Hospital Mulugu", "Government Area Hospital"],
     population: "3 Lakh+",
-    medicalFocus: ["Orthopedics", "Diagnostics"],
+    medicalFocus: ["Trauma", "Diagnostics"],
   },
   {
     name: "Narayanpet",
@@ -240,7 +240,7 @@ export const TELANGANA_DISTRICTS = [
     description: "Narayanpet district provides healthcare access to the southern Telangana population. Hospitals in the district require medical devices for orthopedic surgeries, diagnostics, and infection prevention.",
     hospitals: ["District Hospital Narayanpet", "Government Area Hospital"],
     population: "6 Lakh+",
-    medicalFocus: ["Orthopedics", "Diagnostics"],
+    medicalFocus: ["Trauma", "Diagnostics"],
   },
   {
     name: "Mahabubabad",
@@ -249,7 +249,7 @@ export const TELANGANA_DISTRICTS = [
     description: "Mahabubabad district in eastern Telangana has growing healthcare infrastructure. The district hospital and area hospitals serve the local population with orthopedic, diagnostic, and general surgical needs.",
     hospitals: ["District Hospital Mahabubabad", "Government Area Hospital Thorrur"],
     population: "8 Lakh+",
-    medicalFocus: ["Orthopedics", "Diagnostics"],
+    medicalFocus: ["Trauma", "Diagnostics"],
   },
   {
     name: "Jayashankar Bhupalpally",
@@ -258,7 +258,7 @@ export const TELANGANA_DISTRICTS = [
     description: "Jayashankar Bhupalpally, a forested district in northern Telangana, has healthcare facilities serving remote and tribal populations. Medical device requirements center on orthopedics, diagnostics, and emergency care.",
     hospitals: ["District Hospital Bhupalpally", "Government Area Hospital"],
     population: "7 Lakh+",
-    medicalFocus: ["Orthopedics", "Critical Care", "Diagnostics"],
+    medicalFocus: ["Trauma", "Critical Care", "Diagnostics"],
   },
   {
     name: "Jangaon",
@@ -267,7 +267,7 @@ export const TELANGANA_DISTRICTS = [
     description: "Jangaon district, centrally located between Hyderabad and Warangal, has healthcare facilities serving the local population. The district requires medical devices for its hospital network.",
     hospitals: ["District Hospital Jangaon", "Government Area Hospital"],
     population: "6 Lakh+",
-    medicalFocus: ["Orthopedics", "Diagnostics"],
+    medicalFocus: ["Trauma", "Diagnostics"],
   },
   {
     name: "Nirmal",
@@ -276,7 +276,7 @@ export const TELANGANA_DISTRICTS = [
     description: "Nirmal district in northern Telangana has healthcare facilities serving the local and surrounding population. District hospitals require reliable medical device supply for orthopedic and diagnostic needs.",
     hospitals: ["District Hospital Nirmal", "Government Area Hospital Bhainsa"],
     population: "8 Lakh+",
-    medicalFocus: ["Orthopedics", "Diagnostics"],
+    medicalFocus: ["Trauma", "Diagnostics"],
   },
   {
     name: "Yadadri Bhuvanagiri",
@@ -285,7 +285,7 @@ export const TELANGANA_DISTRICTS = [
     description: "Yadadri Bhuvanagiri, home to the famous Yadadri temple, has growing healthcare infrastructure serving pilgrims and local residents. Medical devices for orthopedics, diagnostics, and emergency care are in demand.",
     hospitals: ["District Hospital Bhuvanagiri", "Government Area Hospital"],
     population: "8 Lakh+",
-    medicalFocus: ["Orthopedics", "Diagnostics", "Critical Care"],
+    medicalFocus: ["Trauma", "Diagnostics", "Critical Care"],
   },
   {
     name: "Bhadradri Kothagudem",
@@ -294,7 +294,7 @@ export const TELANGANA_DISTRICTS = [
     description: "Bhadradri Kothagudem, part of the Singareni coal belt in eastern Telangana, has unique healthcare needs driven by its mining workforce. Trauma implants, orthopedic devices, and diagnostic equipment are in consistent demand.",
     hospitals: ["District Hospital Kothagudem", "Singareni Hospital", "Government Area Hospital Bhadrachalam"],
     population: "11 Lakh+",
-    medicalFocus: ["Orthopedics", "Critical Care", "Diagnostics"],
+    medicalFocus: ["Trauma", "Critical Care", "Diagnostics"],
   },
 ];
 
