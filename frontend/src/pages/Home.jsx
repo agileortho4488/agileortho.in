@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowRight, Shield, Truck, HeartPulse, Microscope, Bone, Stethoscope,
   Syringe, Activity, Phone, MessageSquare, Building2, Scan, Scissors,
   BadgeCheck, MapPin, Headphones, Package, Clock, FileCheck, Users,
-  ClipboardList, Send, ChevronRight, Zap, Globe, CircuitBoard
+  ClipboardList, Send, ChevronRight, Zap, Globe, CircuitBoard, Search
 } from "lucide-react";
 import { getProducts, getDivisions } from "../lib/api";
 import { SEO, buildOrganizationSchema, buildLocalBusinessSchema } from "../components/SEO";
@@ -27,6 +27,8 @@ const DIVISION_META = {
 export default function Home() {
   const [divisions, setDivisions] = useState([]);
   const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [heroSearch, setHeroSearch] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
     getDivisions().then((r) => setDivisions(r.data.divisions || [])).catch(() => {});
@@ -64,10 +66,10 @@ export default function Home() {
 
       {/* ===== 2. HERO ===== */}
       <section className="relative bg-slate-900 overflow-hidden" data-testid="hero-section">
-        <div className="absolute inset-0 opacity-15">
-          <img src="https://images.unsplash.com/photo-1761639935303-67b032fe5fcf?w=1600&q=60" alt="" className="w-full h-full object-cover" />
+        <div className="absolute inset-0 opacity-40">
+          <img src="https://images.unsplash.com/photo-1640876777012-bdb00a6323e2?w=1920&q=80" alt="" className="w-full h-full object-cover" />
         </div>
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/95 to-slate-900/70" />
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/85 to-slate-900/50" />
         <div className="relative max-w-7xl mx-auto px-6 py-24 lg:py-32">
           <div className="max-w-2xl">
             <p className="text-teal-400 text-xs font-bold uppercase tracking-[0.2em] mb-5">
@@ -79,7 +81,46 @@ export default function Home() {
             <p className="mt-6 text-lg text-slate-300 leading-relaxed max-w-xl">
               Orthopedics, cardiovascular, diagnostics, infection prevention, endo-surgery, ENT, robotics, and more — with compliant distribution, fast dispatch, and technical product support.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
+
+            {/* ===== MASTER SEARCH BAR ===== */}
+            <form
+              onSubmit={(e) => { e.preventDefault(); if (heroSearch.trim()) navigate(`/products?search=${encodeURIComponent(heroSearch.trim())}`); }}
+              className="mt-8 flex w-full max-w-lg"
+              data-testid="hero-search-form"
+            >
+              <div className="relative flex-1">
+                <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  value={heroSearch}
+                  onChange={(e) => setHeroSearch(e.target.value)}
+                  placeholder="Search 814+ products — implants, stents, analyzers..."
+                  className="w-full pl-11 pr-4 py-4 bg-white/10 border border-slate-600 rounded-l-xl text-white placeholder-slate-400 text-sm focus:outline-none focus:border-teal-500 focus:bg-white/15 backdrop-blur-sm transition-all"
+                  data-testid="hero-search-input"
+                />
+              </div>
+              <button
+                type="submit"
+                className="px-7 py-4 bg-teal-600 text-white font-bold text-sm rounded-r-xl hover:bg-teal-700 transition-colors shadow-lg shadow-teal-600/25"
+                data-testid="hero-search-btn"
+              >
+                Search
+              </button>
+            </form>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {["Knee Implants", "Coronary Stents", "Sutures", "Surgical Gowns", "Hip System"].map((q) => (
+                <button
+                  key={q}
+                  onClick={() => navigate(`/products?search=${encodeURIComponent(q)}`)}
+                  className="text-xs text-slate-400 hover:text-white border border-slate-700 hover:border-teal-500 px-3 py-1.5 rounded-full transition-all"
+                  data-testid={`quick-search-${q.toLowerCase().replace(/\s/g, "-")}`}
+                >
+                  {q}
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-6 flex flex-wrap gap-3">
               <Link
                 to="/products"
                 className="inline-flex items-center gap-2 px-6 py-3.5 bg-teal-600 text-white font-semibold rounded-lg hover:bg-teal-700 transition-colors shadow-lg shadow-teal-600/20"
