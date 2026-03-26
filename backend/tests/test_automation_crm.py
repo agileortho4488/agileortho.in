@@ -15,7 +15,7 @@ import time
 import uuid
 from datetime import datetime
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://device-catalog-18.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://sku-evidence-check.preview.emergentagent.com').rstrip('/')
 
 
 class TestAdminLogin:
