@@ -4,9 +4,9 @@ import { Search, SlidersHorizontal, Package, Grid3X3, List, ChevronLeft, Chevron
 import { getProducts, getDivisions } from "../lib/api";
 
 const DIVISIONS = [
-  "Orthopedics", "Trauma", "Cardiovascular", "Diagnostics",
+  "Orthopedics", "Cardiovascular", "Diagnostics",
   "ENT", "Endo-surgical", "Infection Prevention", "Peripheral Intervention",
-  "Cardiac Surgery", "Critical Care", "Dental", "Robotics", "Sport Medicine"
+  "Cardiac Surgery", "Critical Care", "Urology", "Robotics"
 ];
 
 export default function Products() {
@@ -167,8 +167,18 @@ export default function Products() {
                     className="group bg-white border border-slate-200 rounded-sm hover-lift overflow-hidden"
                     data-testid={`product-card-${p.id}`}
                   >
-                    <div className="h-36 bg-slate-50 flex items-center justify-center">
-                      <Package size={36} className="text-slate-200" />
+                    <div className="h-36 bg-slate-50 flex items-center justify-center overflow-hidden">
+                      {p.images && p.images.length > 0 ? (
+                        <img
+                          src={`${process.env.REACT_APP_BACKEND_URL}/api/files/${p.images[0].storage_path}`}
+                          alt={p.product_name}
+                          className="w-full h-full object-contain"
+                          loading="lazy"
+                          data-testid={`product-image-${p.id}`}
+                        />
+                      ) : (
+                        <Package size={36} className="text-slate-200" />
+                      )}
                     </div>
                     <div className="p-4">
                       <div className="flex items-center gap-2 mb-1.5">
@@ -194,8 +204,17 @@ export default function Products() {
                     className="group flex items-center gap-4 bg-white border border-slate-200 rounded-sm p-4 hover-lift"
                     data-testid={`product-list-${p.id}`}
                   >
-                    <div className="w-16 h-16 bg-slate-50 rounded flex items-center justify-center shrink-0">
-                      <Package size={24} className="text-slate-200" />
+                    <div className="w-16 h-16 bg-slate-50 rounded flex items-center justify-center shrink-0 overflow-hidden">
+                      {p.images && p.images.length > 0 ? (
+                        <img
+                          src={`${process.env.REACT_APP_BACKEND_URL}/api/files/${p.images[0].storage_path}`}
+                          alt={p.product_name}
+                          className="w-full h-full object-contain"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <Package size={24} className="text-slate-200" />
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">

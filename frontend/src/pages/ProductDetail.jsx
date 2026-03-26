@@ -160,8 +160,10 @@ export default function ProductDetail() {
     );
   }
 
-  const specs = product.technical_specifications || {};
-  const specEntries = Object.entries(specs).filter(([, v]) => v !== null && v !== "");
+  const specs = typeof product.technical_specifications === "object" && product.technical_specifications !== null
+    ? product.technical_specifications
+    : {};
+  const specEntries = Object.entries(specs).filter(([k, v]) => v !== null && v !== "" && !/^\d+$/.test(k));
   const hasSizes = product.size_variables && product.size_variables.length > 0;
 
   /* Build enriched spec table rows (merge product meta + technical specs) */
@@ -209,11 +211,20 @@ export default function ProductDetail() {
           {/* Left column: Image + Tags */}
           <div className="lg:col-span-5">
             <div className="bg-white border border-slate-200 rounded-lg overflow-hidden sticky top-6">
-              <div className="aspect-square flex items-center justify-center bg-gradient-to-br from-white to-slate-50 p-8" data-testid="product-image">
-                <div className="text-center">
-                  <Package size={80} className="text-slate-200 mx-auto" />
-                  <p className="text-xs text-slate-300 mt-4 font-medium">Product Image Coming Soon</p>
-                </div>
+              <div className="aspect-square flex items-center justify-center bg-gradient-to-br from-white to-slate-50 overflow-hidden" data-testid="product-image">
+                {product.images && product.images.length > 0 ? (
+                  <img
+                    src={`${process.env.REACT_APP_BACKEND_URL}/api/files/${product.images[0].storage_path}`}
+                    alt={product.product_name}
+                    className="w-full h-full object-contain p-4"
+                    data-testid="product-detail-image"
+                  />
+                ) : (
+                  <div className="text-center">
+                    <Package size={80} className="text-slate-200 mx-auto" />
+                    <p className="text-xs text-slate-300 mt-4 font-medium">Product Image Coming Soon</p>
+                  </div>
+                )}
               </div>
               {/* Tags below image (like reference) */}
               <div className="px-5 py-4 border-t border-slate-100">

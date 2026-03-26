@@ -73,4 +73,10 @@ export const approveBulkProducts = (id, approveIds) =>
   api.post(`/api/admin/bulk-catalog/jobs/${id}/approve`, { approve_ids: approveIds || [] });
 export const deleteBulkJob = (id) => api.delete(`/api/admin/bulk-catalog/jobs/${id}`);
 
+// Brochure Image Extraction APIs
+export const startBrochureExtraction = () => api.post("/api/admin/extract-brochure-images");
+export const getBrochureExtractionStatus = () => api.get("/api/admin/extract-brochure-images/status");
+export const clearBrochureImages = () => api.delete("/api/admin/clear-brochure-images");
+export const getProductsWithoutImages = () => api.get("/api/admin/products-without-images");
+
 export default api;

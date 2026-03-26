@@ -5,7 +5,6 @@ import { getProducts, getDivisions } from "../lib/api";
 
 const DIVISION_ICONS = {
   "Orthopedics": Bone,
-  "Trauma": Shield,
   "Cardiovascular": HeartPulse,
   "Diagnostics": Microscope,
   "ENT": Stethoscope,
@@ -16,7 +15,6 @@ const DIVISION_ICONS = {
 
 const DIVISION_COLORS = {
   "Orthopedics": "bg-blue-50 text-blue-700 border-blue-200",
-  "Trauma": "bg-amber-50 text-amber-700 border-amber-200",
   "Cardiovascular": "bg-red-50 text-red-700 border-red-200",
   "Diagnostics": "bg-purple-50 text-purple-700 border-purple-200",
   "ENT": "bg-teal-50 text-teal-700 border-teal-200",
@@ -60,7 +58,7 @@ export default function Home() {
             </h1>
             <p className="mt-6 text-lg text-slate-300 leading-relaxed max-w-lg animate-fade-up stagger-2">
               Agile Ortho brings world-class Meril medical devices to hospitals and clinics across
-              all 33 districts of Telangana. Orthopedics, Trauma, Cardiovascular, and more.
+              all 33 districts of Telangana. Orthopedics, Cardiovascular, Diagnostics, and more.
             </p>
             <div className="mt-8 flex flex-wrap gap-3 animate-fade-up stagger-3">
               <Link

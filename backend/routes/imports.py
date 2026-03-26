@@ -129,7 +129,7 @@ You will receive images of pages from a medical device catalog/brochure.
 Extract structured product information from these images. For each distinct product found, return a JSON array of objects with these fields:
 - product_name: Full product name
 - sku_code: SKU or product code (generate one like MRL-XXX-NNN if not found)
-- division: One of: Orthopedics, Trauma, Cardiovascular, Diagnostics, ENT, Endo-surgical, Infection Prevention, Peripheral Intervention, Critical Care, Dental, Robotics, Sport Medicine, Cardiac Surgery, Urology, Sleep Health
+- division: One of: Orthopedics, Cardiovascular, Diagnostics, ENT, Endo-surgical, Infection Prevention, Peripheral Intervention, Critical Care, Robotics, Cardiac Surgery, Urology
 - category: Sub-category within the division
 - description: 2-3 sentence description of the product
 - technical_specifications: Object with key technical specs (material, dimensions, features)
@@ -175,7 +175,7 @@ async def claude_extract_products(pdf_text: str) -> list:
 Extract structured product information from the given text. For each product found, return a JSON array of objects with these fields:
 - product_name: Full product name
 - sku_code: SKU or product code (generate one like MRL-XXX-NNN if not found)
-- division: One of: Orthopedics, Trauma, Cardiovascular, Diagnostics, ENT, Endo-surgical, Infection Prevention, Peripheral Intervention, Critical Care, Dental, Robotics, Sport Medicine, Cardiac Surgery, Urology, Sleep Health
+- division: One of: Orthopedics, Cardiovascular, Diagnostics, ENT, Endo-surgical, Infection Prevention, Peripheral Intervention, Critical Care, Robotics, Cardiac Surgery, Urology
 - category: Sub-category within the division
 - description: 2-3 sentence description of the product
 - technical_specifications: Object with key technical specs

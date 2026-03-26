@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import {
   getAdminProducts, createAdminProduct, updateAdminProduct,
   deleteAdminProduct, uploadProductImages, deleteProductImage,
-  bulkUploadImages, getFileUrl,
+  bulkUploadImages, getFileUrl, startBrochureExtraction, getBrochureExtractionStatus,
 } from "../lib/api";
 import { toast } from "sonner";
 import {
@@ -11,9 +11,9 @@ import {
 } from "lucide-react";
 
 const DIVISIONS = [
-  "Orthopedics", "Trauma", "Cardiovascular", "Diagnostics",
+  "Orthopedics", "Cardiovascular", "Diagnostics",
   "ENT", "Endo-surgical", "Infection Prevention", "Peripheral Intervention",
-  "Cardiac Surgery", "Critical Care", "Dental", "Robotics", "Sport Medicine",
+  "Cardiac Surgery", "Critical Care", "Urology", "Robotics",
 ];
 
 const EMPTY_FORM = {
@@ -42,6 +42,8 @@ export default function AdminProducts() {
   const [bulkFiles, setBulkFiles] = useState([]);
   const [bulkUploading, setBulkUploading] = useState(false);
   const [bulkResult, setBulkResult] = useState(null);
+  const [extracting, setExtracting] = useState(false);
+  const [extractStatus, setExtractStatus] = useState(null);
   const fileInputRef = useRef(null);
   const bulkInputRef = useRef(null);
 
@@ -172,6 +174,30 @@ export default function AdminProducts() {
     }
   };
 
+  const handleBrochureExtraction = async () => {
+    setExtracting(true);
+    try {
+      const res = await startBrochureExtraction();
+      toast.success(res.data.message);
+      setExtractStatus({ status: "running", processed: 0, total: 0, matched: 0 });
+      const interval = setInterval(async () => {
+        try {
+          const s = await getBrochureExtractionStatus();
+          setExtractStatus(s.data);
+          if (s.data.status === "completed" || s.data.status === "failed") {
+            clearInterval(interval);
+            setExtracting(false);
+            fetchProducts();
+            toast.success(`Extraction done: ${s.data.matched} images matched`);
+          }
+        } catch { /* ignore polling errors */ }
+      }, 5000);
+    } catch {
+      toast.error("Failed to start extraction");
+      setExtracting(false);
+    }
+  };
+
   const imageCount = (p) => (p.images || []).length;
 
   return (
@@ -182,6 +208,15 @@ export default function AdminProducts() {
           <p className="text-sm text-slate-500">{total} products in catalog</p>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={handleBrochureExtraction}
+            disabled={extracting}
+            className="flex items-center gap-1.5 px-3 py-2 border border-indigo-200 text-indigo-700 text-sm font-medium rounded-sm hover:bg-indigo-50 transition-colors disabled:opacity-50"
+            data-testid="extract-brochure-btn"
+          >
+            {extracting ? <Loader2 size={16} className="animate-spin" /> : <ImagePlus size={16} />}
+            {extracting ? `Extracting... ${extractStatus?.matched || 0} matched` : "Extract from Brochures"}
+          </button>
           <button
             onClick={() => { setShowBulkUpload(true); setBulkResult(null); setBulkFiles([]); }}
             className="flex items-center gap-1.5 px-3 py-2 border border-slate-200 text-slate-700 text-sm font-medium rounded-sm hover:bg-slate-50 transition-colors"
@@ -249,7 +284,17 @@ export default function AdminProducts() {
                 {products.map((p) => (
                   <tr key={p.id} className="hover:bg-slate-50" data-testid={`product-row-${p.id}`}>
                     <td className="px-4 py-3">
-                      <p className="font-semibold text-slate-900">{p.product_name}</p>
+                      <div className="flex items-center gap-2">
+                        {imageCount(p) > 0 ? (
+                          <img
+                            src={`${process.env.REACT_APP_BACKEND_URL}/api/files/${p.images[0].storage_path}`}
+                            alt=""
+                            className="w-8 h-8 object-contain rounded border border-slate-200"
+                            loading="lazy"
+                          />
+                        ) : null}
+                        <p className="font-semibold text-slate-900">{p.product_name}</p>
+                      </div>
                     </td>
                     <td className="px-4 py-3 font-mono text-slate-500 text-xs">{p.sku_code}</td>
                     <td className="px-4 py-3">
