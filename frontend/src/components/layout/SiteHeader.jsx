@@ -10,7 +10,7 @@ function NavItem({ to, children, testId, onClick }) {
       to={to}
       onClick={onClick}
       className={({ isActive }) =>
-        `text-sm font-medium transition-colors ${isActive ? "text-emerald-700" : "text-slate-600 hover:text-slate-900"}`
+        `text-sm font-medium transition-colors ${isActive ? "text-teal-700" : "text-slate-600 hover:text-slate-900"}`
       }
     >
       {children}
