@@ -42,6 +42,41 @@ async def get_divisions():
     return {"divisions": divisions}
 
 
+@router.get("/api/category-stats")
+async def get_category_stats(division: Optional[str] = None):
+    """Get category-level stats: system count + SKU count per category."""
+    match_stage = {"status": "published"}
+    if division:
+        match_stage["division"] = division
+
+    pipeline = [
+        {"$match": match_stage},
+        {"$group": {
+            "_id": {"division": "$division", "category": "$category"},
+            "sku_count": {"$sum": 1},
+            "systems": {"$addToSet": "$product_family"},
+            "sample_image": {"$first": "$images"},
+            "sample_brochure": {"$max": {"$ifNull": ["$brochure", "$brochure_url"]}},
+        }},
+        {"$sort": {"_id.division": 1, "_id.category": 1}}
+    ]
+    results = await products_col.aggregate(pipeline).to_list(500)
+
+    categories = []
+    for r in results:
+        systems = [s for s in r["systems"] if s]
+        categories.append({
+            "division": r["_id"]["division"],
+            "category": r["_id"]["category"],
+            "system_count": len(systems),
+            "sku_count": r["sku_count"],
+            "systems": sorted(systems),
+            "image": r.get("sample_image") or [],
+            "has_brochure": bool(r.get("sample_brochure")),
+        })
+    return {"categories": categories, "total": len(categories)}
+
+
 @router.get("/api/product-families")
 async def list_product_families(
     division: Optional[str] = None,
