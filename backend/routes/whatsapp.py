@@ -157,13 +157,71 @@ async def track_event_in_interakt(phone: str, event_name: str, event_traits: dic
         return {"success": False, "error": str(e)}
 
 
+WA_SYSTEM_PROMPT = """You are Agile Ortho's WhatsApp sales assistant. You're chatting on WhatsApp — be BRIEF and conversational.
+
+RULES:
+- MAX 2 sentences per reply. Use WhatsApp-style short messages.
+- Be warm: use "Hi Doctor", "Sure!", "Absolutely!"
+- NEVER give pricing. Say "I'll connect you with our team for best bulk rates"
+- When user shares name/hospital/district — acknowledge warmly
+- Suggest relevant products from CONTEXT below
+- For human support, share the right contact number
+
+CONTACTS:
+- Dispatch: 741818183
+- Ortho/Spine: 74161612350
+- General: 7416216262
+- Consumables: 7416416871
+- Billing: 7416416093
+
+PRODUCTS:
+{product_context}"""
+
+
+WELCOME_MSG = """Hi! Welcome to *Agile Ortho* — Telangana's authorized Meril Life Sciences distributor.
+
+I can help you with:
+1. Product info & specifications
+2. Bulk pricing quotations
+3. Connect with our specialists
+
+What are you looking for today?"""
+
+
+def chunk_message(text: str, max_len: int = 300) -> list:
+    """Split long AI response into WhatsApp-friendly chunks."""
+    if len(text) <= max_len:
+        return [text]
+
+    chunks = []
+    paragraphs = text.split("\n\n")
+
+    current = ""
+    for para in paragraphs:
+        if len(current) + len(para) + 2 > max_len and current:
+            chunks.append(current.strip())
+            current = para
+        else:
+            current = current + "\n\n" + para if current else para
+
+    if current.strip():
+        chunks.append(current.strip())
+
+    if not chunks:
+        chunks = [text[:max_len], text[max_len:]] if len(text) > max_len else [text]
+
+    return chunks[:3]
+
+
 async def handle_wa_incoming(phone: str, message_text: str, customer_name: str = ""):
-    from routes.chat import search_relevant_products, format_product_context, CHATBOT_SYSTEM_PROMPT
+    from routes.chat import search_relevant_products, format_product_context
+    from routes.automation import update_lead_from_conversation, schedule_followups
 
     session_id = f"wa-{phone}"
     conv = await wa_conversations_col.find_one({"phone": phone})
+    is_new = conv is None
 
-    if not conv:
+    if is_new:
         await wa_conversations_col.insert_one({
             "phone": phone,
             "session_id": session_id,
@@ -177,24 +235,46 @@ async def handle_wa_incoming(phone: str, message_text: str, customer_name: str =
         })
         conv = await wa_conversations_col.find_one({"phone": phone})
 
+    # Save incoming message immediately
     incoming_msg = {
         "role": "customer",
         "content": message_text,
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "channel": "whatsapp",
     }
+    await wa_conversations_col.update_one(
+        {"phone": phone},
+        {
+            "$push": {"messages": incoming_msg},
+            "$set": {"updated_at": datetime.now(timezone.utc).isoformat()},
+            "$inc": {"unread": 1},
+        }
+    )
 
-    from emergentintegrations.llm.chat import LlmChat, UserMessage
+    # IMPROVEMENT 1: Instant acknowledgment for first-time users
+    if is_new:
+        await send_whatsapp_message(phone, WELCOME_MSG, callback_data="welcome")
+        welcome_msg = {
+            "role": "assistant", "content": WELCOME_MSG,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "channel": "whatsapp", "type": "welcome",
+        }
+        await wa_conversations_col.update_one(
+            {"phone": phone}, {"$push": {"messages": welcome_msg}}
+        )
+
+    # IMPROVEMENT 2: Product search + shorter WhatsApp prompt
     relevant_products = await search_relevant_products(message_text)
     product_context = format_product_context(relevant_products)
-    system_prompt = CHATBOT_SYSTEM_PROMPT.replace("{product_context}", product_context)
+    system_prompt = WA_SYSTEM_PROMPT.replace("{product_context}", product_context)
 
-    history = conv.get("messages", [])
+    history = conv.get("messages", []) if conv else []
     initial_msgs = [{"role": "system", "content": system_prompt}]
-    for h in history[-8:]:
+    for h in history[-6:]:
         role = "user" if h["role"] == "customer" else "assistant"
         initial_msgs.append({"role": role, "content": h["content"]})
 
+    from emergentintegrations.llm.chat import LlmChat, UserMessage
     chat = LlmChat(
         api_key=EMERGENT_LLM_KEY,
         session_id=f"wa-chat-{phone}",
@@ -205,58 +285,83 @@ async def handle_wa_incoming(phone: str, message_text: str, customer_name: str =
     try:
         ai_response = await chat.send_message(UserMessage(text=message_text))
     except Exception:
-        ai_response = "Thank you for your message. Our team will get back to you shortly. For urgent queries, call us at +917416521222."
+        ai_response = "Thanks for your message! Our team will get back to you shortly. For urgent queries, call 7416216262."
 
+    # IMPROVEMENT 3: Message chunking — split into natural chat-size pieces
+    chunks = chunk_message(ai_response)
+    for i, chunk in enumerate(chunks):
+        await send_whatsapp_message(phone, chunk, callback_data=f"ai_reply_{i}")
+        if i < len(chunks) - 1:
+            await asyncio.sleep(1.5)  # Natural typing delay between chunks
+
+    # Save AI response
     outgoing_msg = {
         "role": "assistant",
         "content": ai_response,
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "channel": "whatsapp",
     }
-
     await wa_conversations_col.update_one(
         {"phone": phone},
         {
-            "$push": {"messages": {"$each": [incoming_msg, outgoing_msg]}},
+            "$push": {"messages": outgoing_msg},
             "$set": {
                 "updated_at": datetime.now(timezone.utc).isoformat(),
                 "customer_name": customer_name or conv.get("customer_name", phone),
             },
-            "$inc": {"unread": 1},
         }
     )
 
-    if not conv.get("lead_created"):
+    # IMPROVEMENT 6: Automated lead extraction + follow-up scheduling
+    updated_conv = await wa_conversations_col.find_one({"phone": phone})
+    customer_msgs = [m for m in updated_conv.get("messages", []) if m.get("role") == "customer"]
+
+    # Extract lead info after every 2nd customer message
+    if len(customer_msgs) >= 2 and len(customer_msgs) % 2 == 0:
+        try:
+            result = await update_lead_from_conversation(phone, updated_conv)
+            if result:
+                info, score_value, score_label = result
+                await schedule_followups(phone, score_label, updated_conv)
+
+                # Track in Interakt
+                asyncio.create_task(track_user_in_interakt(
+                    phone,
+                    name=info.get("name") or customer_name or f"WhatsApp {phone}",
+                    traits={k: v for k, v in info.items() if v and isinstance(v, str)},
+                    tags=["whatsapp-lead", f"score-{score_label}"]
+                ))
+        except Exception as e:
+            print(f"[WA] Lead extraction error for {phone}: {e}")
+    elif len(customer_msgs) == 1 and not conv.get("lead_created"):
+        # First message — create basic lead
         lead = {
             "name": customer_name or f"WhatsApp {phone}",
             "phone_whatsapp": phone,
-            "hospital_clinic": "",
-            "email": "",
-            "district": "",
+            "hospital_clinic": "", "email": "", "district": "",
             "inquiry_type": "WhatsApp Chat",
-            "product_interest": "",
+            "product_interest": message_text[:100],
             "source": "whatsapp",
-            "score": "warm",
-            "score_value": 30,
+            "score": "cold", "score_value": 15,
             "status": "new",
-            "notes": "Auto-created from WhatsApp conversation",
             "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat(),
         }
         await leads_col.insert_one(lead)
         await wa_conversations_col.update_one(
-            {"phone": phone},
-            {"$set": {"lead_created": True}}
+            {"phone": phone}, {"$set": {"lead_created": True}}
         )
+        await schedule_followups(phone, "cold", updated_conv)
+
         asyncio.create_task(track_user_in_interakt(
             phone, name=customer_name or f"WhatsApp {phone}",
-            tags=["whatsapp-lead", "auto-created"]
+            tags=["whatsapp-lead", "auto-created", "score-cold"]
         ))
         asyncio.create_task(track_event_in_interakt(
             phone, "WhatsApp Conversation Started",
             {"source": "whatsapp", "first_message": message_text[:100]}
         ))
 
-    await send_whatsapp_message(phone, ai_response)
     return ai_response
 
 
