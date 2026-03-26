@@ -17,6 +17,8 @@ api.interceptors.request.use((config) => {
 // Public APIs
 export const getProducts = (params) => api.get("/api/products", { params });
 export const getProduct = (id) => api.get(`/api/products/${id}`);
+export const getProductFamilies = (params) => api.get("/api/product-families", { params });
+export const getProductFamilyDetail = (familyName) => api.get(`/api/product-families/${encodeURIComponent(familyName)}`);
 export const getDivisions = () => api.get("/api/divisions");
 export const submitLead = (data) => api.post("/api/leads", data);
 

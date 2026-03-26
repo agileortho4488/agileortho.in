@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Search, SlidersHorizontal, Package, Grid3X3, List, ChevronLeft, ChevronRight, ChevronDown, X, Bone, HeartPulse, Microscope, Stethoscope, Scissors, Shield, Activity, Syringe, Scan, CircuitBoard, Dumbbell, Disc, Replace, Wrench } from "lucide-react";
-import { getProducts, getDivisions } from "../lib/api";
+import { Search, SlidersHorizontal, Package, Grid3X3, List, ChevronLeft, ChevronRight, ChevronDown, X, Bone, HeartPulse, Microscope, Stethoscope, Scissors, Shield, Activity, Syringe, Scan, CircuitBoard, Dumbbell, Disc, Replace, Wrench, Layers } from "lucide-react";
+import { getProductFamilies, getDivisions } from "../lib/api";
 import { SEO, buildBreadcrumbSchema, buildItemListSchema } from "../components/SEO";
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -32,12 +32,13 @@ const DIVISIONS = [
 
 export default function Products() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [products, setProducts] = useState([]);
+  const [families, setFamilies] = useState([]);
   const [total, setTotal] = useState(0);
   const [pages, setPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState("grid");
   const [divisionCounts, setDivisionCounts] = useState({});
+  const [totalProducts, setTotalProducts] = useState(0);
   const [searchInput, setSearchInput] = useState("");
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
@@ -50,8 +51,10 @@ export default function Products() {
     getDivisions()
       .then((r) => {
         const counts = {};
-        (r.data.divisions || []).forEach((d) => { counts[d.name] = d.product_count; });
+        let tp = 0;
+        (r.data.divisions || []).forEach((d) => { counts[d.name] = d.product_count; tp += d.product_count; });
         setDivisionCounts(counts);
+        setTotalProducts(tp);
       })
       .catch(() => {});
   }, []);
@@ -63,9 +66,9 @@ export default function Products() {
     if (category) params.category = category;
     if (search) params.search = search;
 
-    getProducts(params)
+    getProductFamilies(params)
       .then((r) => {
-        setProducts(r.data.products);
+        setFamilies(r.data.families);
         setTotal(r.data.total);
         setPages(r.data.pages);
       })
@@ -102,12 +105,11 @@ export default function Products() {
   };
 
   const hasActiveFilters = division || category || search;
-  const totalDivisionProducts = Object.values(divisionCounts).reduce((a, b) => a + b, 0);
 
   const seoTitle = division ? `${division} Medical Devices` : "Medical Device Catalog";
   const seoDesc = division
-    ? `Browse ${division} medical devices from Meril Life Sciences. Authorized distributor for hospitals and clinics in Telangana. ${total} products available.`
-    : "Browse 814+ medical devices across 10 divisions. Orthopedics, cardiovascular, diagnostics, ENT, endo-surgical devices for hospitals in Telangana.";
+    ? `Browse ${division} medical devices from Meril Life Sciences. Authorized distributor for hospitals and clinics in Telangana.`
+    : `Browse ${totalProducts}+ medical devices across ${Object.keys(divisionCounts).length} divisions. Orthopedics, cardiovascular, diagnostics, ENT, endo-surgical devices for hospitals in Telangana.`;
   const breadcrumbs = [{ name: "Home", url: "/" }, { name: "Products" }];
   if (division) breadcrumbs.push({ name: division });
 
@@ -117,11 +119,9 @@ export default function Products() {
         title={seoTitle}
         description={seoDesc}
         canonical={division ? `/products?division=${encodeURIComponent(division)}` : "/products"}
-        jsonLd={[
-          buildBreadcrumbSchema(breadcrumbs),
-          ...(products.length > 0 ? [buildItemListSchema(products, division)] : [])
-        ]}
-      />      {/* ===== DARK HERO BANNER ===== */}
+        jsonLd={[buildBreadcrumbSchema(breadcrumbs)]}
+      />
+      {/* ===== DARK HERO BANNER ===== */}
       <section className="bg-slate-900 relative overflow-hidden" data-testid="products-hero">
         <div className="absolute inset-0 opacity-10">
           <div className="w-full h-full bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-teal-500 via-transparent to-transparent" />
@@ -148,8 +148,8 @@ export default function Products() {
               </h1>
               <p className="mt-3 text-slate-400 text-base">
                 {division
-                  ? `Browse ${total} product${total !== 1 ? "s" : ""} in ${division}`
-                  : `Explore ${totalDivisionProducts > 0 ? totalDivisionProducts.toLocaleString() : ""} medical devices across ${Object.keys(divisionCounts).length} divisions`
+                  ? `${total} product ${total !== 1 ? "ranges" : "range"} in ${division} (${divisionCounts[division] || ""} total SKUs)`
+                  : `${totalProducts > 0 ? totalProducts.toLocaleString() : ""} medical devices across ${Object.keys(divisionCounts).length} divisions`
                 }
               </p>
             </div>
@@ -215,7 +215,6 @@ export default function Products() {
 
         <div className="flex flex-col lg:flex-row gap-8">
           {/* ===== SIDEBAR FILTERS ===== */}
-          {/* Mobile filter toggle */}
           <button
             onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
             className="lg:hidden flex items-center justify-between w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700"
@@ -249,7 +248,7 @@ export default function Products() {
                     All Divisions
                   </span>
                   <span className={`text-xs ${!division ? "text-slate-400" : "text-slate-400"}`}>
-                    {totalDivisionProducts > 0 ? totalDivisionProducts : ""}
+                    {totalProducts > 0 ? totalProducts : ""}
                   </span>
                 </button>
 
@@ -283,12 +282,12 @@ export default function Products() {
             </div>
           </aside>
 
-          {/* ===== PRODUCT GRID ===== */}
+          {/* ===== PRODUCT FAMILY GRID ===== */}
           <div className="flex-1 min-w-0">
             {/* Toolbar */}
             <div className="flex items-center justify-between mb-6">
               <p className="text-sm text-slate-500">
-                <span className="font-semibold text-slate-900">{total}</span> product{total !== 1 ? "s" : ""}
+                <span className="font-semibold text-slate-900">{total}</span> product {total !== 1 ? "ranges" : "range"}
                 {search && <> matching &quot;<span className="text-teal-600">{search}</span>&quot;</>}
               </p>
               <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-0.5">
@@ -316,7 +315,7 @@ export default function Products() {
                   <p className="text-sm text-slate-400">Loading products...</p>
                 </div>
               </div>
-            ) : products.length === 0 ? (
+            ) : families.length === 0 ? (
               <div className="text-center py-28 bg-slate-50 rounded-2xl border border-slate-100">
                 <Package size={48} className="mx-auto text-slate-300 mb-4" />
                 <p className="text-slate-700 font-semibold mb-1">No products found</p>
@@ -331,43 +330,51 @@ export default function Products() {
               </div>
             ) : viewMode === "grid" ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-                {products.map((p) => (
+                {families.map((f) => (
                   <Link
-                    key={p.id}
-                    to={`/products/${p.id}`}
+                    key={f.family_name}
+                    to={f.variant_count > 1 ? `/products/family/${encodeURIComponent(f.family_name)}` : `/products/${f.id}`}
                     className="group bg-white border border-slate-100 rounded-2xl overflow-hidden hover:shadow-lg hover:border-teal-200 transition-all duration-300"
-                    data-testid={`product-card-${p.id}`}
+                    data-testid={`product-family-card-${f.id}`}
                   >
                     <div className="h-48 bg-slate-50 flex items-center justify-center overflow-hidden p-4 relative">
-                      {p.images && p.images.length > 0 ? (
+                      {f.images && f.images.length > 0 ? (
                         <img
-                          src={`${API}/api/files/${p.images[0].storage_path}`}
-                          alt={p.product_name}
+                          src={`${API}/api/files/${f.images[0].storage_path}`}
+                          alt={f.family_name}
                           className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
                           loading="lazy"
-                          data-testid={`product-image-${p.id}`}
                         />
                       ) : (
                         <Package size={40} className="text-slate-200" />
                       )}
                       <div className="absolute top-3 left-3">
                         <span className="text-[10px] font-bold uppercase tracking-widest text-teal-700 bg-teal-50 px-2 py-0.5 rounded-full border border-teal-100">
-                          {p.division}
+                          {f.division}
                         </span>
                       </div>
+                      {f.variant_count > 1 && (
+                        <div className="absolute top-3 right-3">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-600 bg-white px-2 py-0.5 rounded-full border border-slate-200 shadow-sm">
+                            <Layers size={10} /> {f.variant_count} variants
+                          </span>
+                        </div>
+                      )}
                     </div>
                     <div className="p-5">
-                      {p.category && (
-                        <p className="text-[11px] text-slate-400 font-medium mb-1.5">{p.category}</p>
+                      {f.category && (
+                        <p className="text-[11px] text-slate-400 font-medium mb-1.5">{f.category}</p>
                       )}
                       <h3 className="font-bold text-slate-900 group-hover:text-teal-600 transition-colors line-clamp-2 leading-snug">
-                        {p.product_name}
+                        {f.family_name}
                       </h3>
-                      <p className="text-sm text-slate-500 mt-1.5 line-clamp-2 leading-relaxed">{p.description}</p>
+                      <p className="text-sm text-slate-500 mt-1.5 line-clamp-2 leading-relaxed">{f.description}</p>
                       <div className="mt-4 flex items-center justify-between">
-                        <span className="text-[11px] font-mono text-slate-400">SKU: {p.sku_code}</span>
+                        <span className="text-[11px] text-slate-400 font-medium">
+                          {f.variant_count > 1 ? `${f.variant_count} SKUs available` : `SKU: ${f.product_name !== f.family_name ? "" : ""}`.trim()}
+                        </span>
                         <span className="inline-flex items-center gap-1 text-xs text-teal-600 font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
-                          View Details <ChevronRight size={12} />
+                          {f.variant_count > 1 ? "View Range" : "View Details"} <ChevronRight size={12} />
                         </span>
                       </div>
                     </div>
@@ -376,18 +383,18 @@ export default function Products() {
               </div>
             ) : (
               <div className="space-y-3">
-                {products.map((p) => (
+                {families.map((f) => (
                   <Link
-                    key={p.id}
-                    to={`/products/${p.id}`}
+                    key={f.family_name}
+                    to={f.variant_count > 1 ? `/products/family/${encodeURIComponent(f.family_name)}` : `/products/${f.id}`}
                     className="group flex items-center gap-5 bg-white border border-slate-100 rounded-2xl p-4 hover:shadow-lg hover:border-teal-200 transition-all duration-300"
-                    data-testid={`product-list-${p.id}`}
+                    data-testid={`product-family-list-${f.id}`}
                   >
                     <div className="w-20 h-20 bg-slate-50 rounded-xl flex items-center justify-center shrink-0 overflow-hidden p-2">
-                      {p.images && p.images.length > 0 ? (
+                      {f.images && f.images.length > 0 ? (
                         <img
-                          src={`${API}/api/files/${p.images[0].storage_path}`}
-                          alt={p.product_name}
+                          src={`${API}/api/files/${f.images[0].storage_path}`}
+                          alt={f.family_name}
                           className="w-full h-full object-contain"
                           loading="lazy"
                         />
@@ -397,17 +404,21 @@ export default function Products() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-teal-600">{p.division}</span>
-                        {p.category && <span className="text-[10px] text-slate-400">{p.category}</span>}
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-teal-600">{f.division}</span>
+                        {f.category && <span className="text-[10px] text-slate-400">{f.category}</span>}
                       </div>
                       <h3 className="font-bold text-sm text-slate-900 group-hover:text-teal-600 transition-colors truncate">
-                        {p.product_name}
+                        {f.family_name}
                       </h3>
-                      <p className="text-xs text-slate-500 truncate mt-0.5">{p.description}</p>
+                      <p className="text-xs text-slate-500 truncate mt-0.5">{f.description}</p>
                     </div>
                     <div className="text-right shrink-0 hidden sm:block">
-                      <span className="text-xs font-mono text-slate-400 block">{p.sku_code}</span>
-                      <span className="inline-flex items-center gap-1 text-xs text-teal-600 font-semibold mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {f.variant_count > 1 && (
+                        <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 bg-slate-50 px-2.5 py-1 rounded-full border border-slate-200">
+                          <Layers size={11} /> {f.variant_count} SKUs
+                        </span>
+                      )}
+                      <span className="inline-flex items-center gap-1 text-xs text-teal-600 font-semibold mt-2 opacity-0 group-hover:opacity-100 transition-opacity block">
                         View <ChevronRight size={12} />
                       </span>
                     </div>

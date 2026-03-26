@@ -42,11 +42,145 @@ async def get_divisions():
     return {"divisions": divisions}
 
 
+@router.get("/api/product-families")
+async def list_product_families(
+    division: Optional[str] = None,
+    category: Optional[str] = None,
+    search: Optional[str] = None,
+    page: int = 1,
+    limit: int = 20
+):
+    """List product families (grouped view) instead of individual products."""
+    match_stage = {"status": "published"}
+    if division:
+        match_stage["division"] = division
+    if category:
+        match_stage["category"] = category
+    if search:
+        match_stage["$or"] = [
+            {"product_name": {"$regex": search, "$options": "i"}},
+            {"description": {"$regex": search, "$options": "i"}},
+            {"category": {"$regex": search, "$options": "i"}},
+            {"sku_code": {"$regex": search, "$options": "i"}},
+            {"product_family": {"$regex": search, "$options": "i"}},
+        ]
+
+    pipeline = [
+        {"$match": match_stage},
+        {"$group": {
+            "_id": "$product_family",
+            "family_name": {"$first": "$product_family"},
+            "division": {"$first": "$division"},
+            "category": {"$first": "$category"},
+            "description": {"$first": "$description"},
+            "manufacturer": {"$first": "$manufacturer"},
+            "material": {"$first": "$material"},
+            "variant_count": {"$sum": 1},
+            "representative_id": {"$first": "$_id"},
+            "representative_name": {"$first": "$product_name"},
+            "images": {"$first": "$images"},
+            "brochure": {"$max": {"$ifNull": ["$brochure", "$brochure_url"]}},
+            "categories": {"$addToSet": "$category"},
+            "skus": {"$push": "$sku_code"},
+        }},
+        {"$sort": {"family_name": 1}},
+    ]
+
+    # Count total families
+    count_pipeline = pipeline + [{"$count": "total"}]
+    count_result = await products_col.aggregate(count_pipeline).to_list(1)
+    total = count_result[0]["total"] if count_result else 0
+
+    # Paginate
+    skip = (page - 1) * limit
+    paginated_pipeline = pipeline + [{"$skip": skip}, {"$limit": limit}]
+    results = await products_col.aggregate(paginated_pipeline).to_list(limit)
+
+    families = []
+    for r in results:
+        families.append({
+            "id": str(r["representative_id"]),
+            "family_name": r["family_name"] or r["representative_name"],
+            "product_name": r["representative_name"],
+            "division": r["division"],
+            "category": r["category"],
+            "categories": sorted(set(r.get("categories", []))),
+            "description": r["description"],
+            "manufacturer": r.get("manufacturer", ""),
+            "material": r.get("material", ""),
+            "variant_count": r["variant_count"],
+            "images": r.get("images", []),
+            "brochure": r.get("brochure", ""),
+        })
+
+    return {
+        "families": families,
+        "total": total,
+        "page": page,
+        "pages": math.ceil(total / limit) if total > 0 else 1
+    }
+
+
+@router.get("/api/product-families/{family_name:path}")
+async def get_product_family_detail(family_name: str):
+    """Get all products in a specific product family."""
+    docs = await products_col.find(
+        {"product_family": family_name, "status": "published"}
+    ).sort("product_name", 1).to_list(500)
+
+    if not docs:
+        raise HTTPException(404, "Product family not found")
+
+    # Build a summary from the first product
+    first = docs[0]
+    # Find brochure from any product in the family
+    brochure_url = ""
+    for d in docs:
+        b = d.get("brochure") or d.get("brochure_url", "")
+        if b:
+            brochure_url = b
+            break
+    family_info = {
+        "family_name": family_name,
+        "division": first.get("division", ""),
+        "category": first.get("category", ""),
+        "description": first.get("description", ""),
+        "manufacturer": first.get("manufacturer", ""),
+        "material": first.get("material", ""),
+        "images": first.get("images", []),
+        "brochure": brochure_url,
+        "variant_count": len(docs),
+    }
+
+    # Build variants list
+    variants = []
+    for d in docs:
+        variant = {
+            "id": str(d["_id"]),
+            "product_name": d.get("product_name", ""),
+            "sku_code": d.get("sku_code", ""),
+            "category": d.get("category", ""),
+            "material": d.get("material", ""),
+            "description": d.get("description", ""),
+            "images": d.get("images", []),
+            "technical_specifications": d.get("technical_specifications", {}),
+            "size_variables": d.get("size_variables", []),
+            "pack_size": d.get("pack_size", ""),
+        }
+        variants.append(variant)
+
+    return {
+        "family": family_info,
+        "variants": variants,
+    }
+
+
 @router.get("/api/products")
 async def list_products(
     division: Optional[str] = None,
     category: Optional[str] = None,
     search: Optional[str] = None,
+    product_family: Optional[str] = None,
     status: str = "published",
     page: int = 1,
     limit: int = 20
@@ -56,6 +190,8 @@ async def list_products(
         query["division"] = division
     if category:
         query["category"] = category
+    if product_family:
+        query["product_family"] = product_family
     if search:
         query["$or"] = [
             {"product_name": {"$regex": search, "$options": "i"}},

@@ -48,6 +48,7 @@ async def startup():
     await products_col.create_index("category")
     await products_col.create_index("slug")
     await products_col.create_index("status")
+    await products_col.create_index("product_family")
     await products_col.create_index("sku_code", unique=True, sparse=True)
     await leads_col.create_index("score")
     await leads_col.create_index("status")
