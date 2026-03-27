@@ -8,7 +8,7 @@ from typing import Optional
 from db import shadow_products_col, shadow_skus_col, shadow_brands_col, shadow_chunks_col
 import re
 
-router = APIRouter(prefix="/chatbot", tags=["chatbot"])
+router = APIRouter(prefix="/api/chatbot", tags=["chatbot"])
 
 
 class ChatQuery(BaseModel):
@@ -147,7 +147,7 @@ async def shadow_stats():
             "skus": skus,
             "brands": brands,
             "chunks": chunks,
-            "batch": "batch_1",
+            "batch": "batch_1_to_4",
             "status": "active"
         }
     }

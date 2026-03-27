@@ -65,8 +65,8 @@
     }
   },
   "test_environment": {
-    "backend_url": "https://sku-evidence-check.preview.emergentagent.com",
-    "frontend_url": "https://sku-evidence-check.preview.emergentagent.com",
+    "backend_url": "https://brochure-extraction.preview.emergentagent.com",
+    "frontend_url": "https://brochure-extraction.preview.emergentagent.com",
     "test_mobile": "9876543210",
     "admin_password": "admin"
   }
