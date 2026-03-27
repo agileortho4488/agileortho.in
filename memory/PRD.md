@@ -52,17 +52,33 @@ Core requirement: "SKU Intelligence System" — extract 100% of product data fro
 - Source of truth: `file_id` (NOT ordinal position)
 - Central nervous system: `SYSTEM_STATE.json`
 
-## Key API Endpoints
-- `POST /api/chatbot/query` — Guarded chatbot query (confidence gating + SKU exact-match + off-topic rejection)
+## Website Chatbot UI — COMPLETE (2026-03-27)
+
+### Features Implemented
+- **Confidence-aware chat bubbles**: Green "Verified Match" badge (high), amber "Partial Match" badge (medium), grey "No Match" badge (low/none)
+- **WhatsApp handoff banners**: Shown for medium/low/none confidence responses, enabling smooth escalation to human sales reps
+- **Session tracking**: Conversations stored in `chatbot_conversations` collection with full turn history
+- **Telemetry logging**: All queries, confidence levels, handoff offers, and handoff clicks logged to `chatbot_telemetry` collection
+- **Full-page chat** (`/chat`): Complete chat experience with suggestions, history persistence
+- **Floating chat widget**: Bottom-right widget on all pages with same confidence-aware rendering
+- **Lead form trigger**: Auto-shows after 2+ non-high-confidence responses in the widget
+
+### API Endpoints
+- `POST /api/chatbot/query` — Guarded chatbot query (confidence gating + SKU exact-match + off-topic rejection + session tracking)
+- `GET /api/chatbot/history/{session_id}` — Retrieve conversation history
+- `POST /api/chatbot/telemetry` — Log UI telemetry events
+- `GET /api/chatbot/suggestions` — Contextual suggestions
 - `GET /api/chatbot/stats` — Shadow DB statistics
 - `GET /api/chatbot/brands` — All brands
+- `GET /api/chatbot/products` — Products with filtering
+- `GET /api/chatbot/skus` — SKUs with filtering
 
 ## Current Status
 - Pipeline: COMPLETE (200/200 files)
 - Guardrails: IMPLEMENTED (100% validation pass rate)
 - Shadow DB: Synced and validated
+- Website chatbot UI: COMPLETE AND TESTED (100% pass rate, iteration 29)
 - Live DB: NOT PUSHED (awaiting user approval)
-- Website chatbot UI: NOT YET INTEGRATED (data layer ready)
 - WhatsApp bot: NOT STARTED (awaiting Interakt API key)
 
 ## Priority Stack (User Approved)
@@ -70,10 +86,10 @@ Core requirement: "SKU Intelligence System" — extract 100% of product data fro
 2. ~~Off-topic rejection~~ DONE
 3. ~~SKU exact-match improvement~~ DONE
 4. ~~Re-validation~~ DONE (100%)
-5. Website chatbot UI integration — NEXT
-6. Product comparison feature
-7. Live DB push
-8. WhatsApp bot
+5. ~~Website chatbot UI integration~~ DONE (2026-03-27)
+6. Product comparison feature — NEXT
+7. Live DB push (ON HOLD)
+8. WhatsApp bot (ON HOLD)
 
 ## Blocked
 - File 008 (corrupted DOCX)
