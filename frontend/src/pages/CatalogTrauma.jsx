@@ -225,20 +225,30 @@ export default function CatalogTrauma() {
               </div>
             ) : viewMode === "grid" ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5" data-testid="catalog-grid">
-                {products.map((p) => (
+                {products.map((p) => {
+                  const isBrochure = p.image_type === "brochure_cover";
+                  const hasRealImage = p.images?.length > 0 && !isBrochure;
+                  return (
                   <Link key={p.slug} to={`/catalog/products/${p.slug}`}
                     className="group bg-white border border-slate-100 rounded-2xl overflow-hidden hover:shadow-lg hover:border-amber-200 transition-all duration-300"
                     data-testid={`catalog-product-card-${p.slug}`}>
                     <div className="h-48 bg-slate-50 flex items-center justify-center overflow-hidden p-4 relative">
-                      {p.images && p.images.length > 0 ? (
+                      {hasRealImage ? (
                         <img src={`${API}/api/files/${p.images[0].storage_path}`} alt={p.product_name_display}
                           className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" loading="lazy" />
                       ) : (
-                        <Package size={40} className="text-slate-200" />
+                        <div className="flex flex-col items-center gap-3">
+                          <div className="w-16 h-16 rounded-2xl bg-slate-100 border-2 border-dashed border-slate-200 flex items-center justify-center">
+                            <Bone size={28} className="text-slate-300" />
+                          </div>
+                          <span className="text-[10px] text-slate-400 font-medium">{p.category || "Trauma"}</span>
+                        </div>
                       )}
                       {p.brand && (
                         <div className="absolute top-3 left-3">
-                          <span className="text-[10px] font-bold uppercase tracking-widest text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100">{p.brand}</span>
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100">
+                            {p.brand}{p.parent_brand && p.parent_brand !== p.brand && <span className="text-amber-500 font-medium normal-case tracking-normal"> by {p.parent_brand}</span>}
+                          </span>
                         </div>
                       )}
                       {p.shadow_sku_count > 0 && (
@@ -261,22 +271,26 @@ export default function CatalogTrauma() {
                       </div>
                     </div>
                   </Link>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="space-y-3" data-testid="catalog-list">
-                {products.map((p) => (
+                {products.map((p) => {
+                  const isBrochure = p.image_type === "brochure_cover";
+                  const hasRealImage = p.images?.length > 0 && !isBrochure;
+                  return (
                   <Link key={p.slug} to={`/catalog/products/${p.slug}`}
                     className="group flex items-center gap-5 bg-white border border-slate-100 rounded-2xl p-4 hover:shadow-lg hover:border-amber-200 transition-all duration-300"
                     data-testid={`catalog-product-list-${p.slug}`}>
                     <div className="w-20 h-20 bg-slate-50 rounded-xl flex items-center justify-center shrink-0 overflow-hidden p-2">
-                      {p.images && p.images.length > 0 ? (
+                      {hasRealImage ? (
                         <img src={`${API}/api/files/${p.images[0].storage_path}`} alt={p.product_name_display} className="w-full h-full object-contain" loading="lazy" />
-                      ) : (<Package size={24} className="text-slate-200" />)}
+                      ) : (<Bone size={24} className="text-slate-200" />)}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        {p.brand && <span className="text-[10px] font-bold uppercase tracking-widest text-amber-600">{p.brand}</span>}
+                        {p.brand && <span className="text-[10px] font-bold uppercase tracking-widest text-amber-600">{p.brand}{p.parent_brand && p.parent_brand !== p.brand && <span className="font-medium normal-case tracking-normal text-slate-400"> by {p.parent_brand}</span>}</span>}
                         {p.category && <span className="text-[10px] text-slate-400">{p.category}</span>}
                       </div>
                       <h3 className="font-bold text-sm text-slate-900 group-hover:text-amber-600 transition-colors truncate">{p.product_name_display}</h3>
@@ -290,7 +304,8 @@ export default function CatalogTrauma() {
                       )}
                     </div>
                   </Link>
-                ))}
+                  );
+                })}
               </div>
             )}
 

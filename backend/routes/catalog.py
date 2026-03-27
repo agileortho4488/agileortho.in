@@ -22,6 +22,54 @@ PILOT_FILTER = {
 # Currently enabled pilot divisions
 PILOT_DIVISIONS = ["Trauma"]
 
+# Coating terminology normalization
+COATING_ALIASES = {
+    "Titanium Niobium (TiNBn)": "Bionik Gold Surface (TiNbN Coating)",
+    "TiNBn": "Bionik Gold Surface (TiNbN Coating)",
+    "TiNbN": "Bionik Gold Surface (TiNbN Coating)",
+    "Titanium Niobium": "Bionik Gold Surface (TiNbN Coating)",
+    "Bionik Gold": "Bionik Gold Surface (TiNbN Coating)",
+}
+
+
+def normalize_spec_key(key):
+    """Title-case spec keys: 'thickness' -> 'Thickness'."""
+    return key.replace("_", " ").strip().title()
+
+
+def normalize_spec_value(key_lower, value):
+    """Normalize spec values — especially coating terminology."""
+    if isinstance(value, str) and key_lower in ("coating", "surface"):
+        for alias, canonical in COATING_ALIASES.items():
+            if alias.lower() in value.lower():
+                return canonical
+    return value
+
+
+def normalize_specs(specs):
+    """Normalize spec dict: title-case keys, unify coating terms."""
+    if not specs or not isinstance(specs, dict):
+        return {}
+    result = {}
+    for k, v in specs.items():
+        new_key = normalize_spec_key(k)
+        new_val = normalize_spec_value(k.lower().strip(), v)
+        if new_val is not None and new_val != "":
+            result[new_key] = new_val
+    return result
+
+
+def detect_image_type(images):
+    """Detect if images are brochure covers vs real product photos."""
+    if not images:
+        return "none"
+    for img in images:
+        fname = (img.get("original_filename") or "").lower()
+        source = (img.get("source") or "").lower()
+        if "brochure" in fname or "cover" in fname or "propagation" in source:
+            return "brochure_cover"
+    return "product_photo"
+
 
 @router.get("/divisions")
 async def catalog_divisions():
@@ -85,10 +133,12 @@ async def catalog_product_list(
             "product_family": doc.get("product_family", ""),
             "product_family_display": doc.get("product_family_display", ""),
             "brand": doc.get("brand", ""),
+            "parent_brand": doc.get("parent_brand", ""),
             "division": doc.get("division_canonical", ""),
             "category": doc.get("category", ""),
             "material": doc.get("material_canonical", ""),
             "images": doc.get("images", []),
+            "image_type": detect_image_type(doc.get("images", [])),
             "description": doc.get("description_shadow") or doc.get("description_live", ""),
             "enriched_from_shadow": doc.get("enriched_from_shadow", False),
             "shadow_sku_count": doc.get("shadow_sku_count", 0),
@@ -178,13 +228,14 @@ async def catalog_product_detail(slug: str):
         "description_live": doc.get("description_live", ""),
         "description_shadow": doc.get("description_shadow", ""),
 
-        # Specs & materials
+        # Specs & materials — normalized
         "material": doc.get("material_canonical", ""),
-        "technical_specifications": doc.get("technical_specifications", {}),
+        "technical_specifications": normalize_specs(doc.get("technical_specifications", {})),
         "sku_code": doc.get("sku_code", ""),
 
         # Commerce
         "images": doc.get("images", []),
+        "image_type": detect_image_type(doc.get("images", [])),
         "brochure_url": doc.get("brochure_url", ""),
         "pack_size": doc.get("pack_size"),
         "manufacturer": doc.get("manufacturer", ""),
@@ -194,7 +245,7 @@ async def catalog_product_detail(slug: str):
         "sku_count": len(skus),
 
         # Related
-        "related_products": related,
+        "related_products": [{**r, "image_type": detect_image_type(r.get("images", []))} for r in related],
 
         # Enrichment metadata
         "enriched_from_shadow": doc.get("enriched_from_shadow", False),
