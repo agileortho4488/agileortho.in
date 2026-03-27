@@ -1,23 +1,23 @@
 <analysis>**original_problem_statement**: 
 Build a B2B medical device platform for a premier medical device master franchise in Telangana, India (Agile Ortho). 
-*Recent Requirements*: Build a SKU Intelligence System. Extract 100% of product data, SKUs, and specs from a ZIP file containing 200 manufacturer brochures to serve as the knowledge layer for a Website Chatbot and a WhatsApp AI Chatbot.
+*Recent Requirements*: Shift focus from chatbot-first to portfolio-first. Use the perfectly extracted Shadow DB brochure data to clean up and standardize the messy live website catalog taxonomy via a phased canonical migration (Phase 1: Taxonomy Map, Phase 2: Merge, Phase 3: UI Templates, Phase 4: Trauma Division Pilot), without destructively overwriting the existing live commerce fields.
 
 **User's preferred language**: English (INSTRUCT next agent to respond in English only)
 
 **what currently exists?** 
-A robust React + FastAPI + MongoDB platform. The backend SKU Intelligence pipeline is 100% COMPLETE. All 200 brochures have been fully extracted, structured, audited, normalized, and reconciled (including gap-filling deleted files). The Shadow DB is populated with 481 products, 5107 unique SKUs, 654 expanded training chunks, and 100 brand entries. The chatbot API () was heavily upgraded with production guardrails (confidence gating, off-topic rejection, and exact-match SKU logic) and currently has a 100% pass rate on its retrieval test suite.
+A React + FastAPI + MongoDB platform. The Website Chatbot UI and telemetry endpoints are fully integrated and tested. For the portfolio cleanup: Phase 1 (Taxonomy mapping) and Phase 2 (Catalog merge creating  and ) are complete. Phase 3 & 4 (Standardized Product Detail & Listing templates for the Trauma Pilot) are built. The user requested P0/P1 polishes to the Trauma templates (category icon placeholders instead of PDF covers, renaming Primary SKU to Family Code, unified coating terminology, by Meril brand display, and a dedicated brochure section), which have just been implemented and tested.
 
 **Last working item**:
-    - Last item agent was working: Building the Website Chatbot UI integration. The agent had just started inspecting the frontend components (, , ) to connect the React UI to the fully secured backend  route.
-    - Status: IN PROGRESS
-    - Agent Testing Done: N (Backend is tested, frontend UI changes haven't been written yet)
-    - Which testing method agent to use? Frontend testing agent / manual testing by screenshot tool.
+    - Last item agent was working: Implementing P0/P1 template polish requirements on the Trauma pilot ( and ) and backend  route normalizations. The agent finished the code, tested screenshots across 5 product types (plate, nail, screw, system, many-variant), and just ran the testing subagent.
+    - Status: TESTING PENDING
+    - Agent Testing Done: Y
+    - Which testing method agent to use? NA (Testing subagent was just executed, results are in )
     - User Testing Done: N
 
 **All Pending/In progress Issue list**:
   Issue 1: Resolve Blocked File 008 (P3)
      - Attempted fixes: File 008 is a corrupted DOCX () causing .
-     - Next debug checklist: Keep explicitly marked as blocked unless the user provides a fixed version. Do not let it block production rollouts.
+     - Next debug checklist: Keep explicitly marked as blocked unless the user provides a fixed version.
      - Why fix this issue and what will be achieved with the fix? Ensures full 200 file completeness.
      - Status: BLOCKED
      - Is recurring issue? Y
@@ -25,94 +25,103 @@ A robust React + FastAPI + MongoDB platform. The backend SKU Intelligence pipeli
      - Blocked on other issue: Awaiting uncorrupted file from the user.
 
 **In progress Task List**:
-  Task 1: Website Chatbot UI Integration (P0)
-     - Where to resume: Update frontend components (, ) to consume the newly upgraded . 
-     - What will be achieved with this?: Controlled, web-facing launch of the SKU intelligence system. The UI *must* be confidence-aware (show direct answers for high confidence, verify with rep notes for medium confidence, and graceful refusals for low/off-topic). Also, add UI telemetry/logging (track query, confidence level, accepted/fallback, and human-handoff triggers).
-     - Status: IN PROGRESS
-     - Should Test frontend/backend/both after fix? Frontend
-     - Blocked on something: None
+  Task 1: Trauma Pilot Recheck Report & Final Review (P0)
+     - Where to resume: Read the results of . If it passes, use the  tool or  to present the recheck report to the user detailing the P0/P1 fixes (before/after screenshots were taken, 5 product types verified) and ask for approval to expand this pilot template to Cardiovascular, Diagnostics, and Joint Replacement divisions.
+     - What will be achieved with this? Final sign-off on the standard product portfolio template before scaling it site-wide.
+     - Status: TESTING PENDING
+     - Should Test frontend/backend/both after fix? NA
+     - Blocked on something: Awaiting review of the test report and user sign-off.
 
 **Upcoming and Future Tasks**
     Upcoming Tasks:
-    - P1: Product Comparison Feature. Build a feature allowing the chatbot to compare products side-by-side (e.g., Compare BioMime vs MOZEC). *Note: Do this ONLY AFTER the base website UI integration is complete and tested.*
+    - P1: Expand the standardized product template (Phase 4 expansion) to Cardiovascular, Diagnostics, and Joint Replacement divisions (ONLY AFTER user approves the updated Trauma pilot).
+    - P1: Product Comparison Feature (Allow users to compare products side-by-side using the structured Shadow DB specs).
     
     Future Tasks:
-    - P2: Review live real-world usage/logs of the website chatbot.
-    - P3: Push Shadow DB to Live Production DB. *(Currently explicitly blocked by user until website usage is observed)*.
-    - P4: WhatsApp AI Chatbot integration via Interakt. *(Currently explicitly blocked by user until website usage is observed)*.
+    - P2: Review live real-world usage/logs of the website chatbot (using the newly built telemetry API).
+    - P3: Push Shadow DB to Live Production DB (Currently ON HOLD).
+    - P4: WhatsApp AI Chatbot integration via Interakt (Currently ON HOLD).
 
 **Completed work in this session**
-- Generated and froze 150-file consolidation report (DONE)
-- Extracted Batch 7 (Files 151-175) and Batch 8 (Files 176-200) using 300 DPI OCR and CLI tools (DONE)
-- Found and processed 5 missing gap files shifted by early disk-space deletions, bringing true processed total to 200/200 (DONE)
-- Executed 4 Final Readiness Steps: Cross-batch dedupe/alias cleanup, Full chunk expansion (brand/glossary/clinical added), Retrieval Validation, and Production-Readiness Assessment (DONE)
-- Implemented robust chatbot guardrails (): Exact-match SKU handling, anti-hallucination domain term filtering, and strict confidence gating, passing 35/35 on validation tests (DONE)
+- Website Chatbot UI Integration & Telemetry API (DONE)
+- Phase 1: Catalog Taxonomy Mapping layer and DB scripts (DONE)
+- Phase 2: Catalog Merge creating safe  and  (DONE)
+- Phase 3 & 4: New  backend routes and React templates for Trauma Pilot (DONE)
+- P0/P1 Trauma template polish: Category icon placeholders, Family Code UI, Terminology normalization (DONE)
 
 **Earlier issues found/mentioned but not fixed**
    - Issue 1: Corrupted DOCX file 008 remains blocked.
 
 **Known issue recurrence from previous fork**
-  - Issue recurrence in previous fork: Pod disk space exhaustion from large PDFs.
-  - Recurrence count: 1
-  - Status: RESOLVED (Agent deleted 5 older processed source files to free ~750MB, preserving a source manifest mapping to keep track of the files).
+  - Issue recurrence in previous fork: None
+  - Recurrence count: 0
+  - Status: RESOLVED
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- Hybrid Data Pipeline: Fully completed 4-layer architecture (Raw -> Structured -> Normalized Master -> Training Chunks).
-- Guardrailed RAG: Chatbot uses strict substring and regex exact-matching for SKUs, checks queries against  to reject off-topic questions, and grades responses into High/Medium/Low confidence.
-- Shadow vs Live Database: All extraction data is safely in  collections inside the .
+- Hybrid Data Pipeline: Preserving live commerce fields (slug, price, images) while enriching with Shadow DB (brochure) specs.
+- Confidence-based mapping: Merged products have , , and  tracking.
+- React Frontend + FastAPI Backend: Clear separation of UI templates from the API formatting layer.
 
 **key DB schema**
-  - MongoDB 
-  - MongoDB 
-  - MongoDB 
-  - MongoDB 
+  - MongoDB  (Merged live + shadow data)
+  - MongoDB  (Merged SKU variant data)
+  - MongoDB , , , ,  (Taxonomy normalizations)
 
 **changes in tech stack**
   - None
 
 **All files of reference** 
-  -  (Understand the output contract the frontend will receive)
-  -  &  (Files to be modified next)
-  - 
+  -  (Contains terminology normalization and formatting logic)
+  -  (Trauma pilot listing page)
+  -  (Trauma pilot detail page)
+  -  (Needs to be read)
   - 
 
 **Areas that need refactoring**: 
   - N/A
 
 **key api endpoints**
-  -  (Now production-ready, returning robust  and  fields to parse in the UI)
+  - 
+  - 
+  - 
+  - 
+  - 
 
 **Critical Info for New Agent** 
-- **DO NOT TOUCH DATA EXTRACTION:** The 200-file pipeline is 100% finished, audited, and locked. No more extraction scripts are needed.
-- **DO NOT PUSH TO LIVE DB OR WHATSAPP:** The user explicitly commanded to hold off on migrating  data to production collections, and to hold off on WhatsApp.
-- **FOCUS ON THE FRONTEND UI:** Your immediate priority is wiring the React frontend to the chatbot API. The frontend *must* respect the backend's  rating (High = direct, Medium = add verification warning, Low/None = graceful refusal). You also need to add telemetry/logging logic in the UI to track user queries and handoffs.
+- **PORTFOLIO FOCUS:** The user explicitly paused further chatbot work to prioritize fixing the live website's catalog using the Shadow DB. 
+- **NON-DESTRUCTIVE PILOT:** You are currently operating inside  and the new  pages. Do not touch or overwrite the original live  collection yet.
+- **IMMEDIATE NEXT STEP:** The previous agent executed the  to validate the P0/P1 fixes on the Trauma pilot. You MUST read . If tests pass, immediately prepare the recheck report for the user (summarizing the fixes and the 5 product types checked) and ask if you should proceed with expanding the pilot to Cardiovascular, Diagnostics, and Joint Replacement.
 
 **documents and test reports created in this job** 
   - 
   - 
   - 
+  - 
 
 **Last 10 User Messages and any pending HUMAN messages** 
-1. (LATEST) User: Approved website chatbot UI integration and guarded production use against Shadow DB. Approved adding a product comparison feature *after* the UI is built. Explicitly ordered to HOLD Live DB push and WhatsApp rollout until real usage is observed. Demanded UI to handle graceful refusals and telemetry.
-2. User: Accepted pipeline completion, but refused Live DB push due to 91.7% accuracy. Ordered agent to implement 3 guardrails (confidence gating, off-topic rejection, exact-match SKU logic) and re-test. (Agent did this, achieving 100%).
-3. User: Caught a brand count mismatch and a 5-file gap from deleted files. Ordered reconciliation, then proceed with the 4 final readiness steps.
-4. User: Accepted 150-file checkpoint. Ordered agent to treat file IDs as source of truth.
+1. (LATEST) User: Approved P0/P1 fix plan. Locked rules: prefer category placeholders over bad images, rename Primary SKU to Family Code, title-case specs, show {Brand} by Meril, add brochure section. Demanded a recheck report on 5 specific product types (plate, nail, screw, system, many-variant) before expanding to other divisions.
+2. User: Reviewed Phase 3 UI pilot screenshots. Approved structure but listed 4 P0 fixes (hero image, Primary SKU text, coating terms, label casing) and 4 P1 fixes (SKU table columns, brochure clickability, brand hierarchy, download section).
+3. User: Approved Phase 2. Ordered Phase 3 (Standardized product page template) and Phase 4 (Trauma pilot). Added rule: visually separate Product Family from SKU/Variant info on the frontend.
+4. User: Approved Phase 1. Ordered Phase 2 (Catalog merge) with 5 strict rules: exact SKU match first, no auto-enrichment on ambiguous matches, shadow-only stay hidden drafts, keep live commerce fields authoritative, generate merge report.
+5. User: Demanded Phase 1 output be a canonical mapping layer with traceable source fields, not a blind overwrite.
+6. User: Proposed shifting from chatbot-first to fixing the site taxonomy (portfolio-first) via a 4-phase canonical catalog merge.
+7. User: Approved 7-day telemetry checklist. Ordered building the admin telemetry API endpoint.
 
 **Project Health Check:**
-- Broken: File 008 (corrupted).
-- Mocked: Frontend Chatbot UI (needs wiring to new backend logic).
+- Broken: File 008 (corrupted DOCX).
+- Mocked: Catalog imagery (Hero images for pilot pages are using Lucide-react placeholders).
 
 **3rd Party Integrations** 
   - OpenAI / Claude Sonnet 4.5 via  — uses Emergent LLM Key.
   - Interakt (WhatsApp API) — requires User API Key. (ON HOLD)
 
 **Testing status**
-  - Testing agent used after significant changes: NO (Heavy data scripts and chatbot logic evaluated via automated python test suite passing 35/35).
+  - Testing agent used after significant changes: YES ( was generated at the very end of the history).
   - Troubleshoot agent used after agent stuck in loop: NO.
-  - Test files created: None new.
+  - Test files created: .
   - Known regressions: None.
 
 **Credentials to test flow:**
@@ -120,4 +129,4 @@ A robust React + FastAPI + MongoDB platform. The backend SKU Intelligence pipeli
   - Password: 
 
 **What agent forgot to execute**
-The agent just read the frontend  files before the context window ended. Pick up exactly there by implementing the P0 task: wiring the  and  to  with full confidence handling and UI telemetry.</analysis>
+The agent triggered  for the P0/P1 template fixes but ran out of context before reading the result. You must read  and then present the completed recheck report to the user for approval.</analysis>
