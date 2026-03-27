@@ -88,30 +88,50 @@ Admin-protected endpoint returning:
 
 ## Catalog Taxonomy Mapping (Phase 1) — COMPLETE (2026-03-27)
 
-### Phase 1 Outputs (6 MongoDB Collections)
+### What Was Actually Done
+
+Built the full canonical mapping layer between the current live catalog and the shadow brochure-enriched catalog, without touching live product behavior yet.
+
+#### 1. Created 6 MongoDB Collections
 | Collection | Records | Purpose |
 |-----------|---------|---------|
-| `catalog_division_map` | 15 | Live→Shadow→Canonical division mapping |
+| `catalog_division_map` | 15 | Live vs Shadow vs Canonical division mapping |
 | `catalog_category_map` | 211 | Category mapping with division context |
-| `catalog_material_dict` | 293 | Material normalization dictionary |
+| `catalog_material_dict` | 293 | Controlled material normalization dictionary |
 | `catalog_brand_dict` | 89 | Brand/manufacturer normalization |
-| `catalog_product_family_map` | 643 | Product family grouping with confidence |
-| `catalog_taxonomy` | 1 | Master summary document |
+| `catalog_product_family_map` | 643 | Product family grouping with confidence scores |
+| `catalog_taxonomy` | 1 | Master roll-up / audit summary |
 
-### Mapping Quality
-- **Safely mappable**: 829/967 products (85.7%)
-- **Ambiguous**: 138 products (from live-only divisions: Instruments, Robotics, Sports Medicine, Urology)
-- **Product families**: 44 high-confidence multi-variant groups, 14 medium, 585 singletons
-- **Material groups**: 6 titanium variants → 3 canonical, 4 stainless variants → 3 canonical
+#### 2. Mapped Live vs Shadow Taxonomy
+Compared Live DB (967 products) against Shadow DB (brochure-backed catalog data). Created canonical mappings for: division, category, material, brand, product family.
 
-### Rules Applied
-1. All original values preserved (live + shadow)
-2. Product family confidence scored (singleton/medium/high)
-3. Material dictionary with controlled mapping, not string cleanup
-4. Shadow treated as enrichment, not automatic truth
+#### 3. Preserved Original Values Alongside Canonical Values
+Did not overwrite source values blindly. For each mapped field, preserved:
+- original live value
+- original shadow value
+- canonical normalized value
 
-### Admin Endpoints
-- `GET /api/admin/catalog/taxonomy` — Full taxonomy report with division map, product families, material normalizations
+Applied to: divisions, categories, materials, brands, product families.
+
+#### 4. Built Controlled Material Normalization
+Created a proper material dictionary instead of simple text cleanup. Example: "Titanium Alloy (TAN)", "Titanium alloy", "Titanium Alloy", "TAN(Ti-6Al-7Nb)" all normalized into controlled canonical values while keeping originals preserved.
+
+#### 5. Scored Product Family Confidence
+Because live product_family is often just the same as product_name, grouping was not forced blindly. Added: product_family_canonical, product_family_confidence, grouping classification.
+- 44 high confidence
+- 14 medium confidence
+- 585 singleton / no safe grouping yet
+
+#### 6. Measured Safe Mapping Coverage
+- 829/967 live products safely mappable = **85.7%**
+- 138 products remain in live-only divisions, preserved but flagged
+- Live-only divisions flagged: Instruments, Robotics, Sports Medicine, Urology
+
+#### 7. Treated Shadow as Enrichment, Not Automatic Truth
+Shadow data was used to enrich and standardize, not to blindly replace live data. Live values preserved, ambiguous mappings flagged, only safe canonical mappings accepted automatically.
+
+#### 8. Exposed Results Through Admin API
+- `GET /api/admin/catalog/taxonomy` — Full taxonomy mapping report for review and Phase 2 usage
 
 ## Current Status
 - Pipeline: COMPLETE (200/200 files)
