@@ -11,7 +11,6 @@ import ProductFamily from "./pages/ProductFamily";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Chat from "./pages/Chat";
-import CatalogTrauma from "./pages/CatalogTrauma";
 import CatalogDivision from "./pages/CatalogDivision";
 import CatalogIndex from "./pages/CatalogIndex";
 import CatalogProductDetail from "./pages/CatalogProductDetail";
@@ -43,7 +42,6 @@ function App() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/chat" element={<Chat />} />
             <Route path="/catalog" element={<CatalogIndex />} />
-            <Route path="/catalog/trauma" element={<CatalogTrauma />} />
             <Route path="/catalog/:divisionSlug" element={<CatalogDivision />} />
             <Route path="/catalog/products/:slug" element={<CatalogProductDetail />} />
             <Route path="/districts" element={<DistrictsIndex />} />
