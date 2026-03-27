@@ -265,7 +265,8 @@ async def catalog_product_list(
             "enriched_from_shadow": doc.get("enriched_from_shadow", False),
             "shadow_sku_count": doc.get("shadow_sku_count", 0),
             "brochure_url": doc.get("brochure_url", ""),
-            # Semantic intelligence
+            # Clinical & Semantic context
+            "clinical_subtitle": doc.get("clinical_subtitle", ""),
             "semantic_brand_system": doc.get("semantic_brand_system"),
             "semantic_system_type": doc.get("semantic_system_type"),
             "semantic_material_default": doc.get("semantic_material_default"),
@@ -397,7 +398,10 @@ async def catalog_product_detail(slug: str):
         "enriched_from_shadow": doc.get("enriched_from_shadow", False),
         "shadow_source_files": doc.get("shadow_source_files", []),
 
-        # Semantic intelligence
+        # Clinical reclassification
+        "clinical_subtitle": doc.get("clinical_subtitle", ""),
+
+        # Semantic intelligence (backend use)
         "semantic_brand_system": doc.get("semantic_brand_system"),
         "semantic_system_type": doc.get("semantic_system_type"),
         "semantic_implant_class": doc.get("semantic_implant_class"),

@@ -205,6 +205,11 @@ export default function CatalogProductDetail() {
             {/* Title */}
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 tracking-tight leading-tight" data-testid="catalog-product-name">{product.product_name_display}</h1>
 
+            {/* Clinical subtitle: Brand • Material • Coating */}
+            {product.clinical_subtitle && (
+              <p className="text-sm text-slate-500 font-medium" data-testid="catalog-clinical-subtitle">{product.clinical_subtitle}</p>
+            )}
+
             {/* P0: Renamed "Primary SKU" → "Family Code" */}
             {product.sku_code && (
               <p className="text-xs font-mono text-slate-400 flex items-center gap-1.5" data-testid="catalog-family-code">
@@ -214,54 +219,6 @@ export default function CatalogProductDetail() {
 
             {/* Description */}
             <p className="text-sm sm:text-base text-slate-600 leading-relaxed" data-testid="catalog-product-description">{product.description}</p>
-
-            {/* Semantic Intelligence Card */}
-            {product.semantic_brand_system && (
-              <div className="bg-gradient-to-br from-slate-50 to-amber-50/30 border border-slate-200 rounded-2xl p-5 space-y-3" data-testid="semantic-intelligence-card">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-amber-100 border border-amber-200 flex items-center justify-center">
-                    <Layers size={14} className="text-amber-700" />
-                  </div>
-                  <h3 className="text-xs font-bold uppercase tracking-[0.12em] text-slate-700">System Intelligence</h3>
-                  {product.semantic_confidence && (
-                    <span className="ml-auto text-[10px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">{Math.round(product.semantic_confidence * 100)}% confidence</span>
-                  )}
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-800 bg-amber-100 border border-amber-200 px-3 py-1.5 rounded-lg" data-testid="semantic-brand-system">
-                    <Award size={12} /> {product.semantic_brand_system}
-                  </span>
-                  {product.semantic_system_type && product.semantic_system_type !== "unknown" && (
-                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 bg-white border border-slate-200 px-3 py-1.5 rounded-lg" data-testid="semantic-system-type">
-                      {product.semantic_system_type.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())}
-                    </span>
-                  )}
-                  {product.semantic_material_default && (
-                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-100 px-3 py-1.5 rounded-lg" data-testid="semantic-material">
-                      <Box size={12} /> {product.semantic_material_default}
-                    </span>
-                  )}
-                  {product.semantic_coating_default && (
-                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-purple-700 bg-purple-50 border border-purple-100 px-3 py-1.5 rounded-lg" data-testid="semantic-coating">
-                      <Shield size={12} /> {product.semantic_coating_default}
-                    </span>
-                  )}
-                  {product.semantic_implant_class && (
-                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-teal-700 bg-teal-50 border border-teal-100 px-3 py-1.5 rounded-lg" data-testid="semantic-implant-class">
-                      {product.semantic_implant_class.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())}
-                    </span>
-                  )}
-                </div>
-                {product.semantic_anatomy_scope?.length > 0 && (
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Anatomy:</span>
-                    {product.semantic_anatomy_scope.map(a => (
-                      <span key={a} className="text-[11px] font-medium text-slate-500 bg-white border border-slate-150 px-2 py-0.5 rounded-md capitalize">{a.replace(/_/g, " ")}</span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
 
             {/* Quick attribute chips */}
             <div className="flex flex-wrap gap-2">
