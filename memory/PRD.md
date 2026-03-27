@@ -196,7 +196,8 @@ Every catalog product stores: `source_of_truth_fields`, `enriched_from_shadow`, 
 - Shadow DB: Synced and validated
 - Website chatbot UI: COMPLETE AND TESTED (100% pass rate, iteration 29)
 - Catalog taxonomy (Phase 1): COMPLETE — 6 mapping collections generated
-- Catalog migration (Phase 2): NOT STARTED
+- Catalog migration (Phase 2): COMPLETE — 1206 products, 5882 SKUs
+- Catalog product pages (Phase 3+4): COMPLETE — Trauma pilot with 44 high-confidence products
 - Live DB: NOT PUSHED (awaiting user approval)
 - WhatsApp bot: NOT STARTED (awaiting Interakt API key)
 
@@ -209,11 +210,12 @@ Every catalog product stores: `source_of_truth_fields`, `enriched_from_shadow`, 
 6. ~~Telemetry report endpoint~~ DONE (2026-03-27)
 7. ~~Catalog taxonomy mapping (Phase 1)~~ DONE (2026-03-27)
 8. ~~Catalog merge — catalog_products + catalog_skus (Phase 2)~~ DONE (2026-03-27)
-9. Standardized product page template (Phase 3) — NEXT
-10. Pilot Trauma division migration (Phase 4)
-11. Product comparison feature
-12. Live DB push (ON HOLD)
-13. WhatsApp bot (ON HOLD)
+9. ~~Standardized product page template (Phase 3)~~ DONE (2026-03-27)
+10. ~~Pilot Trauma division migration (Phase 4)~~ DONE (2026-03-27)
+11. Expand to more divisions (next pilot candidates)
+12. Product comparison feature
+13. Live DB push (ON HOLD)
+14. WhatsApp bot (ON HOLD)
 
 ## Blocked
 - File 008 (corrupted DOCX)
