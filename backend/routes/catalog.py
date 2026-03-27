@@ -265,6 +265,11 @@ async def catalog_product_list(
             "enriched_from_shadow": doc.get("enriched_from_shadow", False),
             "shadow_sku_count": doc.get("shadow_sku_count", 0),
             "brochure_url": doc.get("brochure_url", ""),
+            # Semantic intelligence
+            "semantic_brand_system": doc.get("semantic_brand_system"),
+            "semantic_system_type": doc.get("semantic_system_type"),
+            "semantic_material_default": doc.get("semantic_material_default"),
+            "semantic_coating_default": doc.get("semantic_coating_default"),
         })
 
     return {
@@ -391,4 +396,33 @@ async def catalog_product_detail(slug: str):
         # Enrichment metadata
         "enriched_from_shadow": doc.get("enriched_from_shadow", False),
         "shadow_source_files": doc.get("shadow_source_files", []),
+
+        # Semantic intelligence
+        "semantic_brand_system": doc.get("semantic_brand_system"),
+        "semantic_system_type": doc.get("semantic_system_type"),
+        "semantic_implant_class": doc.get("semantic_implant_class"),
+        "semantic_material_default": doc.get("semantic_material_default"),
+        "semantic_coating_default": doc.get("semantic_coating_default"),
+        "semantic_parent_brand": doc.get("semantic_parent_brand"),
+        "semantic_anatomy_scope": doc.get("semantic_anatomy_scope", []),
+        "semantic_confidence": doc.get("semantic_confidence"),
     }
+
+
+bsi_col = mongo_db["brand_system_intelligence"]
+
+
+@router.get("/brand-intelligence/{entity_code}")
+async def get_brand_intelligence(entity_code: str):
+    """Get semantic intelligence for a brand system."""
+    doc = await bsi_col.find_one(
+        {"entity_code": entity_code.upper(), "status": "active"},
+        {"_id": 0}
+    )
+    if not doc:
+        raise HTTPException(status_code=404, detail="Brand system not found")
+    # Convert datetime fields to ISO strings
+    for k in ("created_at", "updated_at"):
+        if k in doc and doc[k]:
+            doc[k] = doc[k].isoformat()
+    return doc

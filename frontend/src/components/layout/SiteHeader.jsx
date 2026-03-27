@@ -30,6 +30,7 @@ export default function SiteHeader() {
         </Link>
 
         <nav data-testid="site-nav" className="hidden items-center gap-7 md:flex">
+          <NavItem testId="nav-portfolio-link" to="/catalog">Portfolio</NavItem>
           <NavItem testId="nav-products-link" to="/products">Products</NavItem>
           <NavItem testId="nav-districts-link" to="/districts">Districts</NavItem>
           <NavItem testId="nav-about-link" to="/about">About</NavItem>
@@ -70,6 +71,7 @@ export default function SiteHeader() {
       {mobileMenuOpen && (
         <div data-testid="mobile-menu" className="border-t border-slate-200 bg-white px-4 py-4 md:hidden">
           <nav className="flex flex-col gap-4">
+            <NavItem testId="nav-portfolio-link-mobile" to="/catalog" onClick={() => setMobileMenuOpen(false)}>Portfolio</NavItem>
             <NavItem testId="nav-products-link-mobile" to="/products" onClick={() => setMobileMenuOpen(false)}>Products</NavItem>
             <NavItem testId="nav-districts-link-mobile" to="/districts" onClick={() => setMobileMenuOpen(false)}>Districts</NavItem>
             <NavItem testId="nav-about-link-mobile" to="/about" onClick={() => setMobileMenuOpen(false)}>About</NavItem>

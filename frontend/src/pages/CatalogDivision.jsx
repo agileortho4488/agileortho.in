@@ -301,7 +301,16 @@ export default function CatalogDivision() {
                       <h3 className={`font-bold text-slate-900 group-hover:${colors.accent} transition-colors line-clamp-2 leading-snug`}>{p.product_name_display}</h3>
                       <p className="text-sm text-slate-500 mt-1.5 line-clamp-2 leading-relaxed">{p.description}</p>
                       <div className="mt-4 flex items-center justify-between">
-                        <span className="text-[11px] text-slate-400 font-medium">{p.material || ""}</span>
+                        <div className="flex items-center gap-1.5">
+                          {p.semantic_material_default ? (
+                            <span className="text-[10px] font-semibold text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-md">{p.semantic_material_default}</span>
+                          ) : p.material ? (
+                            <span className="text-[11px] text-slate-400 font-medium">{p.material}</span>
+                          ) : null}
+                          {p.semantic_system_type && p.semantic_system_type !== "unknown" && (
+                            <span className="text-[10px] font-medium text-slate-500 bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-md">{p.semantic_system_type.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())}</span>
+                          )}
+                        </div>
                         <span className={`inline-flex items-center gap-1 text-xs ${colors.accent} font-semibold opacity-0 group-hover:opacity-100 transition-opacity`}>
                           View Details <ChevronRight size={12} />
                         </span>
