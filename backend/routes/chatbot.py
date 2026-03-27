@@ -1,14 +1,20 @@
 """
 Chatbot route — queries shadow DB for product intelligence.
 Guardrails: confidence gating, SKU exact-match, off-topic rejection.
+Session tracking and telemetry for UI integration.
 """
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional
-from db import shadow_products_col, shadow_skus_col, shadow_brands_col, shadow_chunks_col
+from datetime import datetime, timezone
+from db import shadow_products_col, shadow_skus_col, shadow_brands_col, shadow_chunks_col, db as mongo_db
 import re
 
 router = APIRouter(prefix="/api/chatbot", tags=["chatbot"])
+
+# Collections for session tracking and telemetry
+chatbot_conversations_col = mongo_db["chatbot_conversations"]
+chatbot_telemetry_col = mongo_db["chatbot_telemetry"]
 
 # Medical/product domain terms — if query has NONE of these, it's likely off-topic
 DOMAIN_TERMS = {
@@ -44,6 +50,7 @@ SKU_CODE_PATTERNS = [
 
 class ChatQuery(BaseModel):
     question: str
+    session_id: Optional[str] = None
     top_k: Optional[int] = 5
 
 
@@ -51,6 +58,14 @@ class ChatResponse(BaseModel):
     answer: str
     sources: list
     confidence: str
+
+
+class TelemetryEvent(BaseModel):
+    session_id: str
+    event_type: str  # "query", "handoff_offered", "handoff_clicked", "lead_form_shown"
+    query: Optional[str] = None
+    confidence: Optional[str] = None
+    metadata: Optional[dict] = None
 
 
 def extract_search_terms(question: str) -> list:
@@ -267,22 +282,27 @@ def format_gated_answer(chunks: list, question: str, confidence: str, sku_result
 @router.post("/query", response_model=ChatResponse)
 async def chatbot_query(query: ChatQuery):
     question = query.question.strip()
+    session_id = query.session_id or "anonymous"
     terms = extract_search_terms(question)
 
     if not terms:
-        return {
+        result = {
             "answer": "Could you please rephrase your question? Try asking about a specific product, brand, division, or SKU code.",
             "sources": [],
             "confidence": "none"
         }
+        await _store_conversation(session_id, question, result)
+        return result
 
     # GUARD 1: Off-topic rejection
     if not is_on_topic(question, terms):
-        return {
+        result = {
             "answer": "This question appears to be outside the scope of the Agile Ortho product catalog. I can help with questions about medical devices, products, brands, divisions, SKU codes, and ordering information. Please ask about a specific product or brand.",
             "sources": [],
             "confidence": "none"
         }
+        await _store_conversation(session_id, question, result)
+        return result
 
     # GUARD 2: SKU exact-match — detect codes and do direct DB lookup
     sku_codes = detect_sku_codes(question)
@@ -295,7 +315,39 @@ async def chatbot_query(query: ChatQuery):
     confidence = compute_confidence(chunks, terms)
 
     result = format_gated_answer(chunks, question, confidence, sku_results if sku_results else None)
+    await _store_conversation(session_id, question, result)
     return result
+
+
+async def _store_conversation(session_id: str, question: str, result: dict):
+    """Store conversation turn and log telemetry."""
+    now = datetime.now(timezone.utc).isoformat()
+    turn = {
+        "role_user": question,
+        "role_assistant": result["answer"],
+        "confidence": result["confidence"],
+        "sources_count": len(result.get("sources", [])),
+        "timestamp": now,
+    }
+    await chatbot_conversations_col.update_one(
+        {"session_id": session_id},
+        {
+            "$push": {"turns": turn},
+            "$set": {"updated_at": now},
+            "$inc": {"turn_count": 1},
+            "$setOnInsert": {"created_at": now, "session_id": session_id},
+        },
+        upsert=True,
+    )
+    # Auto-log telemetry for every query
+    await chatbot_telemetry_col.insert_one({
+        "session_id": session_id,
+        "event_type": "query",
+        "query": question,
+        "confidence": result["confidence"],
+        "sources_count": len(result.get("sources", [])),
+        "timestamp": now,
+    })
 
 
 @router.get("/brands")
@@ -352,4 +404,52 @@ async def shadow_stats():
             "batch": "FINAL_ALL_200_FILES",
             "status": "active — expanded chunks (product, brand, glossary, clinical)"
         }
+    }
+
+
+@router.post("/telemetry")
+async def log_telemetry(event: TelemetryEvent):
+    """Log UI telemetry events (handoff clicks, lead form triggers, etc.)."""
+    await chatbot_telemetry_col.insert_one({
+        "session_id": event.session_id,
+        "event_type": event.event_type,
+        "query": event.query,
+        "confidence": event.confidence,
+        "metadata": event.metadata or {},
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    })
+    return {"status": "ok"}
+
+
+@router.get("/history/{session_id}")
+async def get_chatbot_history(session_id: str):
+    """Get conversation history for a session."""
+    conv = await chatbot_conversations_col.find_one(
+        {"session_id": session_id}, {"_id": 0}
+    )
+    if not conv:
+        return {"messages": [], "session_id": session_id}
+
+    messages = []
+    for turn in conv.get("turns", []):
+        messages.append({"role": "user", "content": turn["role_user"]})
+        messages.append({
+            "role": "assistant",
+            "content": turn["role_assistant"],
+            "confidence": turn.get("confidence", "high"),
+        })
+    return {"messages": messages, "session_id": session_id}
+
+
+@router.get("/suggestions")
+async def chatbot_suggestions():
+    """Return contextual suggestions for the chatbot UI."""
+    return {
+        "suggestions": [
+            "What orthopedic implants do you offer?",
+            "Tell me about BioMime stents",
+            "What trauma plating systems are available?",
+            "Show me knee implant products",
+            "What diagnostic devices do you carry?",
+        ]
     }

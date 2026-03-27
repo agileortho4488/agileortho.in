@@ -65,8 +65,8 @@
     }
   },
   "test_environment": {
-    "backend_url": "https://medical-sku-master.preview.emergentagent.com",
-    "frontend_url": "https://medical-sku-master.preview.emergentagent.com",
+    "backend_url": "https://ortho-device-chat.preview.emergentagent.com",
+    "frontend_url": "https://ortho-device-chat.preview.emergentagent.com",
     "test_mobile": "9876543210",
     "admin_password": "admin"
   }

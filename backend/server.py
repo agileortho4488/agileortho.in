@@ -89,4 +89,12 @@ async def startup():
     await followup_col.create_index("phone")
     await leads_col.create_index("phone_whatsapp")
 
+    # Indexes for chatbot session tracking & telemetry
+    chatbot_conv = mongo_db["chatbot_conversations"]
+    chatbot_telem = mongo_db["chatbot_telemetry"]
+    await chatbot_conv.create_index("session_id", unique=True)
+    await chatbot_telem.create_index("session_id")
+    await chatbot_telem.create_index("event_type")
+    await chatbot_telem.create_index("timestamp")
+
     print("Agile Ortho API started")

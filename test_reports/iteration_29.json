@@ -1,0 +1,76 @@
+{
+  "summary": "Iteration 29: Chatbot UI testing complete. All 21 backend API tests passed. Frontend Chat page and Chat Widget both working correctly with confidence-aware badges (Verified Match/Partial Match/No Match) and WhatsApp handoff banners for non-high confidence responses.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_chatbot_api.py",
+    "/app/test_reports/pytest/pytest_results_iter29.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_chatbot_api.py"
+  ],
+  "success_rate": {
+    "backend": "100% (21/21 tests passed)",
+    "frontend": "100%"
+  },
+  "test_credentials": "No credentials needed - chatbot endpoints are public",
+  "seed_data_creation": "None - using existing shadow_* collections with 481 products, 5107 SKUs, 654 chunks, 100 brands",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Chatbot feature fully functional. Backend RAG uses keyword matching against shadow_chunks collection. Confidence levels: high (match_ratio >= 0.6, max_score >= 4), medium (match_ratio >= 0.4, max_score >= 2), low/none (below thresholds or off-topic). Session history persisted in chatbot_conversations collection. Telemetry logged to chatbot_telemetry collection.",
+  "features_tested": {
+    "backend_api": {
+      "POST /api/chatbot/query": {
+        "medical_device_queries": "PASS - Returns answer, sources, confidence",
+        "off_topic_rejection": "PASS - Weather/sports queries return confidence='none'",
+        "session_tracking": "PASS - Stores conversation turns",
+        "empty_question": "PASS - Returns confidence='none'"
+      },
+      "GET /api/chatbot/history/{session_id}": {
+        "new_session": "PASS - Returns empty messages",
+        "after_query": "PASS - Returns user and assistant messages with confidence"
+      },
+      "POST /api/chatbot/telemetry": {
+        "query_event": "PASS - Logs query events",
+        "handoff_offered": "PASS - Logs handoff offers",
+        "handoff_clicked": "PASS - Logs handoff clicks",
+        "with_metadata": "PASS - Accepts metadata field"
+      },
+      "GET /api/chatbot/suggestions": {
+        "returns_5_suggestions": "PASS - Returns 5 medical device related suggestions"
+      },
+      "GET /api/chatbot/stats": "PASS - Returns shadow DB statistics",
+      "GET /api/chatbot/brands": "PASS - Returns brand list",
+      "GET /api/chatbot/products": "PASS - Returns product list with filtering",
+      "GET /api/chatbot/skus": "PASS - Returns SKU list"
+    },
+    "frontend_chat_page": {
+      "page_load": "PASS - /chat loads with welcome message",
+      "confidence_badge_high": "PASS - Green 'Verified Match' badge on welcome",
+      "suggestions_display": "PASS - 5 suggestion buttons shown",
+      "send_message": "PASS - Input and send button work",
+      "biomime_query": "PASS - Returns product info with 'Verified Match' badge",
+      "off_topic_query": "PASS - Shows 'No Match' badge",
+      "handoff_banner": "PASS - WhatsApp link shown for non-high confidence"
+    },
+    "frontend_chat_widget": {
+      "floating_button": "PASS - Visible at bottom-right of homepage",
+      "widget_open": "PASS - Opens on click",
+      "welcome_message": "PASS - Shows with 'Verified' badge",
+      "suggestions": "PASS - 5 quick questions shown",
+      "send_message": "PASS - Input and send work",
+      "knee_implants_query": "PASS - Returns SKU codes with handoff link",
+      "off_topic_query": "PASS - Shows 'No Match' badge and handoff banner",
+      "close_button": "PASS - Closes widget, toggle reappears"
+    }
+  }
+}
