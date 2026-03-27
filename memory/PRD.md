@@ -12,20 +12,10 @@ Core requirement: "SKU Intelligence System" — extract 100% of product data fro
 - **3rd Party**: Interakt WhatsApp API (pending)
 
 ## SKU Intelligence Pipeline — COMPLETE
-
-### Final Metrics
-| Metric | Count |
-|--------|-------|
-| Raw extracted products | 523 |
-| Normalized products | 481 |
-| Unique SKU codes | 5,107 |
-| SKU occurrences | 6,065 |
-| Brands | 97 |
-| Divisions | 13 |
-| Training chunks | 654 |
+- 523 raw products, 481 normalized, 5107 SKU codes, 97 brands, 13 divisions, 654 training chunks
 
 ## Website Chatbot UI — COMPLETE
-- Confidence-aware chat bubbles, WhatsApp handoff, session tracking, telemetry
+- Confidence-aware chat, WhatsApp handoff, session tracking, telemetry
 
 ## Catalog Taxonomy & Merge (Phase 1 & 2) — COMPLETE
 - 6 taxonomy collections, 1206 catalog_products, 5882 catalog_skus
@@ -37,65 +27,56 @@ Core requirement: "SKU Intelligence System" — extract 100% of product data fro
 
 ## Multi-Division Expansion — COMPLETE (2026-03-27)
 
-| Division | Products | Categories | Brands | Icon | Color |
-|----------|----------|------------|--------|------|-------|
-| Trauma | 43 | 12 | 6 | Bone | Amber |
-| Cardiovascular | 8 | 4 | 4 | HeartPulse | Rose |
-| Diagnostics | 63 | 7 | 4 | Microscope | Violet |
-| Joint Replacement | 7 | 5 | 4 | Activity | Teal |
+| Division | Products | Categories | Brands |
+|----------|----------|------------|--------|
+| Trauma | 16 | 12 | 6 |
+| Cardiovascular | 8 | 4 | 4 |
+| Diagnostics | 59 | 7 | 4 |
+| Joint Replacement | 4 | 5 | 4 |
 
-### New Pages
-- `/catalog` — Portfolio index showing all 4 division cards
-- `/catalog/:divisionSlug` — Generic division listing (CatalogDivision.jsx)
-- Updated product detail breadcrumbs to dynamic division routing
+## P0 Grouping Fix — COMPLETE (2026-03-27)
+- Humerus page renamed to "2.7mm-3.5mm LPS Humerus Bone Plates (Titanium)" — 9 plate subtypes mapped to brochure subgroups
+- Duplicate humerus page hidden
 
-## P0 Grouping Fix & P2 SKU Table Polish — COMPLETE (2026-03-27)
+## P1 Product Grouping Audit — COMPLETE (2026-03-27)
+All products now follow: Division > Category > Anatomy/Subgroup > Brand > Product Family > SKU
 
-### P0: Humerus Page Rename & Grouping Audit
-- Renamed "2.7mm-3.5mm LPS Medial Distal Humerus Plates" to "2.7mm-3.5mm LPS Humerus Bone Plates (Titanium)" — heading was too narrow for 83 SKUs spanning 9 plate subfamilies
-- Hidden duplicate humerus page (shared identical 83 SKU set)
-- Mapped SKU prefix codes to actual plate subtype names from brochure data:
-  - MT-PT01 → Posterolateral Distal (10 SKUs)
-  - MT-PT02/03 → Posterolateral Distal w/ Lat Support (20 SKUs)
-  - MT-PT09 → Medial Distal (12 SKUs)
-  - MT-PT15 → Medial Distal Metaphyseal (10 SKUs)
-  - MT-PT41 → Extra-articular Distal (12 SKUs)
-  - MT-PT49 → Extra-articular Distal (Short) (2 SKUs)
-  - MT-PT51 → Proximal (2 SKUs)
-  - MT-PT52 → Proximal (Long) (5 SKUs)
-  - MT-PT74 → Periarticular Proximal Lateral (10 SKUs)
-- Flagged 7 DOA products + 3 reagent products sharing SKU pools for future split
-- Systematic audit of all 39 large-variant products completed
+### Fixes applied:
+- **ARMAR**: "ARMAR Titanium Plates" → "ARMAR LPS Plating System (Titanium)" — flagged for anatomy review
+- **PFRN bolts**: 27 individual bolt-size pages → 1 family page ("PFRN 4.9mm Locking Bolt Self Tapping")
+- **CLAVO IM Nail**: Hidden (duplicate of PFRN Proximal Femoral, shared 59 SKUs)
+- **CLAVO Elastic**: Added "(Pediatric)" context
+- **Destiknee**: 3 entries → 1 ("Destiknee Total Knee Replacement System")
+- **HIV+Syphilis**: 5 pack-size pages → 1 family page
+- **All routes unified**: /catalog/trauma now uses generic CatalogDivision.jsx (breadcrumb: Home > Portfolio > Trauma)
 
-### P2: SKU Table Polish
-- **Structured columns**: SKU Code, Holes, Length (mm), Plate Subtype, Side, Brand, Source
-- **Sticky header**: Table header stays visible on scroll
-- **Search/filter**: Case-insensitive search across all fields
-- **Pagination**: 30 SKUs per page with prev/next controls
-- **CSV export**: Download all variants as CSV
-- **Color-coded side badges**: Blue = Left, Orange = Right
-- **Clean source links**: "View Brochure" clickable badges replacing truncated filenames
-- **Adaptive columns**: Products without parsed data show Product Name column instead
+## P2 SKU Table Polish — COMPLETE (2026-03-27)
+- Structured columns: Plate Subtype, Holes, Length, Side (parsed from SKU codes via HUMERUS_PLATE_TYPES mapping)
+- Sticky header, case-insensitive search, pagination (30/page), CSV export
+- Color-coded Left/Right badges, clean "View Brochure" links
 
 ### Test Results
-- iteration_31.json: P0/P1 Trauma template — 100% pass
-- iteration_32.json: Multi-division expansion — 100% pass (22/22)
-- iteration_34.json: P0 grouping fix + P2 SKU table polish — 100% pass (19/19)
+- iteration_31: Trauma P0/P1 — 100%
+- iteration_32: Multi-division — 100% (22/22)
+- iteration_34: SKU table polish — 100% (19/19)
+- iteration_35: P1 grouping fix — 100% (21/21)
+
+## Flagged for Future Split (from P0/P1 audit)
+- 6 MERISCREEN DOA products sharing 80 SKUs each → need individual test-type split
+- 3 AutoQuant reagents (CRP, Lipase, Micro Albumin) sharing 50 SKUs → need individual reagent split
+- ARMAR Titanium Plates → needs anatomy classification when more detailed catalog data is available
+- Freedom Knee 176 SKUs → may need subfamily grouping
 
 ## Priority Stack
-1. ~~SKU Intelligence Pipeline~~ DONE
-2. ~~Website Chatbot UI~~ DONE
-3. ~~Catalog Taxonomy (Phase 1)~~ DONE
-4. ~~Catalog Merge (Phase 2)~~ DONE
-5. ~~Standardized Template (Phase 3)~~ DONE
-6. ~~Trauma Pilot (Phase 4)~~ DONE
-7. ~~Multi-Division Expansion~~ DONE
-8. ~~P0 Grouping Fix + P2 SKU Table Polish~~ DONE
-9. **P1: Split mis-grouped pages into proper product-family pages** (humerus subfamilies, DOA tests, reagents)
-10. **P3: Add Portfolio to main navigation**
-11. Product Comparison Feature
-12. Live DB push (ON HOLD)
-13. WhatsApp bot (ON HOLD — needs Interakt API key)
+1. ~~All pipeline/chatbot/catalog phases~~ DONE
+2. ~~Multi-Division Expansion~~ DONE
+3. ~~P0/P1 Grouping Fix~~ DONE
+4. ~~P2 SKU Table Polish~~ DONE
+5. **P3: Add Portfolio to main navigation**
+6. Product Comparison Feature
+7. Split shared-SKU products (DOA, reagents)
+8. Live DB push (ON HOLD)
+9. WhatsApp bot (ON HOLD — needs Interakt API key)
 
 ## Blocked
 - File 008 (corrupted DOCX)
