@@ -78,9 +78,9 @@ export default function SiteHeader() {
       >
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2 sm:px-6">
           <Link data-testid="site-logo-link" to="/" className="flex items-center gap-3 shrink-0">
-            <img src="/ao_logo_white.png" alt="Agile Ortho" className="h-12 sm:h-14 w-auto" data-testid="site-logo-mark" />
+            <img src="/agile_healthcare_logo.png" alt="Agile Healthcare" className="h-12 sm:h-14 w-auto invert" data-testid="site-logo-mark" />
             <div className="hidden sm:block leading-tight">
-              <span className="text-base font-bold text-white tracking-tight" style={{ fontFamily: 'Outfit' }}>AGILE ORTHO</span>
+              <span className="text-base font-bold text-white tracking-tight" style={{ fontFamily: 'Outfit' }}>AGILE HEALTHCARE</span>
               <span className="block text-[9px] text-[#D4AF37] font-semibold tracking-[0.15em] uppercase">Meril Authorized</span>
             </div>
           </Link>

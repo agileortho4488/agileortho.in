@@ -9,7 +9,7 @@ export default function SiteFooter() {
         <div className="grid gap-10 sm:gap-8 md:grid-cols-4">
           {/* Brand */}
           <div>
-            <img src="/ao_logo_white.png" alt="Agile Ortho" className="h-10 w-auto" />
+            <img src="/agile_healthcare_logo.png" alt="Agile Healthcare" className="h-10 w-auto invert" />
             <p data-testid="footer-tagline" className="mt-2 text-xs font-bold text-[#D4AF37] tracking-[0.2em] uppercase">
               {COMPANY.tagline}
             </p>
