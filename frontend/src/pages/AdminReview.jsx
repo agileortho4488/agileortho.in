@@ -4,6 +4,7 @@ import {
   Search, Filter, ChevronLeft, ChevronRight, Check, X,
   Edit3, Users, ArrowUpDown, Eye, AlertTriangle, CheckCircle2,
   BarChart3, Layers, Sparkles, ShieldCheck, ShieldAlert, ChevronDown, ChevronUp,
+  Zap, Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -713,6 +714,224 @@ function SmartSuggestionsPanel({ onBulkApprove, onRefresh }) {
   );
 }
 
+// ── Auto-Promote Pipeline Panel ──
+function AutoPromotePanel({ onRefresh }) {
+  const [preview, setPreview] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [executing, setExecuting] = useState(false);
+  const [result, setResult] = useState(null);
+
+  const loadPreview = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API}/api/admin/review/auto-promote/preview`, { headers: getHeaders() });
+      const data = await res.json();
+      setPreview(data);
+    } catch (e) {
+      toast.error("Failed to load preview");
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { loadPreview(); }, [loadPreview]);
+
+  const executeAutoPromote = async (lanes) => {
+    setExecuting(true);
+    try {
+      const res = await fetch(`${API}/api/admin/review/auto-promote/execute`, {
+        method: "POST",
+        headers: getHeaders(),
+        body: JSON.stringify({ lanes }),
+      });
+      const data = await res.json();
+      setResult(data);
+      toast.success(`Promoted ${data.total_promoted} products!`);
+      onRefresh?.();
+      loadPreview();
+    } catch (e) {
+      toast.error("Auto-promote failed");
+    }
+    setExecuting(false);
+  };
+
+  if (loading && !preview) {
+    return (
+      <div className="flex items-center justify-center py-20 text-slate-500" data-testid="auto-promote-loading">
+        <Loader2 className="animate-spin mr-2" size={20} /> Analyzing pipeline...
+      </div>
+    );
+  }
+
+  if (!preview) return null;
+
+  const { lane1_safe, lane2_family, lane3_inherit, lane4_manual, summary } = preview;
+
+  const LANE_CONFIG = [
+    {
+      key: "lane1", label: "Lane 1 — Safe Auto-Approve", data: lane1_safe,
+      color: "emerald", icon: <ShieldCheck size={18} />,
+      desc: "Confidence >= 0.85, no conflicts, not blocked",
+    },
+    {
+      key: "lane2", label: "Lane 2 — Family Consensus", data: lane2_family,
+      color: "blue", icon: <Users size={18} />,
+      desc: "Clean families with consistent brand, class, and materials",
+    },
+    {
+      key: "lane3", label: "Lane 3 — Inherit + Standalone", data: lane3_inherit,
+      color: "teal", icon: <Layers size={18} />,
+      desc: "Parent inheritance, size variants, and standalone decent-confidence products",
+    },
+  ];
+
+  return (
+    <div className="space-y-4" data-testid="auto-promote-panel">
+      {/* Summary Bar */}
+      <div className="bg-white border border-slate-200 rounded-lg p-5">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-semibold text-slate-800">4-Lane Auto-Promotion Pipeline</h3>
+            <p className="text-sm text-slate-500 mt-0.5">Review by exception — only true blockers need manual attention</p>
+          </div>
+          <button
+            onClick={() => executeAutoPromote(["lane1", "lane2", "lane3"])}
+            disabled={executing || summary.auto_promotable === 0}
+            className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white rounded-lg font-medium
+              hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            data-testid="execute-all-lanes-btn"
+          >
+            {executing ? <Loader2 className="animate-spin" size={16} /> : <Zap size={16} />}
+            {executing ? "Promoting..." : `Promote All ${summary.auto_promotable} Products`}
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-center">
+            <p className="text-2xl font-bold text-emerald-700">{summary.auto_promotable}</p>
+            <p className="text-xs text-emerald-600 mt-0.5">Auto-Promotable</p>
+          </div>
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-center">
+            <p className="text-2xl font-bold text-red-700">{summary.manual_review_only}</p>
+            <p className="text-xs text-red-600 mt-0.5">Manual Review</p>
+          </div>
+          <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-center">
+            <p className="text-2xl font-bold text-slate-700">{summary.total_pending}</p>
+            <p className="text-xs text-slate-500 mt-0.5">Total Pending</p>
+          </div>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
+            <p className="text-2xl font-bold text-blue-700">
+              {summary.total_pending > 0 ? Math.round((summary.auto_promotable / summary.total_pending) * 100) : 0}%
+            </p>
+            <p className="text-xs text-blue-600 mt-0.5">Clearance Rate</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Result Banner */}
+      {result && (
+        <div className="bg-emerald-50 border border-emerald-300 rounded-lg p-4" data-testid="auto-promote-result">
+          <div className="flex items-center gap-2 mb-2">
+            <CheckCircle2 size={18} className="text-emerald-600" />
+            <span className="font-semibold text-emerald-800">Pipeline Complete</span>
+          </div>
+          <div className="grid grid-cols-4 gap-3 text-sm">
+            <div><span className="text-emerald-600 font-medium">{result.results?.lane1 || 0}</span> Safe</div>
+            <div><span className="text-blue-600 font-medium">{result.results?.lane2 || 0}</span> Family</div>
+            <div><span className="text-teal-600 font-medium">{result.results?.lane3 || 0}</span> Inherit</div>
+            <div><span className="text-red-600 font-medium">{result.results?.lane4_remaining || 0}</span> Manual</div>
+          </div>
+          <p className="text-sm text-emerald-700 mt-2 font-medium">
+            Total promoted: {result.total_promoted} | Remaining: {result.remaining_manual_review}
+          </p>
+        </div>
+      )}
+
+      {/* Lane Cards */}
+      {LANE_CONFIG.map(({ key, label, data, color, icon, desc }) => (
+        <div key={key} className="bg-white border border-slate-200 rounded-lg p-4" data-testid={`lane-card-${key}`}>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <span className={`text-${color}-600`}>{icon}</span>
+              <h4 className="font-semibold text-slate-800">{label}</h4>
+              <span className={`px-2 py-0.5 rounded-full text-xs font-bold bg-${color}-100 text-${color}-700`}>
+                {data.count}
+              </span>
+            </div>
+            <button
+              onClick={() => executeAutoPromote([key])}
+              disabled={executing || data.count === 0}
+              className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors
+                ${data.count > 0
+                  ? `bg-${color}-50 text-${color}-700 hover:bg-${color}-100`
+                  : "bg-slate-50 text-slate-400 cursor-not-allowed"
+                }`}
+              data-testid={`execute-${key}-btn`}
+            >
+              {executing ? "..." : `Promote ${data.count}`}
+            </button>
+          </div>
+          <p className="text-xs text-slate-500 mb-2">{desc}</p>
+          {data.families && data.families.length > 0 && (
+            <div className="mt-2 space-y-1">
+              {data.families.map((f, i) => (
+                <div key={i} className="text-xs bg-slate-50 rounded px-2 py-1">
+                  <span className="font-medium">{f.family}</span>
+                  <span className="text-slate-400 mx-1">|</span>
+                  {f.division} / {f.brand} — {f.count} products (avg {f.avg_conf})
+                </div>
+              ))}
+            </div>
+          )}
+          {data.sample && data.sample.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1">
+              {data.sample.slice(0, 5).map((s, i) => (
+                <span key={i} className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded">
+                  {typeof s === 'string' ? s : s.slug}
+                </span>
+              ))}
+              {data.count > 5 && (
+                <span className="text-xs text-slate-400">+{data.count - 5} more</span>
+              )}
+            </div>
+          )}
+        </div>
+      ))}
+
+      {/* Lane 4: Manual Review */}
+      <div className="bg-white border border-red-200 rounded-lg p-4" data-testid="lane-card-lane4">
+        <div className="flex items-center gap-2 mb-2">
+          <AlertTriangle size={18} className="text-red-500" />
+          <h4 className="font-semibold text-slate-800">Lane 4 — Manual Review Required</h4>
+          <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700">
+            {lane4_manual.count}
+          </span>
+        </div>
+        <p className="text-xs text-slate-500 mb-3">True blockers: real conflicts, weak evidence, source disagreement, very low confidence</p>
+        {lane4_manual.reasons && (
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mb-3">
+            {Object.entries(lane4_manual.reasons).sort((a,b) => b[1]-a[1]).map(([reason, count]) => (
+              <div key={reason} className="bg-red-50 rounded px-2 py-1.5 text-center">
+                <p className="text-sm font-bold text-red-700">{count}</p>
+                <p className="text-xs text-red-500">{reason.replace(/_/g, " ")}</p>
+              </div>
+            ))}
+          </div>
+        )}
+        {lane4_manual.sample && lane4_manual.sample.length > 0 && (
+          <div className="space-y-1">
+            {lane4_manual.sample.slice(0, 5).map((s, i) => (
+              <div key={i} className="text-xs bg-red-50 rounded px-2 py-1 flex justify-between">
+                <span className="font-medium text-slate-700">{s.slug}</span>
+                <span className="text-red-500">conf: {s.conf} | {s.status}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── Main Dashboard ──
 export default function AdminReview() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -865,6 +1084,15 @@ export default function AdminReview() {
           >
             <Sparkles size={14} /> Smart Suggestions
           </button>
+          <button
+            onClick={() => setViewMode("auto")}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+              viewMode === "auto" ? "bg-amber-600 text-white" : "bg-amber-50 text-amber-700 hover:bg-amber-100"
+            }`}
+            data-testid="view-mode-auto"
+          >
+            <Zap size={14} /> Auto-Promote
+          </button>
         </div>
       </div>
 
@@ -979,6 +1207,8 @@ export default function AdminReview() {
         </>
       ) : viewMode === "families" ? (
         <FamilyPanel onBulkApprove={handleBulkApprove} />
+      ) : viewMode === "auto" ? (
+        <AutoPromotePanel onRefresh={() => { loadProducts(); loadStats(); }} />
       ) : (
         <SmartSuggestionsPanel onRefresh={() => { loadProducts(); loadStats(); }} />
       )}
