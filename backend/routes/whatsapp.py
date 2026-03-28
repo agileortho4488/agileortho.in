@@ -168,8 +168,8 @@ RULES:
 - For human support, share the right contact number
 
 CONTACTS:
-- Dispatch: 741818183
-- Ortho/Spine: 74161612350
+- Dispatch: 7416818183
+- Ortho/Spine: 7416162350
 - General: 7416216262
 - Consumables: 7416416871
 - Billing: 7416416093

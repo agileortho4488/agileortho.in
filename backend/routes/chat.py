@@ -43,8 +43,8 @@ ABOUT AGILE ORTHO:
 - Offers bulk pricing, quick delivery, and after-sales support
 
 CONTACT NUMBERS (Share the relevant number based on the query):
-- Dispatch & Delivery Updates: 741818183
-- Orthopedics & Spine Related Orders: 74161612350
+- Dispatch & Delivery Updates: 7416818183
+- Orthopedics & Spine Related Orders: 7416162350
 - General Queries: 7416216262
 - Consumables & Other Divisions: 7416416871
 - Billing & Finance Issues: 7416416093
