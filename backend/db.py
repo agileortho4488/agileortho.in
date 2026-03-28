@@ -20,3 +20,7 @@ shadow_products_col = db["shadow_products"]
 shadow_skus_col = db["shadow_skus"]
 shadow_brands_col = db["shadow_brands"]
 shadow_chunks_col = db["shadow_chunks"]
+
+catalog_products_col = db["catalog_products"]
+web_verification_log_col = db["web_verification_log"]
+promotion_log_col = db["promotion_log"]

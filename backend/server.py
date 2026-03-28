@@ -19,6 +19,7 @@ from routes.image_extract import router as image_extract_router
 from routes.automation import router as automation_router
 from routes.chatbot import router as chatbot_router
 from routes.catalog import router as catalog_router
+from routes.review import router as review_router
 
 app = FastAPI(title="Agile Ortho API")
 
@@ -41,6 +42,7 @@ app.include_router(image_extract_router)
 app.include_router(automation_router)
 app.include_router(chatbot_router)
 app.include_router(catalog_router)
+app.include_router(review_router)
 
 
 @app.on_event("startup")
