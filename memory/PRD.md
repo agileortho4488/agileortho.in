@@ -13,73 +13,54 @@ Build a B2B medical device platform for Agile Ortho, a premier Meril Life Scienc
 
 ## What's Been Implemented
 
-### UX Audit Implementation (Phase 1-4) — Mar 28, 2026
-- **WhatsApp Header Dropdown**: Converted single WhatsApp button to dropdown with Sales & Availability, Request Catalog (PDF), Technical Support options — each pre-populating WhatsApp message
-- **Hero CTA Consolidation**: Replaced "WhatsApp Sales" with "Check Availability & Pricing" (pre-populated WhatsApp). Primary CTA remains "Browse Catalog"
-- **Search Placeholder**: Updated to "Search by name or SKU (e.g., KET 2.4mm Locking Plate)"
-- **Category Grid Spacing**: Increased gap from gap-3/gap-4 to gap-4/gap-6 for breathing room
-- **Product Cards Redesign**: Centered text, 2-line truncated descriptions, consistent teal material tags + gold brand tags
-- **CTA Section Overhaul**: New headline "Equip Your Hospital with Precision Meril Products", email capture form for catalog requests
-- **Footer 4-Column Layout**: Brand, Navigation, Locations, Compliance columns. Consolidated address. Removed arrow from "All 33 Districts"
-- **Product Detail Dark Theme**: Teal checkmark icons with circular backgrounds for specs, dark form inputs in quote modal
-- **Contact Page**: Updated headline "Equip Your Hospital with Precision Devices", gold focus styling on all inputs
-- **Micro-interactions**: Button press effects, smooth focus transitions, scrollbar-hide utility for horizontal filters
-- **Mobile Sticky Action Bar**: Call / WhatsApp / Browse at bottom for mobile users
+### Universal Lead Capture System — Mar 28, 2026
+- **LeadCaptureModal**: Reusable component that intercepts all WhatsApp/enquiry actions to capture: Name, Hospital/Clinic, Department, WhatsApp Number, Email, District before redirecting to WhatsApp with pre-populated messages
+- **Integrated across all touchpoints**: Header WhatsApp dropdown (Sales, Catalog, Support), Hero CTA "Check Availability & Pricing", Homepage CTA "Get Product Catalog" / "Talk to Sales", Product detail "WhatsApp Enquiry", Mobile action bar
+- **Backend department field**: Added `department` to LeadCreate model, sent to Interakt traits for retargeting
+- **13 department options**: Orthopedics, Cardiology, General Surgery, Neurosurgery, Urology, ENT, Spine Surgery, Sports Medicine, Diagnostics/Pathology, Hospital Administration, Procurement/Purchase, Biomedical Engineering, Other
+
+### UX Audit Fixes — Mar 28, 2026
+- **Logo enlarged**: h-10/h-12 (48px) for proper brand visibility
+- **Dropdown hover fix**: Eliminated gap between trigger and dropdown panel (pt-1 instead of mt-2) so menu stays stable when hovering to items
+- **WhatsApp Header Dropdown**: 3 options (Sales, Catalog PDF, Technical Support) — all go through lead capture
+- **Hero CTA Consolidation**: "Browse Catalog" (primary) + "Check Availability & Pricing" (lead capture)
+- **Search Placeholder**: "Search by name or SKU (e.g., KET 2.4mm Locking Plate)"
+- **Category Grid**: Increased gap-4/gap-6 for breathing room
+- **Product Cards**: Centered text, 2-line truncated descriptions, teal material + gold brand tags
+- **CTA Section**: "Equip Your Hospital with Precision Meril Products" headline, "Get Product Catalog" + "Talk to Sales" buttons
+- **Footer 4-Column**: Brand (with consolidated address), Navigation, Locations ("All 33 Districts" no arrow), Compliance
+- **Product Detail**: Teal circular checkmark icons for specs, dark form inputs, pre-populated WhatsApp messages
+- **Contact Page**: Updated headline, gold focus styling on all inputs
+- **Micro-interactions**: Button press effects, smooth focus transitions, scrollbar-hide, link-underline animation
 
 ### Dark Premium Theme (Full Redesign)
-- **Global CSS**: Dark background (#0A0A0A), card surface (#141414), white/55+ text contrast
-- **Navigation**: Glassmorphism dark header with gold WhatsApp dropdown CTA
-- **Homepage**: Hero with medical device imagery, gold "Devices" text, search bar, division bento grid, featured products, stats, email capture CTA
-- **Catalog**: Dark division cards with teal product counts, gold accent labels, centered product cards
-- **Product Detail**: Dark specs tables, gold brand badges, teal material tags, teal checkmarks
-- **Chat Widget**: Dark theme with gold send button, "Agile Ortho AI" header
-- **Footer**: 4-column layout, gold section headers, "AGILE ORTHO" watermark, compliance badges
-- **All public pages**: About, Contact, Districts, Chat — all dark themed with gold focus
+- Global CSS: Dark background (#0A0A0A), card surface (#141414), white/55+ text contrast
+- Navigation: Glassmorphism header with gold WhatsApp dropdown
+- All public pages: About, Contact, Districts, Chat — dark themed with gold focus
 
 ### Core Platform
-- Responsive homepage with 13 medical divisions, featured products, district coverage
-- Full catalog browsing: `/catalog` → `/catalog/{division-slug}` → `/catalog/products/{slug}`
-- Global product search across 810 production-eligible products
-- SEO-optimized product detail pages with specifications, SKU codes, brochure links
+- 810+ production-eligible products across 13 clinical divisions
+- Full catalog browsing, global search, SEO-optimized product detail pages
+- AI Chatbot (web + WhatsApp via Interakt), greeting detection
+- Admin Dashboard with Product Management, Lead CRM, WhatsApp Management
+- 3-Tab Analytics: CRM Leads | Search Intelligence | WhatsApp Metrics
+- Auto-seed on fresh deployments
 
-### AI Chatbot (Web + WhatsApp)
-- Web chatbot widget with product search, SKU lookup, brand queries
-- Greeting detection for casual messages (hi, hello, hey, etc.)
-- WhatsApp webhook via Interakt — full conversation pipeline
-- Human takeover mode, auto lead creation, delivery tracking
-
-### Admin Dashboard
-- Product management (1202 catalog products across 14 canonical divisions)
-- Lead CRM with scoring and follow-up automation
-- WhatsApp conversation management
-- Enhanced Analytics (3 tabs): CRM Leads | Search Intelligence | WhatsApp
-- 4-Lane Auto-Promotion pipeline, Review dashboard for 65 true blockers
-
-### Data Pipeline & Auto-Seed
-- Auto-seed on fresh deployments (catalog_products, catalog_skus, division maps, leads)
-- 810 production-eligible products with canonical naming
-- Full system cutover: all public APIs use `catalog_products_col`
-
-### Staff Contact Numbers (Configured in AI Bots)
-- Dispatch & Delivery: 7416818183
-- Orthopedics & Spine: 7416162350
-- General Queries: 7416216262
-- Consumables: 7416416871
-- Billing & Finance: 7416416093
-- WhatsApp Sales: 7416521222
+### Staff Contact Numbers
+- Dispatch: 7416818183 | Ortho/Spine: 7416162350 | General: 7416216262
+- Consumables: 7416416871 | Billing: 7416416093 | WhatsApp Sales: 7416521222
 
 ## Deployment Configuration
-- **Interakt API Key**: Configured in backend/.env
-- **Webhook Secret**: `1dc24700-25aa-4262-be11-1e64a38be99f`
-- **Production Webhook URL**: `https://www.agileortho.in/api/webhook/whatsapp`
-- **WhatsApp Business Number**: +917416521222
-- **Rate Limit**: 600 requests/minute on Interakt API
+- Interakt API Key: in backend/.env
+- Webhook Secret: `1dc24700-25aa-4262-be11-1e64a38be99f`
+- Production Webhook: `https://www.agileortho.in/api/webhook/whatsapp`
+- WhatsApp Business: +917416521222
 
 ## Pending Items
-- **P0**: Manual review of 65 true blockers (conflicts, weak evidence) via Admin Review Dashboard
+- **P0**: Manual review of 65 true blockers via Admin Review Dashboard
 - **P2**: Archive legacy phase scripts to `scripts/archive/`
 - **P3**: File 008 (corrupted DOCX) — blocked, awaiting uncorrupted file
 
 ## Known Constraints
-- Emergent LLM Key budget exhausted — avoid batch LLM scripts
+- Emergent LLM Key budget — avoid batch LLM scripts
 - WhatsApp free-form replies only within 24h of customer's last message
