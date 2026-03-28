@@ -12,25 +12,40 @@ router = APIRouter(prefix="/api/catalog", tags=["catalog"])
 catalog_products_col = mongo_db["catalog_products"]
 catalog_skus_col = mongo_db["catalog_skus"]
 
-# Default filter: only safe, non-draft, high-confidence products
-PILOT_FILTER = {
-    "mapping_confidence": "high",
-    "review_required": False,
-    "status": {"$ne": "draft"},
+# Production-eligible filter: only clean, verified, non-draft products
+LIVE_FILTER = {
+    "semantic_brand_system": {"$nin": [None, ""]},    # enriched
+    "review_required": False,                          # not flagged for review
+    "proposed_conflict_detected": {"$ne": True},       # no unresolved conflicts
+    "mapping_confidence": {"$in": ["high", "medium"]}, # not low/weak confidence
+    "division_canonical": {"$nin": ["_REVIEW", None, ""]},  # valid division
+    "status": {"$ne": "draft"},                        # not draft
 }
 
-# Currently enabled pilot divisions
-PILOT_DIVISIONS = ["Trauma", "Cardiovascular", "Diagnostics", "Joint Replacement"]
-
-# Division metadata for frontend
-DIVISION_META = {
+# All divisions with production-eligible products (dynamically populated)
+ALL_DIVISION_META = {
     "Trauma": {"slug": "trauma", "icon": "bone", "color": "amber"},
     "Cardiovascular": {"slug": "cardiovascular", "icon": "heart-pulse", "color": "rose"},
     "Diagnostics": {"slug": "diagnostics", "icon": "microscope", "color": "violet"},
     "Joint Replacement": {"slug": "joint-replacement", "icon": "activity", "color": "teal"},
+    "Endo Surgery": {"slug": "endo-surgery", "icon": "scissors", "color": "blue"},
+    "Infection Prevention": {"slug": "infection-prevention", "icon": "shield", "color": "green"},
+    "ENT": {"slug": "ent", "icon": "ear-off", "color": "orange"},
+    "Instruments": {"slug": "instruments", "icon": "wrench", "color": "slate"},
+    "Sports Medicine": {"slug": "sports-medicine", "icon": "dumbbell", "color": "emerald"},
+    "Urology": {"slug": "urology", "icon": "droplets", "color": "cyan"},
+    "Critical Care": {"slug": "critical-care", "icon": "heart", "color": "red"},
+    "Peripheral Intervention": {"slug": "peripheral-intervention", "icon": "git-branch", "color": "purple"},
+    "Robotics": {"slug": "robotics", "icon": "cpu", "color": "indigo"},
+    "Spine": {"slug": "spine", "icon": "align-vertical-distribute-center", "color": "yellow"},
 }
 
-SLUG_TO_DIVISION = {v["slug"]: k for k, v in DIVISION_META.items()}
+# Backward compat aliases
+PILOT_FILTER = LIVE_FILTER
+DIVISION_META = ALL_DIVISION_META
+PILOT_DIVISIONS = list(ALL_DIVISION_META.keys())
+
+SLUG_TO_DIVISION = {v["slug"]: k for k, v in ALL_DIVISION_META.items()}
 
 # Coating terminology normalization
 COATING_ALIASES = {
@@ -166,24 +181,34 @@ def format_sku_for_response(sku_doc, brochure_url=""):
 
 @router.get("/divisions")
 async def catalog_divisions():
-    """List pilot divisions with product counts and metadata."""
+    """List all divisions with production-eligible products."""
+    # Get all divisions that have at least 1 eligible product
+    pipeline = [
+        {"$match": LIVE_FILTER},
+        {"$group": {"_id": "$division_canonical", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}},
+    ]
+    div_counts = {r["_id"]: r["count"] async for r in catalog_products_col.aggregate(pipeline)}
+
     divisions = []
-    for div in PILOT_DIVISIONS:
-        filt = {**PILOT_FILTER, "division_canonical": div}
-        count = await catalog_products_col.count_documents(filt)
+    for div, count in sorted(div_counts.items(), key=lambda x: -x[1]):
+        if count == 0 or not div:
+            continue
+        meta = ALL_DIVISION_META.get(div, {})
+        slug = meta.get("slug", div.lower().replace(" ", "-"))
+        filt = {**LIVE_FILTER, "division_canonical": div}
         categories = await catalog_products_col.distinct("category", filt)
         brands = await catalog_products_col.distinct("brand", filt)
-        meta = DIVISION_META.get(div, {})
         divisions.append({
             "name": div,
-            "slug": meta.get("slug", div.lower().replace(" ", "-")),
+            "slug": slug,
             "icon": meta.get("icon", "package"),
             "color": meta.get("color", "slate"),
             "product_count": count,
-            "categories": sorted(categories),
+            "categories": sorted([c for c in categories if c]),
             "brands": sorted([b for b in brands if b]),
         })
-    return {"divisions": divisions, "pilot_active": True}
+    return {"divisions": divisions, "total_products": sum(div_counts.values())}
 
 
 @router.get("/divisions/{slug}")
@@ -192,18 +217,18 @@ async def catalog_division_detail(slug: str):
     div_name = SLUG_TO_DIVISION.get(slug)
     if not div_name:
         raise HTTPException(status_code=404, detail="Division not found")
-    filt = {**PILOT_FILTER, "division_canonical": div_name}
+    filt = {**LIVE_FILTER, "division_canonical": div_name}
     count = await catalog_products_col.count_documents(filt)
     categories = await catalog_products_col.distinct("category", filt)
     brands = await catalog_products_col.distinct("brand", filt)
-    meta = DIVISION_META.get(div_name, {})
+    meta = ALL_DIVISION_META.get(div_name, {})
     return {
         "name": div_name,
         "slug": slug,
         "icon": meta.get("icon", "package"),
         "color": meta.get("color", "slate"),
         "product_count": count,
-        "categories": sorted(categories),
+        "categories": sorted([c for c in categories if c]),
         "brands": sorted([b for b in brands if b]),
     }
 
@@ -217,12 +242,10 @@ async def catalog_product_list(
     page: int = Query(default=1, ge=1),
     limit: int = Query(default=20, ge=1, le=100),
 ):
-    """List catalog products with filters. Only pilot-safe products."""
-    filt = dict(PILOT_FILTER)
+    """List catalog products with filters. Only production-eligible products."""
+    filt = dict(LIVE_FILTER)
     if division:
         filt["division_canonical"] = division
-    else:
-        filt["division_canonical"] = {"$in": PILOT_DIVISIONS}
 
     if category:
         filt["category"] = category

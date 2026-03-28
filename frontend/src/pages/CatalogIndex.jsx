@@ -25,6 +25,16 @@ const DIVISION_DESCRIPTIONS = {
   Cardiovascular: "Coronary stents, heart valves, and vascular intervention devices for cardiac care.",
   Diagnostics: "Rapid diagnostic tests, biochemistry reagents, ELISA kits, and point-of-care testing solutions.",
   "Joint Replacement": "Total knee and hip replacement systems, implants, and components for arthroplasty.",
+  "Endo Surgery": "Endoscopic staplers, trocars, hernia mesh, ligating clips, and minimally invasive surgical instruments.",
+  "Infection Prevention": "Surgical gowns, drapes, sterilization products, and antiseptic solutions for OR safety.",
+  ENT: "Sinus balloon systems, nasal splints, tracheostomy tubes, and ear-nose-throat surgical devices.",
+  Instruments: "General surgical instruments, retractors, forceps, and specialized hand tools.",
+  "Sports Medicine": "Arthroscopic implants, anchors, and fixation devices for sports injury repair.",
+  Urology: "Catheters, ureteral stents, and urological intervention devices.",
+  "Critical Care": "Ventilator circuits, infusion sets, and critical care consumables for ICU settings.",
+  "Peripheral Intervention": "Peripheral vascular stents, balloon catheters, and guide wires.",
+  Robotics: "Robotic-assisted surgical systems and components.",
+  Spine: "Spinal implants, pedicle screws, and vertebral body replacement systems.",
 };
 
 export default function CatalogIndex() {
@@ -52,17 +62,15 @@ export default function CatalogIndex() {
           <nav className="flex items-center gap-1.5 text-sm text-slate-400 mb-6" data-testid="catalog-index-breadcrumb">
             <Link to="/" className="hover:text-white transition-colors">Home</Link>
             <ChevronRight size={12} />
-            <Link to="/products" className="hover:text-white transition-colors">Products</Link>
-            <ChevronRight size={12} />
-            <span className="text-white font-medium">Portfolio</span>
+            <span className="text-white font-medium">Products</span>
           </nav>
 
           <div className="max-w-2xl">
             <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-emerald-400 bg-emerald-400/10 px-2.5 py-1 rounded-full border border-emerald-400/20 mb-4">
-              <BadgeCheck size={10} /> Brochure-Verified Catalog
+              <BadgeCheck size={10} /> Verified Product Catalog
             </span>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight" data-testid="catalog-index-title">
-              Product Portfolio
+              Product Catalog
             </h1>
             <p className="mt-4 text-slate-400 text-base sm:text-lg leading-relaxed">
               {totalProducts} verified products across {divisions.length} divisions and {totalCategories} categories, enriched with manufacturer brochure data.

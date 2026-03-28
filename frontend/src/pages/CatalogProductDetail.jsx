@@ -157,7 +157,7 @@ export default function CatalogProductDetail() {
   };
 
   if (loading) return <div className="flex items-center justify-center py-40 font-[Manrope]"><div className="w-8 h-8 border-2 border-amber-600 border-t-transparent rounded-full animate-spin" /></div>;
-  if (!product) return <div className="text-center py-40 font-[Manrope]"><Package size={48} className="mx-auto text-slate-300 mb-4" /><p className="text-slate-700 font-semibold">Product not found</p><Link to="/catalog" className="text-amber-600 font-medium mt-3 inline-block">Back to Portfolio</Link></div>;
+  if (!product) return <div className="text-center py-40 font-[Manrope]"><Package size={48} className="mx-auto text-slate-300 mb-4" /><p className="text-slate-700 font-semibold">Product not found</p><Link to="/catalog" className="text-amber-600 font-medium mt-3 inline-block">Back to Products</Link></div>;
 
   const specs = product.technical_specifications || {};
   const specEntries = Object.entries(specs).filter(([, v]) => v !== null && v !== "");
@@ -177,7 +177,7 @@ export default function CatalogProductDetail() {
           <nav className="flex items-center gap-1.5 text-sm text-slate-400 mb-4 flex-wrap" data-testid="catalog-detail-breadcrumb">
             <Link to="/" className="hover:text-white transition-colors">Home</Link>
             <ChevronRight size={12} />
-            <Link to="/catalog" className="hover:text-white transition-colors">Portfolio</Link>
+            <Link to="/catalog" className="hover:text-white transition-colors">Products</Link>
             <ChevronRight size={12} />
             <Link to={`/catalog/${divSlug}`} className="hover:text-white transition-colors">{divName}</Link>
             {product.category && (<><ChevronRight size={12} /><Link to={`/catalog/${divSlug}?category=${encodeURIComponent(product.category)}`} className="hover:text-white transition-colors">{product.category}</Link></>)}

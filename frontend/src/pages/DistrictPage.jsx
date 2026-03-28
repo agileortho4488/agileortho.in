@@ -199,7 +199,7 @@ export default function DistrictPage() {
       <section className="py-16 bg-white" data-testid="district-divisions">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-10">
-            <p className="text-teal-600 text-xs font-bold uppercase tracking-[0.2em] mb-3">Product Portfolio</p>
+            <p className="text-teal-600 text-xs font-bold uppercase tracking-[0.2em] mb-3">Product Catalog</p>
             <h2 className="text-2xl lg:text-3xl font-bold text-slate-900 tracking-tight">
               Medical Device Divisions Available in {district.name}
             </h2>

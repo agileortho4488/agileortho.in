@@ -122,7 +122,7 @@ export default function CatalogDivision() {
           <nav className="flex items-center gap-1.5 text-sm text-slate-400 mb-5 flex-wrap" data-testid="catalog-breadcrumb">
             <Link to="/" className="hover:text-white transition-colors">Home</Link>
             <ChevronRight size={12} />
-            <Link to="/catalog" className="hover:text-white transition-colors">Portfolio</Link>
+            <Link to="/catalog" className="hover:text-white transition-colors">Products</Link>
             <ChevronRight size={12} />
             <span className="text-white font-medium">{divInfo.name}</span>
             {category && (

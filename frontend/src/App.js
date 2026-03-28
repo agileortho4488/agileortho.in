@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "sonner";
 import { SEOProvider } from "./components/SEO";
 import { Layout } from "./components/layout/Layout";
@@ -37,7 +37,7 @@ function App() {
           {/* Public routes with header/footer */}
           <Route element={<Layout />}>
             <Route path="/" element={<Home />} />
-            <Route path="/products" element={<Products />} />
+            <Route path="/products" element={<Navigate to="/catalog" replace />} />
             <Route path="/products/family/:familyName" element={<ProductFamily />} />
             <Route path="/products/:id" element={<ProductDetail />} />
             <Route path="/about" element={<About />} />

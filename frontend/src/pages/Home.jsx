@@ -21,7 +21,7 @@ const DIVISION_META = {
   "Cardiovascular": { icon: HeartPulse, desc: "Coronary stents, heart valves, TAVI, TEER systems, and cardiac surgery devices for interventional and surgical cardiology.", bg: "bg-red-50/70" },
   "Diagnostics": { icon: Microscope, desc: "Rapid tests, ELISA, hematology analyzers, coagulation systems, and clinical chemistry solutions.", bg: "bg-purple-50/70" },
   "ENT": { icon: Stethoscope, desc: "Sinus, airway, nasal, and tracheostomy devices for ear, nose, and throat surgical procedures.", bg: "bg-teal-50/70" },
-  "Endo-surgical": { icon: Scissors, desc: "Sutures, staplers, hernia mesh, biosurgical products, energy devices, and women's health solutions.", bg: "bg-indigo-50/70" },
+  "Endo Surgery": { icon: Scissors, desc: "Sutures, staplers, hernia mesh, biosurgical products, energy devices, and women's health solutions.", bg: "bg-indigo-50/70" },
   "Infection Prevention": { icon: Shield, desc: "Surgical gowns, drapes, hand hygiene, skin prepping, and hospital disinfection systems.", bg: "bg-emerald-50/70" },
   "Peripheral Intervention": { icon: Activity, desc: "Peripheral stents, PTA balloons, drug-coated balloons, and vascular closure devices.", bg: "bg-orange-50/70" },
   "Critical Care": { icon: Syringe, desc: "Vascular access, renal care, regional anesthesia, respiratory, and airway management devices.", bg: "bg-cyan-50/70" },
@@ -89,7 +89,7 @@ export default function Home() {
 
             {/* ===== MASTER SEARCH BAR ===== */}
             <form
-              onSubmit={(e) => { e.preventDefault(); if (heroSearch.trim()) navigate(`/products?search=${encodeURIComponent(heroSearch.trim())}`); }}
+              onSubmit={(e) => { e.preventDefault(); if (heroSearch.trim()) navigate(`/catalog?search=${encodeURIComponent(heroSearch.trim())}`); }}
               className="mt-8 flex w-full max-w-lg"
               data-testid="hero-search-form"
             >
@@ -99,7 +99,7 @@ export default function Home() {
                   type="text"
                   value={heroSearch}
                   onChange={(e) => setHeroSearch(e.target.value)}
-                  placeholder="Search 814+ products — implants, stents, analyzers..."
+                  placeholder={`Search ${totalProducts || 810}+ products — implants, stents, analyzers...`}
                   className="w-full pl-11 pr-4 py-4 bg-white/10 border border-slate-600 rounded-l-xl text-white placeholder-slate-400 text-sm focus:outline-none focus:border-teal-500 focus:bg-white/15 backdrop-blur-sm transition-all"
                   data-testid="hero-search-input"
                 />
@@ -116,7 +116,7 @@ export default function Home() {
               {["Knee Implants", "Coronary Stents", "Sutures", "Surgical Gowns", "Hip System"].map((q) => (
                 <button
                   key={q}
-                  onClick={() => navigate(`/products?search=${encodeURIComponent(q)}`)}
+                  onClick={() => navigate(`/catalog?search=${encodeURIComponent(q)}`)}
                   className="text-xs text-slate-400 hover:text-white border border-slate-700 hover:border-teal-500 px-3 py-1.5 rounded-full transition-all"
                   data-testid={`quick-search-${q.toLowerCase().replace(/\s/g, "-")}`}
                 >
@@ -127,7 +127,7 @@ export default function Home() {
 
             <div className="mt-6 flex flex-wrap gap-3">
               <Link
-                to="/products"
+                to="/catalog"
                 className="inline-flex items-center gap-2 px-6 py-3.5 bg-teal-600 text-white font-semibold rounded-lg hover:bg-teal-700 transition-colors shadow-lg shadow-teal-600/20"
                 data-testid="hero-browse-btn"
               >
@@ -217,7 +217,7 @@ export default function Home() {
       <section className="py-24 bg-slate-50" data-testid="divisions-section">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-14">
-            <p className="text-teal-600 text-xs font-bold uppercase tracking-[0.2em] mb-3">Product Portfolio</p>
+            <p className="text-teal-600 text-xs font-bold uppercase tracking-[0.2em] mb-3">Product Catalog</p>
             <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 tracking-tight">
               Explore Product Divisions
             </h2>
@@ -232,7 +232,7 @@ export default function Home() {
               return (
                 <Link
                   key={div.name}
-                  to={`/products?division=${encodeURIComponent(div.name)}`}
+                  to={`/catalog?division=${encodeURIComponent(div.name)}`}
                   className={`group ${meta.bg} rounded-2xl p-7 border border-slate-100 hover:border-teal-300 hover:shadow-lg transition-all`}
                   data-testid={`division-card-${div.name.toLowerCase().replace(/\s/g, "-")}`}
                 >
@@ -271,7 +271,7 @@ export default function Home() {
               { icon: MapPin, title: "Pan-Telangana Reach", desc: "Distribution support across all 33 districts with responsive coordination from Hyderabad." },
               { icon: Headphones, title: "Technical Product Guidance", desc: "Dedicated support for product selection, usage understanding, and hospital-facing coordination." },
               { icon: Zap, title: "Fast Institutional Dispatch", desc: "Built for real procurement timelines, urgent requirements, and repeat hospital ordering." },
-              { icon: Globe, title: "Broad Medical Portfolio", desc: "Multiple divisions in one place to simplify sourcing and reduce vendor fragmentation." },
+              { icon: Globe, title: "Broad Medical Catalog", desc: "Multiple divisions in one place to simplify sourcing and reduce vendor fragmentation." },
               { icon: Users, title: "Relationship-Driven Service", desc: "Responsive communication, quotation support, and practical assistance when timelines matter." },
             ].map(({ icon: Icon, title, desc }) => (
               <div key={title} className="flex items-start gap-5 p-6 rounded-2xl hover:bg-slate-50 transition-colors" data-testid={`why-card-${title.toLowerCase().replace(/\s+/g, "-").slice(0, 20)}`}>
@@ -298,7 +298,7 @@ export default function Home() {
                 Featured Products
               </h2>
             </div>
-            <Link to="/products" className="text-sm font-semibold text-teal-600 hover:text-teal-700 flex items-center gap-1 hidden sm:flex">
+            <Link to="/catalog" className="text-sm font-semibold text-teal-600 hover:text-teal-700 flex items-center gap-1 hidden sm:flex">
               View All Products <ArrowRight size={14} />
             </Link>
           </div>
@@ -306,7 +306,7 @@ export default function Home() {
             {featuredProducts.slice(0, 8).map((p, i) => (
               <Link
                 key={p.id}
-                to={`/products/${p.id}`}
+                to={`/catalog/products/${p.id}`}
                 className="group bg-white border border-slate-100 rounded-2xl overflow-hidden hover:shadow-lg hover:border-teal-200 transition-all"
                 data-testid={`featured-product-${p.id}`}
               >
@@ -336,7 +336,7 @@ export default function Home() {
             ))}
           </div>
           <div className="mt-8 text-center sm:hidden">
-            <Link to="/products" className="text-sm font-semibold text-teal-600 hover:text-teal-700">
+            <Link to="/catalog" className="text-sm font-semibold text-teal-600 hover:text-teal-700">
               View All Products <ArrowRight size={14} className="inline" />
             </Link>
           </div>

@@ -20,7 +20,7 @@ export const getProduct = (id) => api.get(`/api/products/${id}`);
 export const getProductFamilies = (params) => api.get("/api/product-families", { params });
 export const getProductFamilyDetail = (familyName) => api.get(`/api/product-families/${encodeURIComponent(familyName)}`);
 export const getCategoryStats = (params) => api.get("/api/category-stats", { params });
-export const getDivisions = () => api.get("/api/divisions");
+export const getDivisions = () => api.get("/api/catalog/divisions");
 export const submitLead = (data) => api.post("/api/leads", data);
 
 // Catalog APIs (Phase 3/4 — serves from catalog_products)
