@@ -1,65 +1,56 @@
-# Agile Ortho — Product Requirements Document
+# Agile Healthcare — Product Requirements Document
 
 ## Original Problem Statement
-Build a B2B medical device platform for Agile Ortho, a premier Meril Life Sciences master franchise in Telangana, India. The platform provides a standardized, clinically grouped product catalog mapped to exact manufacturer SKUs, with an AI Chatbot (web + WhatsApp via Interakt), and a secure Admin Dashboard.
+Build a B2B medical device platform for Agile Healthcare (formerly Agile Ortho), a premier Meril Life Sciences master franchise in Telangana, India. The platform provides a standardized, clinically grouped product catalog with AI Chatbot, WhatsApp integration, and Admin Dashboard.
 
 ## Architecture
-- **Frontend**: React (CRA) + Tailwind + Shadcn UI
+- **Frontend**: React (CRA) + Tailwind + Shadcn UI + Framer Motion
 - **Backend**: FastAPI + Motor (async MongoDB)
 - **Database**: MongoDB (`catalog_products`, `catalog_skus`, `wa_conversations`, `chatbot_telemetry`, `leads`)
-- **AI**: Claude Sonnet 4.5 via `emergentintegrations` (Emergent LLM Key)
-- **WhatsApp**: Interakt API (webhook + outbound messaging)
-- **Design**: Dark Premium theme — Outfit font, gold (#D4AF37) + teal (#2DD4BF) accents on obsidian (#0A0A0A)
+- **AI**: Claude Sonnet 4.5 via `emergentintegrations`
+- **WhatsApp**: Interakt API
+- **Design**: Dark Premium theme — Outfit font, gold (#D4AF37) + teal (#2DD4BF) on obsidian (#0A0A0A)
 
 ## What's Been Implemented
 
+### Framer Motion Animations — Mar 28, 2026
+- **Page Transitions**: AnimatePresence in Layout.jsx for smooth fade/slide between routes
+- **Scroll-Triggered Animations**: FadeUp, StaggerContainer, StaggerItem on homepage sections (divisions, featured products)
+- **Hero Staggered Reveal**: Overline, title, subtitle, search, CTAs animate in sequence with easeOut timing
+- **Stats Cards**: Individual staggered entrance with scale + fade
+- **CTA Section**: ScaleIn animation on scroll
+- **Dropdown Animations**: dropdownVariants for WhatsApp menu open/close
+- **Modal Animations**: modalOverlayVariants + modalContentVariants for LeadCaptureModal
+- **Motion Library**: `/app/frontend/src/lib/motion.jsx` — reusable animation components
+
 ### Universal Lead Capture System — Mar 28, 2026
-- **LeadCaptureModal**: Reusable component that intercepts all WhatsApp/enquiry actions to capture: Name, Hospital/Clinic, Department, WhatsApp Number, Email, District before redirecting to WhatsApp with pre-populated messages
-- **Integrated across all touchpoints**: Header WhatsApp dropdown (Sales, Catalog, Support), Hero CTA "Check Availability & Pricing", Homepage CTA "Get Product Catalog" / "Talk to Sales", Product detail "WhatsApp Enquiry", Mobile action bar
-- **Backend department field**: Added `department` to LeadCreate model, sent to Interakt traits for retargeting
-- **13 department options**: Orthopedics, Cardiology, General Surgery, Neurosurgery, Urology, ENT, Spine Surgery, Sports Medicine, Diagnostics/Pathology, Hospital Administration, Procurement/Purchase, Biomedical Engineering, Other
+- LeadCaptureModal intercepts all WhatsApp/enquiry actions
+- Captures: Name, Hospital, Department, Phone, Email, District
+- Integrated: Header dropdown, Hero CTA, CTA section, Product detail, Mobile bar
+- Backend `department` field in LeadCreate model, sent to Interakt traits
 
-### UX Audit Fixes — Mar 28, 2026
-- **Logo enlarged**: h-10/h-12 (48px) for proper brand visibility
-- **Dropdown hover fix**: Eliminated gap between trigger and dropdown panel (pt-1 instead of mt-2) so menu stays stable when hovering to items
-- **WhatsApp Header Dropdown**: 3 options (Sales, Catalog PDF, Technical Support) — all go through lead capture
-- **Hero CTA Consolidation**: "Browse Catalog" (primary) + "Check Availability & Pricing" (lead capture)
-- **Search Placeholder**: "Search by name or SKU (e.g., KET 2.4mm Locking Plate)"
-- **Category Grid**: Increased gap-4/gap-6 for breathing room
-- **Product Cards**: Centered text, 2-line truncated descriptions, teal material + gold brand tags
-- **CTA Section**: "Equip Your Hospital with Precision Meril Products" headline, "Get Product Catalog" + "Talk to Sales" buttons
-- **Footer 4-Column**: Brand (with consolidated address), Navigation, Locations ("All 33 Districts" no arrow), Compliance
-- **Product Detail**: Teal circular checkmark icons for specs, dark form inputs, pre-populated WhatsApp messages
-- **Contact Page**: Updated headline, gold focus styling on all inputs
-- **Micro-interactions**: Button press effects, smooth focus transitions, scrollbar-hide, link-underline animation
+### UX Audit Implementations — Mar 28, 2026
+- Logo: Agile Healthcare branding with new icon + text
+- WhatsApp dropdown: 3 options (Sales, Catalog PDF, Support)
+- Hero: Better search placeholder, consolidated CTAs
+- Product cards: Centered, 2-line truncation, material/brand tags
+- Footer: 4-column layout (Brand, Navigation, Locations, Compliance)
+- Contact page: Gold focus styling, dark theme consistency
 
-### Dark Premium Theme (Full Redesign)
-- Global CSS: Dark background (#0A0A0A), card surface (#141414), white/55+ text contrast
-- Navigation: Glassmorphism header with gold WhatsApp dropdown
-- All public pages: About, Contact, Districts, Chat — dark themed with gold focus
+### Deployment Fix — Mar 28, 2026
+- Removed 2.5GB of large binaries from git history (uploads, brochures, brochure_intelligence)
+- Git repo reduced from 4.4GB to 8.6MB
+- .gitignore updated to prevent re-tracking
 
-### Core Platform
-- 810+ production-eligible products across 13 clinical divisions
-- Full catalog browsing, global search, SEO-optimized product detail pages
-- AI Chatbot (web + WhatsApp via Interakt), greeting detection
-- Admin Dashboard with Product Management, Lead CRM, WhatsApp Management
-- 3-Tab Analytics: CRM Leads | Search Intelligence | WhatsApp Metrics
-- Auto-seed on fresh deployments
-
-### Staff Contact Numbers
-- Dispatch: 7416818183 | Ortho/Spine: 7416162350 | General: 7416216262
-- Consumables: 7416416871 | Billing: 7416416093 | WhatsApp Sales: 7416521222
-
-## Deployment Configuration
-- Interakt API Key: in backend/.env
-- Webhook Secret: `1dc24700-25aa-4262-be11-1e64a38be99f`
-- Production Webhook: `https://www.agileortho.in/api/webhook/whatsapp`
-- WhatsApp Business: +917416521222
+### Core Platform (Previous Sessions)
+- 810+ products across 13 clinical divisions
+- AI Chatbot (web + WhatsApp), Admin Dashboard with CRM
+- 3-Tab Analytics, Auto-seed on deployment
 
 ## Pending Items
 - **P0**: Manual review of 65 true blockers via Admin Review Dashboard
 - **P2**: Archive legacy phase scripts to `scripts/archive/`
-- **P3**: File 008 (corrupted DOCX) — blocked, awaiting uncorrupted file
+- **P3**: File 008 (corrupted DOCX) — blocked
 
 ## Known Constraints
 - Emergent LLM Key budget — avoid batch LLM scripts
