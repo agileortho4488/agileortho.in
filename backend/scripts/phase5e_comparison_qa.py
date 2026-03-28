@@ -3,7 +3,7 @@ import asyncio, os, json, aiohttp
 from dotenv import load_dotenv
 load_dotenv("/app/backend/.env")
 
-API_URL = "https://clinical-enrichment.preview.emergentagent.com"
+API_URL = "https://ortho-admin-portal.preview.emergentagent.com"
 
 TEST_PAIRS = [
     # 1. ARMAR vs AURIC for same plate family (should pass — same implant_class=plates)

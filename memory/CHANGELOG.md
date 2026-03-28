@@ -84,7 +84,7 @@
   - Take Over / Switch to AI toggle buttons
   - Manual reply input with send via Interakt API
   - Auto-refresh every 10 seconds
-- **Webhook URL to configure in Interakt:** https://clinical-enrichment.preview.emergentagent.com/api/webhook/whatsapp
+- **Webhook URL to configure in Interakt:** https://ortho-admin-portal.preview.emergentagent.com/api/webhook/whatsapp
 - **Testing:** 100% pass rate (14 backend + 12 frontend tests)
 
 ## December 2025

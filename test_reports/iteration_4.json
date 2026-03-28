@@ -65,8 +65,8 @@
     }
   },
   "test_environment": {
-    "backend_url": "https://clinical-enrichment.preview.emergentagent.com",
-    "frontend_url": "https://clinical-enrichment.preview.emergentagent.com",
+    "backend_url": "https://ortho-admin-portal.preview.emergentagent.com",
+    "frontend_url": "https://ortho-admin-portal.preview.emergentagent.com",
     "test_mobile": "9876543210",
     "admin_password": "admin"
   }
