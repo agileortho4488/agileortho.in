@@ -187,7 +187,7 @@ export default function Chat() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-180px)] bg-[#FAFAFA] flex flex-col" data-testid="chat-page">
+    <div className="min-h-[calc(100vh-180px)] bg-[#0A0A0A] flex flex-col" data-testid="chat-page">
       {/* Header */}
       <div className="bg-[#0A0A0A] border-b border-white/10">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">

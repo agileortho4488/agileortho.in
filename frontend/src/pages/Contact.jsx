@@ -32,7 +32,7 @@ export default function Contact() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA]">
+    <div className="min-h-screen bg-[#0A0A0A]">
       <SEO
         title="Contact Us - Request Bulk Quote for Medical Devices"
         description="Contact Agile Ortho for bulk medical device pricing, product samples, and technical consultation. Authorized Meril distributor in Telangana. Response within 24 hours."

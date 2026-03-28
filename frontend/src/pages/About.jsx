@@ -4,7 +4,7 @@ import { SEO, buildBreadcrumbSchema } from "../components/SEO";
 
 export default function About() {
   return (
-    <div className="min-h-screen bg-[#FAFAFA]">
+    <div className="min-h-screen bg-[#0A0A0A]">
       <SEO
         title="About Us - Authorized Meril Life Sciences Distributor"
         description="Agile Ortho is the authorized Meril Life Sciences master franchise distributor for Telangana, India. Serving hospitals, clinics, and diagnostic centers across all 33 districts with 814+ medical devices."
@@ -68,7 +68,7 @@ export default function About() {
       </section>
 
       {/* Why Choose Us */}
-      <section className="py-16 bg-[#FAFAFA]">
+      <section className="py-16 bg-[#0D0D0D]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-10">
             <p className="text-[#2DD4BF] text-xs font-bold uppercase tracking-[0.2em] mb-2">Why Choose Us</p>

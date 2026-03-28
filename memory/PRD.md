@@ -9,8 +9,19 @@ Build a B2B medical device platform for Agile Ortho, a premier Meril Life Scienc
 - **Database**: MongoDB (`catalog_products`, `catalog_skus`, `wa_conversations`, `chatbot_telemetry`, `leads`)
 - **AI**: Claude Sonnet 4.5 via `emergentintegrations` (Emergent LLM Key)
 - **WhatsApp**: Interakt API (webhook + outbound messaging)
+- **Design**: Dark Premium theme — Outfit font, gold (#D4AF37) + teal (#2DD4BF) accents on obsidian (#0A0A0A)
 
 ## What's Been Implemented
+
+### Dark Premium Theme (Full Redesign)
+- **Global CSS**: Dark background (#0A0A0A), card surface (#141414), white/55+ text contrast
+- **Navigation**: Glassmorphism dark header with gold WhatsApp CTA
+- **Homepage**: Hero with medical device imagery, gold "Devices" text, search bar, division bento grid, featured products, stats, CTA
+- **Catalog**: Dark division cards with teal product counts, gold accent labels
+- **Product Detail**: Dark specs tables, gold brand badges, teal material tags
+- **Chat Widget**: Dark theme with gold send button, "Agile Ortho AI" header
+- **Footer**: Gold section headers, "AGILE ORTHO" watermark, compliance badges
+- **All public pages**: About, Contact, Districts, Chat — all dark themed
 
 ### Core Platform
 - Responsive homepage with 13 medical divisions, featured products, district coverage
@@ -21,30 +32,20 @@ Build a B2B medical device platform for Agile Ortho, a premier Meril Life Scienc
 ### AI Chatbot (Web + WhatsApp)
 - Web chatbot widget with product search, SKU lookup, brand queries
 - Greeting detection for casual messages (hi, hello, hey, etc.)
-- WhatsApp webhook via Interakt — full conversation pipeline:
-  - Incoming message → AI response → outbound reply (within 24h window)
-  - Welcome message for new users
-  - Message chunking for WhatsApp-friendly lengths
-  - Human takeover mode (admin can pause AI, reply manually)
-  - Auto lead creation and scoring
-  - Delivery tracking (sent/delivered/read/failed)
+- WhatsApp webhook via Interakt — full conversation pipeline
+- Human takeover mode, auto lead creation, delivery tracking
 
 ### Admin Dashboard
 - Product management (1202 catalog products across 14 canonical divisions)
 - Lead CRM with scoring and follow-up automation
-- WhatsApp conversation management (view, takeover, reply)
-- 4-Lane Auto-Promotion pipeline (cleared 505 products automatically)
-- Review dashboard for 65 remaining true blockers
-- **Enhanced Analytics (3 tabs)**:
-  - CRM Leads: funnel, scores, sources, districts, inquiry types
-  - Search Intelligence: top doctor queries, confidence breakdown, unmatched searches (inventory gaps), SKU lookups, off-topic rate, handoff metrics
-  - WhatsApp: conversations, delivery stats, read rates, templates
+- WhatsApp conversation management
+- Enhanced Analytics (3 tabs): CRM Leads | Search Intelligence | WhatsApp
+- 4-Lane Auto-Promotion pipeline, Review dashboard for 65 true blockers
 
-### Data Pipeline
-- Enriched catalog from legacy product data via AI classification
-- 810 production-eligible products (live_visible=true, review_required=false)
-- 13 divisions with canonical naming
-- Full system cutover: all public APIs use `catalog_products_col` (no legacy dependencies)
+### Data Pipeline & Auto-Seed
+- Auto-seed on fresh deployments (catalog_products, catalog_skus, division maps, leads)
+- 810 production-eligible products with canonical naming
+- Full system cutover: all public APIs use `catalog_products_col`
 
 ### Staff Contact Numbers (Configured in AI Bots)
 - Dispatch & Delivery: 7416818183
@@ -67,6 +68,5 @@ Build a B2B medical device platform for Agile Ortho, a premier Meril Life Scienc
 - **P3**: File 008 (corrupted DOCX) — blocked, awaiting uncorrupted file
 
 ## Known Constraints
-- Emergent LLM Key budget was exhausted in prior wave — avoid batch LLM scripts
-- WhatsApp free-form replies only work within 24h of customer's last message
-- Outside 24h window, only pre-approved Interakt templates can be sent
+- Emergent LLM Key budget exhausted — avoid batch LLM scripts
+- WhatsApp free-form replies only within 24h of customer's last message
