@@ -82,3 +82,4 @@ frontend/node_modules/.cache/default-development/0.pack
 # Large upload files (stored in object storage, not needed for deployment)
 backend/uploads/
 backend/brochure_intelligence/
+frontend/node_modules/.cache/default-development/13.pack

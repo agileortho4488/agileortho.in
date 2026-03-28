@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, MessageCircle, ChevronDown, Bone, HeartPulse, Activity, Microscope, ShieldCheck, Scissors, Wrench, Dumbbell, EarOff, Droplets, Heart, GitBranch, Cpu, Phone } from "lucide-react";
 import { COMPANY } from "@/lib/constants";
+import { dropdownVariants } from "@/lib/motion";
 import LeadCaptureModal from "@/components/LeadCaptureModal";
 
 const DIVISIONS = [
@@ -50,13 +52,18 @@ function DropdownMenu({ trigger, children, testId }) {
       >
         {trigger} <ChevronDown size={12} className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
       </button>
-      {open && (
-        <div className="absolute top-full left-0 pt-1 z-50">
-          <div className="w-64 bg-[#141414] border border-white/10 rounded-sm shadow-2xl shadow-black/50 py-2 animate-fade-up" style={{ animationDuration: '0.15s' }}>
-            {children}
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            variants={dropdownVariants} initial="hidden" animate="visible" exit="exit"
+            className="absolute top-full left-0 pt-1 z-50 origin-top"
+          >
+            <div className="w-64 bg-[#141414] border border-white/10 rounded-sm shadow-2xl shadow-black/50 py-2">
+              {children}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
   Search, ArrowRight, Shield, Award, Building2, MapPin,
   MessageCircle, Phone, ChevronDown, ChevronRight,
@@ -8,6 +9,7 @@ import {
 } from "lucide-react";
 import { getDivisions, getFeaturedProducts } from "@/lib/api";
 import { COMPANY } from "@/lib/constants";
+import { FadeUp, StaggerContainer, StaggerItem, ScaleIn } from "@/lib/motion";
 import LeadCaptureModal from "@/components/LeadCaptureModal";
 
 const DIVISION_ICONS = {
@@ -57,29 +59,51 @@ export default function Home() {
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             {/* LEFT: Text */}
             <div>
-              <div className="flex items-center gap-3 mb-6 animate-fade-up stagger-1">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+                className="flex items-center gap-3 mb-6"
+              >
                 <span className="h-px w-10 bg-[#D4AF37]" />
                 <span className="text-xs font-bold text-[#D4AF37] tracking-[0.25em] uppercase" data-testid="hero-overline">
                   Meril Authorized Distributor
                 </span>
-              </div>
+              </motion.div>
 
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-light tracking-tight text-white leading-[1.1] animate-fade-up stagger-2" data-testid="hero-title" style={{ fontFamily: 'Outfit' }}>
+              <motion.h1
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                className="text-4xl sm:text-5xl lg:text-6xl font-light tracking-tight text-white leading-[1.1]"
+                data-testid="hero-title" style={{ fontFamily: 'Outfit' }}
+              >
                 Precision Medical
                 <br />
                 <span className="text-gradient-gold font-medium">Devices</span> for
                 <br />
                 Telangana
-              </h1>
+              </motion.h1>
 
-              <p className="mt-6 text-base sm:text-lg text-white/70 max-w-lg leading-[1.75] animate-fade-up stagger-3" data-testid="hero-subtitle">
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                className="mt-6 text-base sm:text-lg text-white/70 max-w-lg leading-[1.75]"
+                data-testid="hero-subtitle"
+              >
                 Browse <span className="text-white font-semibold">{totalProducts > 0 ? `${totalProducts}+` : "800+"}</span> verified products across{" "}
                 <span className="text-white font-semibold">{divisions.length || 13}</span> clinical divisions.
                 Serving hospitals and clinics in all 33 districts.
-              </p>
+              </motion.p>
 
               {/* Search */}
-              <div className={`mt-8 transition-all duration-300 max-w-lg animate-fade-up stagger-4 ${searchFocused ? "scale-[1.02]" : ""}`}>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                className={`mt-8 transition-all duration-300 max-w-lg ${searchFocused ? "scale-[1.02]" : ""}`}
+              >
                 <form onSubmit={handleSearch} className="flex items-center gap-0" data-testid="hero-search-form">
                   <div className="relative flex-1">
                     <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" />
@@ -99,10 +123,15 @@ export default function Home() {
                   </button>
                 </form>
                 <p className="mt-2 text-xs text-white/35 pl-1">Try: "trauma plates", "BioMime stent", "knee implant"</p>
-              </div>
+              </motion.div>
 
               {/* CTAs */}
-              <div className="mt-8 flex flex-wrap gap-4 animate-fade-up stagger-5">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.55, ease: [0.22, 1, 0.36, 1] }}
+                className="mt-8 flex flex-wrap gap-4"
+              >
                 <Link to="/catalog" className="group inline-flex items-center gap-2 bg-[#D4AF37] hover:bg-[#F2C94C] text-black font-semibold rounded-sm px-7 py-3.5 text-sm transition-all hover:shadow-lg hover:shadow-[#D4AF37]/20" data-testid="hero-cta-catalog">
                   Browse Catalog <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
                 </Link>
@@ -110,22 +139,29 @@ export default function Home() {
                   className="group inline-flex items-center gap-2 border border-white/15 hover:border-[#D4AF37]/40 hover:bg-white/5 text-white font-medium rounded-sm px-7 py-3.5 text-sm transition-all" data-testid="hero-cta-availability">
                   <MessageCircle size={14} /> Check Availability & Pricing
                 </button>
-              </div>
+              </motion.div>
             </div>
 
             {/* RIGHT: Quick Stats */}
-            <div className="hidden lg:grid grid-cols-2 gap-4 animate-fade-up stagger-6">
+            <div className="hidden lg:grid grid-cols-2 gap-4">
               {[
                 { value: `${totalProducts || 810}+`, label: "Verified Products", sub: "Across all divisions" },
                 { value: `${divisions.length || 13}`, label: "Clinical Divisions", sub: "Complete coverage" },
                 { value: "33", label: "Districts", sub: "All of Telangana" },
                 { value: "24/7", label: "AI Support", sub: "Instant product help" },
-              ].map((stat) => (
-                <div key={stat.label} className="card-premium rounded-sm p-6 text-center hover-lift" data-testid={`hero-stat-${stat.label.toLowerCase().replace(/\s/g, '-')}`}>
+              ].map((stat, i) => (
+                <motion.div
+                  key={stat.label}
+                  initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ duration: 0.5, delay: 0.3 + i * 0.1, ease: [0.22, 1, 0.36, 1] }}
+                  className="card-premium rounded-sm p-6 text-center hover-lift"
+                  data-testid={`hero-stat-${stat.label.toLowerCase().replace(/\s/g, '-')}`}
+                >
                   <p className="text-3xl font-light text-white" style={{ fontFamily: 'Outfit' }}>{stat.value}</p>
                   <p className="text-xs text-[#D4AF37] font-semibold mt-1 uppercase tracking-wider">{stat.label}</p>
                   <p className="text-[11px] text-white/40 mt-0.5">{stat.sub}</p>
-                </div>
+                </motion.div>
               ))}
             </div>
           </div>
@@ -158,38 +194,41 @@ export default function Home() {
       {/* ===== DIVISIONS — Alternating bg #111 ===== */}
       <section className="py-20 sm:py-24 bg-[#111]" data-testid="divisions-section">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="text-center mb-12">
-            <span className="text-xs font-bold text-[#D4AF37] tracking-[0.2em] uppercase">Product Divisions</span>
-            <h2 className="mt-2 text-2xl sm:text-3xl lg:text-4xl font-medium tracking-tight text-white" style={{ fontFamily: 'Outfit' }}>
-              Clinical Categories
-            </h2>
-            <p className="mt-3 text-sm text-white/50 max-w-md mx-auto">Select a division to explore verified products with specifications and SKU details</p>
-          </div>
+          <FadeUp>
+            <div className="text-center mb-12">
+              <span className="text-xs font-bold text-[#D4AF37] tracking-[0.2em] uppercase">Product Divisions</span>
+              <h2 className="mt-2 text-2xl sm:text-3xl lg:text-4xl font-medium tracking-tight text-white" style={{ fontFamily: 'Outfit' }}>
+                Clinical Categories
+              </h2>
+              <p className="mt-3 text-sm text-white/50 max-w-md mx-auto">Select a division to explore verified products with specifications and SKU details</p>
+            </div>
+          </FadeUp>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
-            {divisions.map((div, i) => {
+          <StaggerContainer className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
+            {divisions.map((div) => {
               const Icon = DIVISION_ICONS[div.name] || Bone;
               return (
-                <Link
-                  key={div.name}
-                  to={`/catalog/${div.slug || div.name.toLowerCase().replace(/\s+/g, "-")}`}
-                  className={`group card-premium rounded-sm p-5 sm:p-6 text-center hover-lift animate-fade-up stagger-${Math.min(i + 1, 8)}`}
-                  data-testid={`division-card-${div.slug}`}
-                >
-                  <div className="mx-auto w-12 h-12 rounded-sm bg-[#D4AF37]/8 border border-[#D4AF37]/15 flex items-center justify-center mb-4 group-hover:bg-[#D4AF37]/15 group-hover:border-[#D4AF37]/30 transition-all duration-300">
-                    <Icon size={20} strokeWidth={1.5} className="text-[#D4AF37]" />
-                  </div>
-                  <h3 className="text-sm font-semibold text-white group-hover:text-[#D4AF37] transition-colors" style={{ fontFamily: 'Outfit' }}>
-                    {div.name}
-                  </h3>
-                  <p className="mt-1 text-xs text-[#2DD4BF] font-medium">{div.product_count} products</p>
-                  <p className="mt-1.5 text-[11px] text-white/40 line-clamp-1">
-                    {(div.categories || []).slice(0, 3).join(", ")}
-                  </p>
-                </Link>
+                <StaggerItem key={div.name}>
+                  <Link
+                    to={`/catalog/${div.slug || div.name.toLowerCase().replace(/\s+/g, "-")}`}
+                    className="group card-premium rounded-sm p-5 sm:p-6 text-center hover-lift block"
+                    data-testid={`division-card-${div.slug}`}
+                  >
+                    <div className="mx-auto w-12 h-12 rounded-sm bg-[#D4AF37]/8 border border-[#D4AF37]/15 flex items-center justify-center mb-4 group-hover:bg-[#D4AF37]/15 group-hover:border-[#D4AF37]/30 transition-all duration-300">
+                      <Icon size={20} strokeWidth={1.5} className="text-[#D4AF37]" />
+                    </div>
+                    <h3 className="text-sm font-semibold text-white group-hover:text-[#D4AF37] transition-colors" style={{ fontFamily: 'Outfit' }}>
+                      {div.name}
+                    </h3>
+                    <p className="mt-1 text-xs text-[#2DD4BF] font-medium">{div.product_count} products</p>
+                    <p className="mt-1.5 text-[11px] text-white/40 line-clamp-1">
+                      {(div.categories || []).slice(0, 3).join(", ")}
+                    </p>
+                  </Link>
+                </StaggerItem>
               );
             })}
-          </div>
+          </StaggerContainer>
 
           <div className="text-center mt-10">
             <Link to="/catalog" className="group inline-flex items-center gap-2 text-sm text-[#D4AF37] hover:text-[#F2C94C] font-medium transition-colors" data-testid="view-all-divisions">
@@ -203,21 +242,23 @@ export default function Home() {
       {featuredProducts.length > 0 && (
         <section className="py-20 sm:py-24 bg-[#0A0A0A]" data-testid="featured-section">
           <div className="mx-auto max-w-7xl px-4 sm:px-6">
-            <div className="text-center mb-12">
-              <span className="text-xs font-bold text-[#D4AF37] tracking-[0.2em] uppercase">Featured</span>
-              <h2 className="mt-2 text-2xl sm:text-3xl font-medium tracking-tight text-white" style={{ fontFamily: 'Outfit' }}>
-                Popular Products
-              </h2>
-            </div>
+            <FadeUp>
+              <div className="text-center mb-12">
+                <span className="text-xs font-bold text-[#D4AF37] tracking-[0.2em] uppercase">Featured</span>
+                <h2 className="mt-2 text-2xl sm:text-3xl font-medium tracking-tight text-white" style={{ fontFamily: 'Outfit' }}>
+                  Popular Products
+                </h2>
+              </div>
+            </FadeUp>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+            <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5" staggerDelay={0.06}>
               {featuredProducts.slice(0, 8).map((p) => (
-                <Link
-                  key={p.slug || p.id}
-                  to={`/catalog/products/${p.slug || p.id}`}
-                  className="group card-premium rounded-sm overflow-hidden hover-lift"
-                  data-testid={`featured-product-${p.slug || p.id}`}
-                >
+                <StaggerItem key={p.slug || p.id}>
+                  <Link
+                    to={`/catalog/products/${p.slug || p.id}`}
+                    className="group card-premium rounded-sm overflow-hidden hover-lift block"
+                    data-testid={`featured-product-${p.slug || p.id}`}
+                  >
                   {p.images && p.images[0] ? (
                     <div className="aspect-[4/3] bg-[#0D0D0D] overflow-hidden flex items-center justify-center p-6">
                       <img
@@ -249,9 +290,10 @@ export default function Home() {
                       View Details <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
                     </div>
                   </div>
-                </Link>
+                  </Link>
+                </StaggerItem>
               ))}
-            </div>
+            </StaggerContainer>
           </div>
         </section>
       )}
@@ -259,7 +301,8 @@ export default function Home() {
       {/* ===== CTA — Alternating bg #111 ===== */}
       <section className="py-20 sm:py-28 bg-[#111]" data-testid="cta-section">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="text-center max-w-2xl mx-auto">
+          <ScaleIn>
+            <div className="text-center max-w-2xl mx-auto">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-light tracking-tight text-white" style={{ fontFamily: 'Outfit' }}>
               Equip Your Hospital with <span className="text-[#D4AF37] font-medium">Precision Meril</span> Products
             </h2>
@@ -280,7 +323,8 @@ export default function Home() {
                 <Phone size={14} /> Contact Us
               </Link>
             </div>
-          </div>
+            </div>
+          </ScaleIn>
         </div>
       </section>
 

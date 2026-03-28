@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { X, MessageCircle, ArrowRight } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { submitLead } from "@/lib/api";
 import { toast } from "sonner";
 import { COMPANY } from "@/lib/constants";
+import { modalOverlayVariants, modalContentVariants } from "@/lib/motion";
 
 const DISTRICTS = ["Hyderabad","Rangareddy","Medchal-Malkajgiri","Sangareddy","Nalgonda","Warangal","Karimnagar","Khammam","Nizamabad","Adilabad","Mahabubnagar","Medak","Siddipet","Suryapet","Jagtial","Peddapalli","Kamareddy","Mancherial","Wanaparthy","Nagarkurnool","Vikarabad","Jogulamba Gadwal","Rajanna Sircilla","Kumuram Bheem","Mulugu","Narayanpet","Mahabubabad","Jayashankar","Jangaon","Nirmal","Yadadri","Bhadradri","Hanumakonda"];
 
@@ -56,8 +58,18 @@ export default function LeadCaptureModal({ isOpen, onClose, inquiryType, product
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }} data-testid="lead-capture-overlay">
-      <div className="bg-[#0A0A0A] border border-white/10 rounded-sm shadow-2xl w-full max-w-md overflow-hidden" data-testid="lead-capture-modal">
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          variants={modalOverlayVariants} initial="hidden" animate="visible" exit="exit"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4"
+          onClick={(e) => { if (e.target === e.currentTarget) onClose(); }} data-testid="lead-capture-overlay"
+        >
+          <motion.div
+            variants={modalContentVariants} initial="hidden" animate="visible" exit="exit"
+            className="bg-[#0A0A0A] border border-white/10 rounded-sm shadow-2xl w-full max-w-md overflow-hidden"
+            data-testid="lead-capture-modal"
+          >
         <div className="bg-[#0D0D0D] px-6 py-4 flex items-center justify-between border-b border-white/[0.06]">
           <div>
             <h3 className="text-white font-semibold text-base" style={{ fontFamily: 'Outfit' }}>Quick Enquiry</h3>
@@ -100,7 +112,9 @@ export default function LeadCaptureModal({ isOpen, onClose, inquiryType, product
           </button>
           <p className="text-[10px] text-white/25 text-center">Your details help us serve you better. We never share your info.</p>
         </form>
-      </div>
-    </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
