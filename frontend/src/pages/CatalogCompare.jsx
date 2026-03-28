@@ -103,6 +103,16 @@ export default function CatalogCompare() {
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight" data-testid="compare-title">Product Comparison</h1>
             {comparison && <p className="text-sm text-slate-500">{comparison.division} — {comparison.products.length} products</p>}
           </div>
+          {comparison?.comparison_basis && (
+            <div className="ml-auto flex items-center gap-2" data-testid="compare-basis-badge">
+              <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ${
+                comparison.comparison_confidence === "high" ? "text-emerald-700 bg-emerald-50 border-emerald-200" :
+                comparison.comparison_confidence === "medium" ? "text-amber-700 bg-amber-50 border-amber-200" :
+                "text-slate-500 bg-slate-50 border-slate-200"
+              }`}>{comparison.comparison_confidence} confidence</span>
+              <span className="text-[10px] text-slate-400 max-w-xs truncate">{comparison.comparison_guardrail_reason}</span>
+            </div>
+          )}
         </div>
 
         {/* Empty state */}

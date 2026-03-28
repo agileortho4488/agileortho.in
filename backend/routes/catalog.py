@@ -636,7 +636,12 @@ def _format_value(val):
     """Format snake_case values for display."""
     if not val or val == "—":
         return val
-    return val.replace("_", " ").title() if "_" in val else val
+    if "_" in val:
+        return val.replace("_", " ").title()
+    # Also title-case pure lowercase multi-word values
+    if val == val.lower() and len(val) > 2:
+        return val.title()
+    return val
 
 
 def _comparison_card(doc):
@@ -669,8 +674,8 @@ def _comparison_card(doc):
         "brand_system": doc.get("semantic_brand_system", ""),
         "material": doc.get("semantic_material_default", "") or doc.get("material_canonical", ""),
         "coating": doc.get("semantic_coating_default", ""),
-        "system_type": doc.get("semantic_system_type", ""),
-        "implant_class": doc.get("semantic_implant_class", ""),
+        "system_type": _format_value(doc.get("semantic_system_type", "")),
+        "implant_class": _format_value(doc.get("semantic_implant_class", "")),
         "anatomy_scope": doc.get("semantic_anatomy_scope", []),
         "sku_count": doc.get("shadow_sku_count", 0),
         "manufacturer": doc.get("manufacturer", ""),
@@ -715,6 +720,73 @@ async def compare_products(req: CompareRequest):
             status_code=400,
             detail=f"Cannot compare products from different divisions: {', '.join(divisions)}"
         )
+    
+    # ── Clinical-level guardrail ──
+    # Products must be at the same clinical level (plate vs plate, not plate vs screw)
+    impl_classes = set(p.get("semantic_implant_class") or "" for p in products)
+    sys_types = set(p.get("semantic_system_type") or "" for p in products)
+    categories = set(p.get("category_canonical") or "" for p in products)
+    
+    # Remove empties for comparison
+    impl_classes_real = impl_classes - {"", None}
+    sys_types_real = sys_types - {"", None}
+    categories_real = categories - {"", None}
+    
+    # Determine comparison basis and confidence
+    comparison_basis = "unknown"
+    comparison_confidence = "low"
+    guardrail_reasons = []
+    
+    if len(impl_classes_real) == 1 and len(impl_classes_real) > 0:
+        # Same implant class (plate vs plate, stent vs stent)
+        comparison_basis = "same_clinical_class"
+        comparison_confidence = "high"
+        guardrail_reasons.append(f"Same implant class: {list(impl_classes_real)[0]}")
+    elif len(sys_types_real) == 1 and len(sys_types_real) > 0:
+        # Same system type (nail_system vs nail_system)
+        comparison_basis = "same_system_type"
+        comparison_confidence = "high"
+        guardrail_reasons.append(f"Same system type: {list(sys_types_real)[0]}")
+    elif len(categories_real) == 1 and len(categories_real) > 0:
+        # Same category (fallback for unenriched products)
+        comparison_basis = "same_category"
+        comparison_confidence = "medium"
+        guardrail_reasons.append(f"Same category: {list(categories_real)[0]}")
+    elif len(impl_classes_real) > 1:
+        # Different implant classes — block comparison
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot compare different clinical classes: {', '.join(_format_value(c) for c in impl_classes_real)}. Compare products of the same type (e.g., plate vs plate, stent vs stent)."
+        )
+    elif len(sys_types_real) > 1:
+        # Different system types — block
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot compare different system types: {', '.join(_format_value(t) for t in sys_types_real)}. Compare products of the same clinical family."
+        )
+    else:
+        # No semantic data — allow with low confidence
+        comparison_basis = "same_division_only"
+        comparison_confidence = "low"
+        guardrail_reasons.append("No semantic classification — limited comparison")
+    
+    # Check for related brand systems (adds confidence)
+    brand_systems = set(p.get("semantic_brand_system") or "" for p in products) - {"", None}
+    if len(brand_systems) > 1:
+        # Check if brands are related
+        for bs in brand_systems:
+            rel = await fr_col.find_one({
+                "$or": [
+                    {"source_entity_code": bs, "target_entity_code": {"$in": list(brand_systems - {bs})}},
+                    {"target_entity_code": bs, "source_entity_code": {"$in": list(brand_systems - {bs})}},
+                ],
+                "status": "active",
+            })
+            if rel:
+                guardrail_reasons.append(f"Related brand systems: {rel.get('relationship_type', '').replace('_', ' ')}")
+                if comparison_confidence == "medium":
+                    comparison_confidence = "high"
+                break
     
     # Build comparison cards
     cards = [_comparison_card(p) for p in products]
@@ -767,6 +839,9 @@ async def compare_products(req: CompareRequest):
         "products": cards,
         "comparison": comparison_attrs,
         "division": list(divisions)[0],
+        "comparison_basis": comparison_basis,
+        "comparison_confidence": comparison_confidence,
+        "comparison_guardrail_reason": " + ".join(guardrail_reasons),
     }
 
 
@@ -786,11 +861,40 @@ async def get_comparison_suggestions(slug: str):
     division = product.get("division_canonical", "")
     category = product.get("category_canonical", "")
     brand_system = product.get("semantic_brand_system", "")
+    implant_class = product.get("semantic_implant_class", "")
+    system_type = product.get("semantic_system_type", "")
     
     suggestions = []
     seen = {slug}
     
-    # Priority 1: Same category, different brand (clinical alternatives)
+    # Clinical-level filter: only suggest same implant class or system type
+    clinical_filter = {}
+    if implant_class:
+        clinical_filter["semantic_implant_class"] = implant_class
+    elif system_type:
+        clinical_filter["semantic_system_type"] = system_type
+    
+    # Priority 1: Same implant class + same division (clinical alternatives)
+    if clinical_filter:
+        same_class = await catalog_products_col.find({
+            **PILOT_FILTER,
+            **clinical_filter,
+            "division_canonical": division,
+            "slug": {"$ne": slug},
+        }, {"_id": 0, "slug": 1, "product_name_display": 1, "clinical_subtitle": 1,
+            "category_canonical": 1, "brand": 1, "semantic_material_default": 1}
+        ).sort("product_name_display", 1).to_list(10)
+        
+        for doc in same_class:
+            s = doc.get("slug", "")
+            if s not in seen:
+                seen.add(s)
+                suggestions.append({
+                    **_product_card(doc),
+                    "comparison_reason": "Same Clinical Family",
+                })
+    
+    # Priority 2: Same category (fallback for unenriched products)
     if category:
         same_cat = await catalog_products_col.find({
             **PILOT_FILTER,
