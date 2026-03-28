@@ -38,15 +38,23 @@ Core: 6-layer semantic architecture — Raw Extraction → Structured Catalog �
 - Reviewer-facing (not auto-approve) — approve/inspect/reject per suggestion
 - **Testing: 100% pass (59/59 backend + all frontend — iteration_43.json)**
 
+### Phase 5I: Non-Pilot Shared-SKU Cleanup (ENT + Endo Surgery) — COMPLETE (2026-03-28)
+- Phase 1: Merged laser duplicates, split Tracheal T-Tube, fixed Tracheostomy cross-brand, Hernia Mesh, Endocutter devices/reloads, Mericron XL
+- Phase 2: Merged Nasal Splints, split MESIRE Sinus (190 SKUs), Endocutter Reloads, Bladeless Trocar/Kit, MIRUS Endocutter 45/60mm
+- Brand normalization across both divisions
+- Final: ENT 45 products, Endo Surgery 170 products — both 0 shared shadow_ids
+- **Testing: 100% pass (23 backend + all frontend — iteration_44.json)**
+
 ## Current State
 | Metric | Value |
 |--------|-------|
-| Total products | 1,206 |
-| Canonical enriched | ~597 (49.5%) |
-| Staged (pending) | ~607 |
-| Promoted total | ~301 |
-| Safe-to-approve families | 7 |
-| Products clearable via smart | ~35 |
+| Total products | 1,202 |
+| Canonical enriched | 629 (52.3%) |
+| Staged (pending) | 903 |
+| Promoted total | 337 |
+| Pending review | 571 |
+| ENT products | 45 (0 shared) |
+| Endo Surgery products | 170 (0 shared) |
 
 ## Key API Endpoints
 - Catalog: `/api/catalog/divisions`, `/api/catalog/products/{slug}`, `/api/catalog/compare`
@@ -67,9 +75,9 @@ Core: 6-layer semantic architecture — Raw Extraction → Structured Catalog �
 - Password: kOpcELYcEvkVtyDAE5-2uw
 
 ## Priority Stack
-1. ~~Phase 5A-H~~ DONE
-2. **NEXT: Review pending products** using dashboard (user action)
-3. Non-pilot division shared-SKU cleanup (ENT, Endo Surgery)
+1. ~~Phase 5A-I~~ DONE (includes ENT + Endo Surgery SKU cleanup)
+2. **NEXT: Review pending 571 products** using dashboard (user action)
+3. Non-pilot cleanup for Cardiovascular (if needed)
 4. Live DB push (ON HOLD)
 5. WhatsApp bot (ON HOLD — needs Interakt API key)
 
