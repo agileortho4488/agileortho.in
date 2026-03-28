@@ -19,57 +19,77 @@ Core requirement: "SKU Intelligence System" — extract 100% of product data fro
 ### Phase 5A: Semantic Intelligence + Clinical Reclassification — COMPLETE (2026-03-27)
 - 3 MongoDB collections: `brand_system_intelligence`, `family_relationships`, `semantic_rules`
 - 297/1206 products semantically enriched
-- Product names reclassified: brand-centric → clinical-centric
-- Naming rules by division (anatomy+implant for Trauma, device+function for CV, test+analyte for Diagnostics)
+- Clinical-first naming by division
 
 ### Phase 5B: Relationship Graph + Related Products — COMPLETE (2026-03-27)
 - `GET /api/catalog/products/{slug}/related` — 3 labeled buckets
 - Compatible Components, Same Family Alternatives, Related System Products
-- Only high-confidence data shown, empty for unenriched products
-- Admin password secured (moved to .env)
+- Admin password secured
 
 ### Phase 5C: Split Shared-SKU Products — COMPLETE (2026-03-28)
+- 6 pools resolved, 1,296 SKUs reassigned, 27 products merged
+- MBOSS screws promoted to high confidence
 
-**Pools Resolved:**
-| Pool | Action | Before | After |
-|------|--------|--------|-------|
-| DOA Diagnostics | Split by SKU code pattern | 7 products × 80 shared SKUs | Individual: AMP=28, COC=14, MOR=12, OPI=12, THC=75, Single=179, Multi=243 |
-| AutoQuant Reagents | Split by code prefix | 3 products × 50 shared | CRP=3, Lipase/Albumin distributed |
-| PFRN Nails | Split by nail type pattern | 3 products × 59 shared | PFRN=59, Reconstruction=14, Generic IM=59 |
-| PFRN Locking Bolts | Merged 27 size products | 27 individual bolt sizes → 1 parent | "Locking Bolts 4.9mm" with all bolt SKUs |
-| Humerus Plates | Merged 5 duplicates | 5 duplicate products | 1 consolidated with 34 SKUs |
-| Proviso Test Kits | Split by test type | 4 products × 15 shared | Individual test kits |
+### Phase 5D: Product Comparison Feature — COMPLETE (2026-03-28)
 
-**Other Fixes:**
-- MBOSS screw products promoted to `mapping_confidence: "high"` — now appear as Compatible Components
-- 1,296 total SKUs reassigned
-- 27 products merged (bolt sizes → parent family)
-- 6 shared-SKU pools resolved
+**API Endpoints:**
+- `POST /api/catalog/compare` — Side-by-side comparison of 2-4 products
+  - Input: `{"slugs": ["slug1", "slug2"]}`
+  - Returns: `{products: [...], comparison: [{label, values, is_different}], division}`
+- `GET /api/catalog/compare/suggestions/{slug}` — Suggest comparable products
+  - Returns: `{suggestions: [{slug, product_name_display, comparison_reason}]}`
 
-**Remaining Shared-SKU Issues (non-pilot divisions):**
-- ENT: Tracheostomy tubes (24 SKUs × 3 products), MESIRE balloons (19 SKUs × 10 products), T-Tubes (6 SKUs × 7 products)
-- Endo Surgery: Endocutters (8 SKUs × 8 products), Power Endocutters (8 SKUs × 8 products), Trocars (7 SKUs × 6 products)
-- Cardiovascular: Flomero (12 SKUs × 3 products)
+**Supported Comparison Types:**
+| Type | Example |
+|------|---------|
+| Coated vs Uncoated | ARMAR (Titanium) vs AURIC (TiNbN Coated) |
+| Same Category Different Brand | Any products in same category_canonical |
+| Related System Products | Products linked via family_relationships |
+| Multi-product (up to 4) | Any 2-4 products from same division |
+
+**Guardrails:**
+- Cross-division comparison blocked (400 error)
+- Maximum 4 products
+- Minimum 2 products
+- Only pilot-filter products (mapping_confidence=high)
+- Merged/draft products excluded
+
+**Comparison Attributes:**
+Division, Category, Brand System, Material, Coating, System Type, Implant Class, technical specs, Available Variants (SKUs), Anatomy Scope, Description
+
+**Example Comparisons:**
+1. ARMAR Titanium Plates vs AURIC 2.4mm LPS Distal Radial Volar Buttress Plate → Highlights coating difference (TiNbN)
+2. BioMime vs MOZEC → Cardiovascular stent vs balloon comparison
+3. Suggestions for AURIC plate → Shows ARMAR base variant, MBOSS screws, same-category alternatives
+
+**Frontend:**
+- `/catalog/compare` page with side-by-side table
+- Amber highlight on differing rows
+- "Add Product" button with search and suggestions
+- "Compare with Similar" button on product detail pages
+- Empty state with "Browse Portfolio" link
 
 ### Test Results
 - iteration_37: Phase 5A — 100%
 - iteration_38: Phase 5B — 100%
-- iteration_39: Phase 5C — 100% (14/14 backend, 100% frontend)
+- iteration_39: Phase 5C — 100%
+- iteration_40: Phase 5D — 100% (14/14 backend, 100% frontend)
 
 ## Current Priority Stack
-1. ~~Phase 5A-C~~ DONE
-2. **Phase 5D: Product Comparison Feature** (using semantic attributes)
-3. **Phase 5E: Re-audit vague/mixed pages** (using semantic rules)
-4. Non-pilot division shared-SKU cleanup (ENT, Endo Surgery)
-5. Live DB push (ON HOLD)
-6. WhatsApp bot (ON HOLD — needs Interakt API key)
+1. ~~Phase 5A-D~~ DONE
+2. **Phase 5E: Re-audit vague/mixed pages** (using semantic rules)
+3. Non-pilot division shared-SKU cleanup (ENT, Endo Surgery)
+4. Live DB push (ON HOLD)
+5. WhatsApp bot (ON HOLD — needs Interakt API key)
 
 ## Key API Endpoints
-- `GET /api/catalog/divisions` — all divisions with product counts
-- `GET /api/catalog/divisions/{slug}` — division detail with products
-- `GET /api/catalog/products/{slug}` — product detail with SKUs
-- `GET /api/catalog/products/{slug}/related` — relationship-based related products
-- `GET /api/catalog/brand-intelligence/{entity_code}` — semantic brand lookup
+- `GET /api/catalog/divisions`
+- `GET /api/catalog/divisions/{slug}`
+- `GET /api/catalog/products/{slug}`
+- `GET /api/catalog/products/{slug}/related`
+- `POST /api/catalog/compare`
+- `GET /api/catalog/compare/suggestions/{slug}`
+- `GET /api/catalog/brand-intelligence/{entity_code}`
 
 ## Admin Access
 - URL: /admin/login
