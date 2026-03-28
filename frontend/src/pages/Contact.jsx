@@ -42,9 +42,9 @@ export default function Contact() {
       {/* Header */}
       <section className="bg-[#0D0D0D] py-16" data-testid="contact-hero">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center">
-          <p className="text-emerald-400 text-xs font-bold uppercase tracking-[0.2em] mb-3">Get In Touch</p>
-          <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight" style={{ fontFamily: "Chivo" }}>
-            Request a Quote or Inquiry
+          <p className="text-[#D4AF37] text-xs font-bold uppercase tracking-[0.2em] mb-3">Get In Touch</p>
+          <h1 className="text-3xl sm:text-4xl font-light text-white tracking-tight" style={{ fontFamily: "Outfit" }}>
+            Equip Your Hospital with Precision Devices
           </h1>
           <p className="mt-3 text-white/45 max-w-lg mx-auto">
             Need bulk pricing, product samples, or technical consultation? We respond within 24 hours.
@@ -57,7 +57,7 @@ export default function Contact() {
           {/* Contact Info */}
           <div className="space-y-6">
             <div className="bg-[#0A0A0A] border border-white/10 rounded-sm p-6">
-              <h3 className="font-bold text-white mb-4" style={{ fontFamily: "Chivo" }}>Contact Information</h3>
+              <h3 className="font-bold text-white mb-4" style={{ fontFamily: "Outfit" }}>Contact Information</h3>
               <ul className="space-y-4">
                 <li className="flex items-start gap-3">
                   <MapPin size={18} className="text-[#2DD4BF] mt-0.5 shrink-0" />
@@ -109,7 +109,7 @@ export default function Contact() {
                   <div className="w-14 h-14 rounded-full bg-[#2DD4BF]/10 flex items-center justify-center mx-auto mb-4">
                     <Send size={24} className="text-[#2DD4BF]" />
                   </div>
-                  <h3 className="text-xl font-bold text-white" style={{ fontFamily: "Chivo" }}>Inquiry Submitted!</h3>
+                  <h3 className="text-xl font-bold text-white" style={{ fontFamily: "Outfit" }}>Inquiry Submitted!</h3>
                   <p className="text-white/40 mt-2 max-w-sm mx-auto">
                     Thank you for your interest. Our team will contact you within 24 hours with pricing and availability.
                   </p>
@@ -122,7 +122,7 @@ export default function Contact() {
                 </div>
               ) : (
                 <>
-                  <h3 className="text-lg font-bold text-white mb-6" style={{ fontFamily: "Chivo" }}>Submit Your Inquiry</h3>
+                  <h3 className="text-lg font-bold text-white mb-6" style={{ fontFamily: "Outfit" }}>Submit Your Inquiry</h3>
                   <form onSubmit={handleSubmit} className="space-y-4" data-testid="contact-form">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
@@ -131,7 +131,7 @@ export default function Contact() {
                           type="text"
                           value={formData.name}
                           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                          className="w-full px-3 py-2.5 border border-white/10 rounded-sm text-sm outline-none focus:border-emerald-500"
+                          className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-sm text-sm text-white placeholder:text-white/30 outline-none focus:border-[#D4AF37]/50"
                           placeholder="Dr. Rajesh Kumar"
                           data-testid="contact-name-input"
                         />
@@ -142,7 +142,7 @@ export default function Contact() {
                           type="text"
                           value={formData.hospital_clinic}
                           onChange={(e) => setFormData({ ...formData, hospital_clinic: e.target.value })}
-                          className="w-full px-3 py-2.5 border border-white/10 rounded-sm text-sm outline-none focus:border-emerald-500"
+                          className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-sm text-sm text-white placeholder:text-white/30 outline-none focus:border-[#D4AF37]/50"
                           placeholder="City Hospital"
                           data-testid="contact-hospital-input"
                         />
@@ -155,7 +155,7 @@ export default function Contact() {
                           type="tel"
                           value={formData.phone_whatsapp}
                           onChange={(e) => setFormData({ ...formData, phone_whatsapp: e.target.value })}
-                          className="w-full px-3 py-2.5 border border-white/10 rounded-sm text-sm outline-none focus:border-emerald-500"
+                          className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-sm text-sm text-white placeholder:text-white/30 outline-none focus:border-[#D4AF37]/50"
                           placeholder="+91 98765 43210"
                           data-testid="contact-phone-input"
                         />
@@ -166,7 +166,7 @@ export default function Contact() {
                           type="email"
                           value={formData.email}
                           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                          className="w-full px-3 py-2.5 border border-white/10 rounded-sm text-sm outline-none focus:border-emerald-500"
+                          className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-sm text-sm text-white placeholder:text-white/30 outline-none focus:border-[#D4AF37]/50"
                           placeholder="doctor@hospital.in"
                         />
                       </div>
@@ -177,7 +177,7 @@ export default function Contact() {
                         <select
                           value={formData.district}
                           onChange={(e) => setFormData({ ...formData, district: e.target.value })}
-                          className="w-full px-3 py-2.5 border border-white/10 rounded-sm text-sm outline-none focus:border-emerald-500 bg-[#0A0A0A]"
+                          className="w-full px-3 py-2.5 bg-[#0A0A0A] border border-white/10 rounded-sm text-sm text-white/70 outline-none focus:border-[#D4AF37]/50"
                         >
                           <option value="">Select District</option>
                           {DISTRICTS.map((d) => <option key={d} value={d}>{d}</option>)}
@@ -188,7 +188,7 @@ export default function Contact() {
                         <select
                           value={formData.inquiry_type}
                           onChange={(e) => setFormData({ ...formData, inquiry_type: e.target.value })}
-                          className="w-full px-3 py-2.5 border border-white/10 rounded-sm text-sm outline-none focus:border-emerald-500 bg-[#0A0A0A]"
+                          className="w-full px-3 py-2.5 bg-[#0A0A0A] border border-white/10 rounded-sm text-sm text-white/70 outline-none focus:border-[#D4AF37]/50"
                           data-testid="contact-inquiry-type"
                         >
                           <option value="Bulk Quote">Bulk Quote</option>
@@ -204,7 +204,7 @@ export default function Contact() {
                         type="text"
                         value={formData.product_interest}
                         onChange={(e) => setFormData({ ...formData, product_interest: e.target.value })}
-                        className="w-full px-3 py-2.5 border border-white/10 rounded-sm text-sm outline-none focus:border-emerald-500"
+                        className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-sm text-sm text-white placeholder:text-white/30 outline-none focus:border-[#D4AF37]/50"
                         placeholder="e.g., Destiknee TKR, BioMime Stents, AutoQuant Analyzers"
                       />
                     </div>
@@ -214,7 +214,7 @@ export default function Contact() {
                         value={formData.message}
                         onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                         rows={4}
-                        className="w-full px-3 py-2.5 border border-white/10 rounded-sm text-sm outline-none focus:border-emerald-500 resize-none"
+                        className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-sm text-sm text-white placeholder:text-white/30 outline-none focus:border-[#D4AF37]/50 resize-none"
                         placeholder="Quantity needed, delivery location, any specific requirements..."
                         data-testid="contact-message-input"
                       />

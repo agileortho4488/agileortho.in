@@ -66,7 +66,7 @@ export default function Home() {
                 Telangana
               </h1>
 
-              <p className="mt-6 text-base sm:text-lg text-white/70 max-w-lg leading-relaxed animate-fade-up stagger-3" data-testid="hero-subtitle">
+              <p className="mt-6 text-base sm:text-lg text-white/70 max-w-lg leading-[1.75] animate-fade-up stagger-3" data-testid="hero-subtitle">
                 Browse <span className="text-white font-semibold">{totalProducts > 0 ? `${totalProducts}+` : "800+"}</span> verified products across{" "}
                 <span className="text-white font-semibold">{divisions.length || 13}</span> clinical divisions.
                 Serving hospitals and clinics in all 33 districts.
@@ -83,7 +83,7 @@ export default function Home() {
                       onChange={(e) => setSearchQuery(e.target.value)}
                       onFocus={() => setSearchFocused(true)}
                       onBlur={() => setSearchFocused(false)}
-                      placeholder="Search products, SKUs, brands..."
+                      placeholder="Search by name or SKU (e.g., KET 2.4mm Locking Plate)"
                       className={`w-full bg-white/5 border rounded-l-sm pl-11 pr-4 py-3.5 text-sm text-white placeholder:text-white/30 focus:outline-none transition-all duration-300 ${searchFocused ? "border-[#D4AF37]/60 bg-white/8 shadow-lg shadow-[#D4AF37]/5" : "border-white/10"}`}
                       data-testid="hero-search-input"
                     />
@@ -100,9 +100,9 @@ export default function Home() {
                 <Link to="/catalog" className="group inline-flex items-center gap-2 bg-[#D4AF37] hover:bg-[#F2C94C] text-black font-semibold rounded-sm px-7 py-3.5 text-sm transition-all hover:shadow-lg hover:shadow-[#D4AF37]/20" data-testid="hero-cta-catalog">
                   Browse Catalog <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
                 </Link>
-                <a href={`https://wa.me/${COMPANY.whatsapp.replace("+", "")}`} target="_blank" rel="noopener noreferrer"
-                  className="group inline-flex items-center gap-2 border border-white/15 hover:border-white/30 hover:bg-white/5 text-white font-medium rounded-sm px-7 py-3.5 text-sm transition-all" data-testid="hero-cta-whatsapp">
-                  <MessageCircle size={14} /> WhatsApp Sales
+                <a href={`https://wa.me/${COMPANY.whatsapp.replace("+", "")}?text=${encodeURIComponent("Hi, I'd like to check product availability and pricing for my hospital.")}`} target="_blank" rel="noopener noreferrer"
+                  className="group inline-flex items-center gap-2 border border-white/15 hover:border-[#D4AF37]/40 hover:bg-white/5 text-white font-medium rounded-sm px-7 py-3.5 text-sm transition-all" data-testid="hero-cta-availability">
+                  <MessageCircle size={14} /> Check Availability & Pricing
                 </a>
               </div>
             </div>
@@ -160,7 +160,7 @@ export default function Home() {
             <p className="mt-3 text-sm text-white/50 max-w-md mx-auto">Select a division to explore verified products with specifications and SKU details</p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
             {divisions.map((div, i) => {
               const Icon = DIVISION_ICONS[div.name] || Bone;
               return (
@@ -226,15 +226,20 @@ export default function Home() {
                       <Bone size={36} className="text-white/8" />
                     </div>
                   )}
-                  <div className="p-5">
+                  <div className="p-5 text-center">
                     <p className="text-[11px] text-[#D4AF37] font-semibold uppercase tracking-wider mb-1.5">{p.division_canonical || p.division}</p>
                     <h3 className="text-sm font-semibold text-white group-hover:text-[#D4AF37] transition-colors line-clamp-2 leading-snug" style={{ fontFamily: 'Outfit' }}>
                       {p.product_name_display || p.product_name}
                     </h3>
-                    {p.semantic_brand_system && (
+                    {p.semantic_material_default && (
+                      <span className="inline-block mt-2 text-[10px] font-semibold text-[#2DD4BF] bg-[#2DD4BF]/10 border border-[#2DD4BF]/20 px-2.5 py-0.5 rounded">
+                        {p.semantic_material_default}
+                      </span>
+                    )}
+                    {!p.semantic_material_default && p.semantic_brand_system && (
                       <p className="mt-1.5 text-xs text-white/45">{p.semantic_brand_system}</p>
                     )}
-                    <div className="mt-4 flex items-center gap-1 text-xs text-[#D4AF37] font-medium opacity-0 group-hover:opacity-100 transition-all duration-300">
+                    <div className="mt-3 flex items-center justify-center gap-1 text-xs text-[#D4AF37] font-medium opacity-0 group-hover:opacity-100 transition-all duration-300">
                       View Details <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
                     </div>
                   </div>
@@ -250,19 +255,31 @@ export default function Home() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="text-center max-w-2xl mx-auto">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-light tracking-tight text-white" style={{ fontFamily: 'Outfit' }}>
-              Ready to <span className="text-[#D4AF37] font-medium">order</span>?
+              Equip Your Hospital with <span className="text-[#D4AF37] font-medium">Precision Meril</span> Products
             </h2>
             <p className="mt-4 text-sm sm:text-base text-white/55">
               Connect with our product specialists for bulk quotes, hospital procurement, and technical specifications.
             </p>
-            <div className="mt-10 flex flex-wrap justify-center gap-4">
-              <a href={`https://wa.me/${COMPANY.whatsapp.replace("+", "")}`} target="_blank" rel="noopener noreferrer"
-                className="group inline-flex items-center gap-2 bg-[#D4AF37] hover:bg-[#F2C94C] text-black font-semibold rounded-sm px-8 py-3.5 text-sm transition-all hover:shadow-lg hover:shadow-[#D4AF37]/20" data-testid="cta-whatsapp">
-                <MessageCircle size={14} /> WhatsApp Sales
+
+            {/* Email Capture for Catalog */}
+            <div className="mt-8 max-w-md mx-auto">
+              <form onSubmit={(e) => { e.preventDefault(); const email = e.target.email.value; if(email) { window.open(`https://wa.me/${COMPANY.whatsapp.replace("+", "")}?text=${encodeURIComponent(`Hi, please send the Agile Ortho catalog to ${email}`)}`, '_blank'); e.target.reset(); } }} className="flex items-center gap-0" data-testid="cta-email-capture">
+                <input type="email" name="email" placeholder="Enter email for catalog PDF" className="flex-1 bg-white/5 border border-white/10 rounded-l-sm px-4 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-[#D4AF37]/50 transition-colors" data-testid="cta-email-input" />
+                <button type="submit" className="bg-[#D4AF37] hover:bg-[#F2C94C] text-black font-semibold px-5 py-3 rounded-r-sm text-sm transition-all hover:shadow-lg hover:shadow-[#D4AF37]/20 whitespace-nowrap" data-testid="cta-email-btn">
+                  Get Catalog
+                </button>
+              </form>
+              <p className="mt-2 text-[11px] text-white/30">We'll send you the complete product catalog via WhatsApp</p>
+            </div>
+
+            <div className="mt-8 flex flex-wrap justify-center gap-4">
+              <a href={`https://wa.me/${COMPANY.whatsapp.replace("+", "")}?text=${encodeURIComponent("Hi, I'd like to discuss bulk procurement for my hospital.")}`} target="_blank" rel="noopener noreferrer"
+                className="group inline-flex items-center gap-2 border border-white/15 hover:border-[#D4AF37]/40 hover:bg-white/5 text-white font-medium rounded-sm px-8 py-3.5 text-sm transition-all" data-testid="cta-whatsapp">
+                <MessageCircle size={14} /> Talk to Sales
               </a>
-              <a href={`tel:${COMPANY.phone}`} className="group inline-flex items-center gap-2 border border-white/15 hover:border-white/30 hover:bg-white/5 text-white font-medium rounded-sm px-8 py-3.5 text-sm transition-all" data-testid="cta-phone">
-                <Phone size={14} /> Call Now
-              </a>
+              <Link to="/contact" className="group inline-flex items-center gap-2 border border-white/15 hover:border-white/30 hover:bg-white/5 text-white font-medium rounded-sm px-8 py-3.5 text-sm transition-all" data-testid="cta-contact">
+                <Phone size={14} /> Contact Us
+              </Link>
             </div>
           </div>
         </div>

@@ -233,19 +233,20 @@ export default function CatalogDivision() {
                       </span>
                     )}
                   </div>
-                  <div className="p-5">
+                  <div className="p-5 text-center">
                     {p.category && <p className="text-[11px] text-[#D4AF37] font-semibold uppercase tracking-wider mb-1.5">{p.category}</p>}
                     <h3 className="font-semibold text-white group-hover:text-[#D4AF37] transition-colors line-clamp-2 leading-snug" style={{ fontFamily: 'Outfit' }}>{p.product_name_display}</h3>
                     <p className="text-xs text-white/45 mt-1.5 line-clamp-2 leading-relaxed">{p.description}</p>
-                    <div className="mt-4 flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
-                        {p.semantic_material_default && (
-                          <span className="text-[10px] font-semibold text-[#2DD4BF] bg-[#2DD4BF]/10 border border-[#2DD4BF]/20 px-2 py-0.5 rounded">{p.semantic_material_default}</span>
-                        )}
-                      </div>
-                      <span className="inline-flex items-center gap-1 text-xs text-[#D4AF37] font-semibold opacity-0 group-hover:opacity-100 transition-all duration-300">
-                        Details <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
-                      </span>
+                    <div className="mt-3 flex items-center justify-center gap-1.5 flex-wrap">
+                      {p.semantic_material_default && (
+                        <span className="text-[10px] font-semibold text-[#2DD4BF] bg-[#2DD4BF]/10 border border-[#2DD4BF]/20 px-2.5 py-0.5 rounded">{p.semantic_material_default}</span>
+                      )}
+                      {p.brand && (
+                        <span className="text-[10px] font-semibold text-[#D4AF37] bg-[#D4AF37]/10 border border-[#D4AF37]/20 px-2.5 py-0.5 rounded">{p.brand}</span>
+                      )}
+                    </div>
+                    <div className="mt-3 flex items-center justify-center gap-1 text-xs text-[#D4AF37] font-semibold opacity-0 group-hover:opacity-100 transition-all duration-300">
+                      View Details <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
                     </div>
                   </div>
                 </Link>

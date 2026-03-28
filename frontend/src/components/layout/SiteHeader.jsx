@@ -131,15 +131,28 @@ export default function SiteHeader() {
           </nav>
 
           <div className="flex items-center gap-3">
-            <a
-              href={`https://wa.me/${COMPANY.whatsapp.replace("+", "")}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hidden sm:inline-flex items-center gap-2 rounded-sm bg-[#D4AF37] px-5 py-2 text-sm font-semibold text-black hover:bg-[#F2C94C] transition-all hover:shadow-lg hover:shadow-[#D4AF37]/20"
-              data-testid="header-whatsapp-btn"
-            >
-              <MessageCircle size={14} strokeWidth={2} /> WhatsApp
-            </a>
+            {/* WhatsApp Dropdown */}
+            <div className="hidden sm:block relative" data-testid="header-whatsapp-dropdown">
+              <DropdownMenu trigger={<span className="inline-flex items-center gap-2 rounded-sm bg-[#D4AF37] px-5 py-2 text-sm font-semibold text-black hover:bg-[#F2C94C] transition-all hover:shadow-lg hover:shadow-[#D4AF37]/20"><MessageCircle size={14} strokeWidth={2} /> WhatsApp</span>} testId="header-wa-menu">
+                <div className="px-1">
+                  <a href={`https://wa.me/${COMPANY.whatsapp.replace("+", "")}?text=${encodeURIComponent("Hi, I'd like to check product availability and pricing for my hospital.")}`} target="_blank" rel="noopener noreferrer"
+                    className="flex flex-col px-3 py-2.5 rounded-sm hover:bg-white/5 transition-colors group" data-testid="wa-sales">
+                    <span className="text-sm text-white/70 group-hover:text-white font-medium transition-colors">Sales & Availability</span>
+                    <span className="text-xs text-white/35">Check pricing & stock</span>
+                  </a>
+                  <a href={`https://wa.me/${COMPANY.whatsapp.replace("+", "")}?text=${encodeURIComponent("Hi, I'd like to request the Agile Ortho product catalog (PDF) for our hospital.")}`} target="_blank" rel="noopener noreferrer"
+                    className="flex flex-col px-3 py-2.5 rounded-sm hover:bg-white/5 transition-colors group" data-testid="wa-catalog">
+                    <span className="text-sm text-white/70 group-hover:text-white font-medium transition-colors">Request Catalog (PDF)</span>
+                    <span className="text-xs text-white/35">Get the full product list</span>
+                  </a>
+                  <a href={`https://wa.me/${COMPANY.whatsapp.replace("+", "")}?text=${encodeURIComponent("Hi, I need technical support regarding a Meril medical device.")}`} target="_blank" rel="noopener noreferrer"
+                    className="flex flex-col px-3 py-2.5 rounded-sm hover:bg-white/5 transition-colors group" data-testid="wa-support">
+                    <span className="text-sm text-white/70 group-hover:text-white font-medium transition-colors">Technical Support</span>
+                    <span className="text-xs text-white/35">Device queries & assistance</span>
+                  </a>
+                </div>
+              </DropdownMenu>
+            </div>
 
             <button
               data-testid="mobile-menu-toggle"

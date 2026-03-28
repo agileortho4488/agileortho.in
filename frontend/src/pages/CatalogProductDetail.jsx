@@ -156,8 +156,8 @@ export default function CatalogProductDetail() {
     finally { setSubmitting(false); }
   };
 
-  if (loading) return <div className="flex items-center justify-center py-40 font-[Manrope]"><div className="w-8 h-8 border-2 border-amber-600 border-t-transparent rounded animate-spin" /></div>;
-  if (!product) return <div className="text-center py-40 font-[Manrope]"><Package size={48} className="mx-auto text-white/35 mb-4" /><p className="text-white/70 font-semibold">Product not found</p><Link to="/catalog" className="text-[#D4AF37] font-medium mt-3 inline-block">Back to Products</Link></div>;
+  if (loading) return <div className="flex items-center justify-center py-40 bg-[#0A0A0A]"><div className="w-8 h-8 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" /></div>;
+  if (!product) return <div className="text-center py-40 bg-[#0A0A0A]"><Package size={48} className="mx-auto text-white/35 mb-4" /><p className="text-white/70 font-semibold">Product not found</p><Link to="/catalog" className="text-[#D4AF37] font-medium mt-3 inline-block">Back to Products</Link></div>;
 
   const specs = product.technical_specifications || {};
   const specEntries = Object.entries(specs).filter(([, v]) => v !== null && v !== "");
@@ -253,7 +253,7 @@ export default function CatalogProductDetail() {
             {/* Brand + Division — P1: "AURIC by Meril" */}
             <div className="flex items-center gap-2 flex-wrap">
               <BrandDisplay brand={product.brand} parentBrand={product.parent_brand} />
-              <span className="text-[10px] font-bold uppercase tracking-widest text-teal-700 bg-teal-50 border border-teal-100 px-2.5 py-1 rounded" data-testid="catalog-division-badge">{product.division}</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[#2DD4BF] bg-[#2DD4BF]/10 border border-[#2DD4BF]/20 px-2.5 py-1 rounded" data-testid="catalog-division-badge">{product.division}</span>
               {product.category && <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 bg-white/5 border border-white/[0.06] px-2.5 py-1 rounded">{product.category}</span>}
             </div>
 
@@ -305,10 +305,12 @@ export default function CatalogProductDetail() {
                 <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
                   <Stethoscope size={15} className="text-[#D4AF37]" /> Key Specifications
                 </h3>
-                <ul className="space-y-2">
+                <ul className="space-y-2.5">
                   {specEntries.slice(0, 6).map(([key, value]) => (
                     <li key={key} className="flex items-start gap-2.5 text-sm text-white/50">
-                      <CheckCircle2 size={15} className="text-[#D4AF37] mt-0.5 shrink-0" />
+                      <div className="w-5 h-5 rounded-full bg-[#2DD4BF]/15 flex items-center justify-center mt-0.5 shrink-0">
+                        <CheckCircle2 size={12} className="text-[#2DD4BF]" />
+                      </div>
                       <span><span className="font-semibold text-white/70">{key}:</span> {typeof value === "object" ? (Array.isArray(value) ? value.join(", ") : JSON.stringify(value)) : String(value)}</span>
                     </li>
                   ))}
@@ -429,7 +431,7 @@ export default function CatalogProductDetail() {
                 <input
                   type="text" value={skuSearch} onChange={(e) => { setSkuSearch(e.target.value); setSkuPage(1); }}
                   placeholder="Search SKU codes, side, length..."
-                  className="w-full sm:w-80 pl-9 pr-4 py-2.5 border border-white/10 rounded-sm text-sm text-white/70 placeholder-slate-400 focus:outline-none focus:border-amber-400 transition-colors"
+                  className="w-full sm:w-80 pl-9 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-sm text-sm text-white/70 placeholder-white/30 focus:outline-none focus:border-[#D4AF37]/50 transition-colors"
                   data-testid="sku-search-input"
                 />
               </div>
@@ -600,15 +602,15 @@ export default function CatalogProductDetail() {
                 <p className="text-white/45 text-xs mt-1">For: {product.product_name_display}{product.brand ? ` (${product.brand})` : ""}</p>
               </div>
               <form onSubmit={handleSubmitQuote} className="p-6 space-y-3">
-                <input type="text" placeholder="Your Name *" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full px-3.5 py-2.5 border border-white/10 rounded-sm text-sm outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/10 transition-all" data-testid="catalog-quote-name" />
-                <input type="text" placeholder="Hospital / Clinic" value={formData.hospital_clinic} onChange={(e) => setFormData({ ...formData, hospital_clinic: e.target.value })} className="w-full px-3.5 py-2.5 border border-white/10 rounded-sm text-sm outline-none focus:border-amber-500 transition-all" data-testid="catalog-quote-hospital" />
-                <input type="tel" placeholder="WhatsApp Number *" value={formData.phone_whatsapp} onChange={(e) => setFormData({ ...formData, phone_whatsapp: e.target.value })} className="w-full px-3.5 py-2.5 border border-white/10 rounded-sm text-sm outline-none focus:border-amber-500 transition-all" data-testid="catalog-quote-phone" />
-                <input type="email" placeholder="Email Address" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full px-3.5 py-2.5 border border-white/10 rounded-sm text-sm outline-none focus:border-amber-500 transition-all" />
-                <select value={formData.district} onChange={(e) => setFormData({ ...formData, district: e.target.value })} className="w-full px-3.5 py-2.5 border border-white/10 rounded-sm text-sm outline-none focus:border-amber-500 bg-[#0A0A0A] transition-all">
+                <input type="text" placeholder="Your Name *" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full px-3.5 py-2.5 bg-white/5 border border-white/10 rounded-sm text-sm text-white placeholder:text-white/30 outline-none focus:border-[#D4AF37]/50 focus:ring-2 focus:ring-[#D4AF37]/10 transition-all" data-testid="catalog-quote-name" />
+                <input type="text" placeholder="Hospital / Clinic" value={formData.hospital_clinic} onChange={(e) => setFormData({ ...formData, hospital_clinic: e.target.value })} className="w-full px-3.5 py-2.5 bg-white/5 border border-white/10 rounded-sm text-sm text-white placeholder:text-white/30 outline-none focus:border-[#D4AF37]/50 transition-all" data-testid="catalog-quote-hospital" />
+                <input type="tel" placeholder="WhatsApp Number *" value={formData.phone_whatsapp} onChange={(e) => setFormData({ ...formData, phone_whatsapp: e.target.value })} className="w-full px-3.5 py-2.5 bg-white/5 border border-white/10 rounded-sm text-sm text-white placeholder:text-white/30 outline-none focus:border-[#D4AF37]/50 transition-all" data-testid="catalog-quote-phone" />
+                <input type="email" placeholder="Email Address" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full px-3.5 py-2.5 bg-white/5 border border-white/10 rounded-sm text-sm text-white placeholder:text-white/30 outline-none focus:border-[#D4AF37]/50 transition-all" />
+                <select value={formData.district} onChange={(e) => setFormData({ ...formData, district: e.target.value })} className="w-full px-3.5 py-2.5 bg-[#0A0A0A] border border-white/10 rounded-sm text-sm text-white/70 outline-none focus:border-[#D4AF37]/50 transition-all">
                   <option value="">Select District (Telangana)</option>
                   {DISTRICTS.map((d) => <option key={d} value={d}>{d}</option>)}
                 </select>
-                <textarea placeholder="Quantity needed, specific requirements..." value={formData.message} onChange={(e) => setFormData({ ...formData, message: e.target.value })} rows={3} className="w-full px-3.5 py-2.5 border border-white/10 rounded-sm text-sm outline-none focus:border-amber-500 resize-none transition-all" />
+                <textarea placeholder="Quantity needed, specific requirements..." value={formData.message} onChange={(e) => setFormData({ ...formData, message: e.target.value })} rows={3} className="w-full px-3.5 py-2.5 bg-white/5 border border-white/10 rounded-sm text-sm text-white placeholder:text-white/30 outline-none focus:border-[#D4AF37]/50 resize-none transition-all" />
                 <div className="flex gap-3 pt-1">
                   <button type="button" onClick={() => setShowQuoteForm(false)} className="flex-1 px-4 py-2.5 border border-white/10 text-white/50 text-sm font-semibold rounded-sm hover:bg-white/5 transition-colors">Cancel</button>
                   <button type="submit" disabled={submitting} className="flex-1 px-4 py-2.5 bg-[#D4AF37] text-white text-sm font-bold rounded-sm hover:bg-[#F2C94C] disabled:opacity-50 transition-colors" data-testid="catalog-submit-quote">{submitting ? "Submitting..." : "Submit Request"}</button>

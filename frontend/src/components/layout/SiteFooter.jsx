@@ -1,69 +1,66 @@
 import { Link } from "react-router-dom";
-import { Phone, Mail, MapPin, MessageCircle } from "lucide-react";
+import { Phone, Mail, MapPin } from "lucide-react";
 import { COMPANY, DISCLAIMER_LINES } from "@/lib/constants";
 
 export default function SiteFooter() {
   return (
     <footer data-testid="site-footer" className="border-t border-white/[0.06] bg-black relative overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 relative z-10">
-        <div className="grid gap-10 md:grid-cols-5">
+        <div className="grid gap-10 sm:gap-8 md:grid-cols-4">
           {/* Brand */}
-          <div className="md:col-span-2">
+          <div>
             <img src="/ao_logo_white.png" alt="Agile Ortho" className="h-10 w-auto" />
             <p data-testid="footer-tagline" className="mt-2 text-xs font-bold text-[#D4AF37] tracking-[0.2em] uppercase">
               {COMPANY.tagline}
             </p>
-            <p data-testid="footer-subtitle" className="mt-4 max-w-md text-sm leading-relaxed text-white/55">
-              Authorized Meril Life Sciences master distributor serving hospitals, clinics, and diagnostic centers across all 33 districts of Telangana.
+            <p data-testid="footer-subtitle" className="mt-4 max-w-xs text-sm leading-relaxed text-white/55">
+              Authorized Meril Life Sciences master distributor serving hospitals and clinics across Telangana.
             </p>
-            <div className="mt-6 space-y-2.5">
+            <div className="mt-5 space-y-2">
+              <div className="flex items-start gap-2.5 text-sm text-white/55">
+                <MapPin size={13} className="text-[#D4AF37] mt-0.5 shrink-0" />
+                <span>Hayathnagar, Hyderabad, Telangana - 500074</span>
+              </div>
               <a href={`tel:${COMPANY.phone}`} className="flex items-center gap-2.5 text-sm text-white/55 hover:text-white transition-colors">
                 <Phone size={13} className="text-[#D4AF37]" /> {COMPANY.phone}
-              </a>
-              <a href={`https://wa.me/${COMPANY.whatsapp.replace("+", "")}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2.5 text-sm text-white/55 hover:text-white transition-colors">
-                <MessageCircle size={13} className="text-[#D4AF37]" /> {COMPANY.whatsapp} (WhatsApp)
               </a>
               <a href={`mailto:${COMPANY.email}`} className="flex items-center gap-2.5 text-sm text-white/55 hover:text-white transition-colors">
                 <Mail size={13} className="text-[#D4AF37]" /> {COMPANY.email}
               </a>
-              <div className="flex items-start gap-2.5 text-sm text-white/55">
-                <MapPin size={13} className="text-[#D4AF37] mt-0.5 shrink-0" /> {COMPANY.address}
-              </div>
             </div>
           </div>
 
-          {/* Quick Links */}
-          <div>
-            <div className="text-xs font-bold text-[#D4AF37] tracking-[0.15em] uppercase mb-5">Quick Links</div>
+          {/* Navigation */}
+          <div className="text-center sm:text-left">
+            <div className="text-xs font-bold text-[#D4AF37] tracking-[0.15em] uppercase mb-5">Navigation</div>
             <ul className="space-y-3">
-              <li><Link to="/catalog" className="text-sm text-white/55 hover:text-white transition-colors">Products</Link></li>
-              <li><Link to="/districts" className="text-sm text-white/55 hover:text-white transition-colors">Districts</Link></li>
-              <li><Link to="/about" className="text-sm text-white/55 hover:text-white transition-colors">About Us</Link></li>
-              <li><Link to="/contact" className="text-sm text-white/55 hover:text-white transition-colors">Contact</Link></li>
+              <li><Link to="/catalog" className="text-sm text-white/55 hover:text-white transition-colors">Product Catalog</Link></li>
+              <li><Link to="/about" className="text-sm text-white/55 hover:text-white transition-colors">About Agile Ortho</Link></li>
+              <li><Link to="/contact" className="text-sm text-white/55 hover:text-white transition-colors">Contact & Quotes</Link></li>
               <li><Link to="/chat" className="text-sm text-white/55 hover:text-white transition-colors">AI Assistant</Link></li>
               <li><a href="https://www.agileortho.shop" target="_blank" rel="noreferrer" className="text-sm text-white/55 hover:text-white transition-colors">Online Shop</a></li>
             </ul>
           </div>
 
-          {/* Key Districts */}
-          <div>
-            <div className="text-xs font-bold text-[#D4AF37] tracking-[0.15em] uppercase mb-5">Key Districts</div>
+          {/* Locations */}
+          <div className="text-center sm:text-left">
+            <div className="text-xs font-bold text-[#D4AF37] tracking-[0.15em] uppercase mb-5">Locations</div>
             <ul className="space-y-3">
               <li><Link to="/districts/hyderabad" className="text-sm text-white/55 hover:text-white transition-colors">Hyderabad</Link></li>
               <li><Link to="/districts/warangal" className="text-sm text-white/55 hover:text-white transition-colors">Warangal</Link></li>
               <li><Link to="/districts/karimnagar" className="text-sm text-white/55 hover:text-white transition-colors">Karimnagar</Link></li>
               <li><Link to="/districts/nizamabad" className="text-sm text-white/55 hover:text-white transition-colors">Nizamabad</Link></li>
               <li><Link to="/districts/khammam" className="text-sm text-white/55 hover:text-white transition-colors">Khammam</Link></li>
-              <li><Link to="/districts" className="text-sm text-[#2DD4BF] hover:text-[#5EEAD4] transition-colors font-medium">All 33 Districts &rarr;</Link></li>
+              <li><Link to="/districts" className="text-sm text-[#2DD4BF] hover:text-[#5EEAD4] transition-colors font-medium">All 33 Districts</Link></li>
             </ul>
           </div>
 
           {/* Compliance */}
-          <div>
+          <div className="text-center sm:text-left">
             <div data-testid="footer-disclaimer-title" className="text-xs font-bold text-[#D4AF37] tracking-[0.15em] uppercase mb-5">Compliance</div>
             <ul className="space-y-2.5">
               {DISCLAIMER_LINES.map((line) => (
-                <li key={line} className="text-xs text-white/40 flex items-start gap-2">
+                <li key={line} className="text-xs text-white/40 flex items-start gap-2 justify-center sm:justify-start">
                   <span className="w-1 h-1 rounded-full bg-[#D4AF37] mt-1.5 shrink-0" />
                   {line}
                 </li>

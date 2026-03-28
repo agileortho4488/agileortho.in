@@ -174,3 +174,45 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
+
+/* Hide scrollbar for horizontal filters */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Safe area padding for mobile action bar */
+.safe-area-pb {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}
+
+/* Smooth focus transitions on inputs */
+input:focus, select:focus, textarea:focus {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Button press effect */
+button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+/* Link hover underline animation */
+.link-underline {
+  position: relative;
+}
+.link-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: #D4AF37;
+  transition: width 0.3s ease;
+}
+.link-underline:hover::after {
+  width: 100%;
+}
