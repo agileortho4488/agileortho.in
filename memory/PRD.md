@@ -28,58 +28,53 @@ Trauma, Joints/Arthroplasty, Spine, Cardiology, Endosurgery, Endo, ENT, Diagnost
 
 ## What's Been Implemented
 
+### Hospital Account Intelligence & Competitive Intelligence — Mar 29, 2026
+- **Hospital Account Intel**: Multi-department engagement tracking per hospital. Shows engagement depth (deep/moderate/single), upsell opportunities with missing Meril divisions, department count per hospital. API: `GET /api/geo/hospital-intelligence`
+- **Competitive Intelligence**: Tracks 24 competitor brands (Zimmer Biomet, Stryker, DePuy Synthes, Medtronic, Abbott, Boston Scientific, Smith & Nephew, Arthrex, NuVasive, Globus Medical, Edwards Lifesciences, Karl Storz, Olympus, Ethicon, B. Braun, Cook Medical, Siemens, GE Healthcare, Philips, Straumann, Nobel Biocare, Osstem, Integra). Auto-detects mentions in chatbot queries & website searches. Shows division threat map with Meril counter-products. API: `GET /api/geo/competitive-intelligence`
+- **Territory Tab Fixed**: All 4 zones ALWAYS visible with accounts/hospitals/labs, penetration %, missing divisions per zone. Red alerts for zero-lead zones.
+
 ### Admin CRM Dashboard Upgrade + Marketing Integrations — Mar 29, 2026
-- **Territory Tab**: Zone performance cards, district penetration table, zone filter buttons, zero-lead districts, cross-sell opportunities (division gaps), top departments by zone, visitor searches by zone
-- **Meta Pixel + Google Ads**: Pixel script in index.html (placeholder ID), GA4 lead event tracking, Google Ads conversion stub, trackLeadConversion() fires on all lead form submissions
-- **Interakt WhatsApp Nurture**: Automated nurture sequences (hot/warm/cold), follow-up scheduler with 60s polling, smart skip (customer active, human takeover), nurture stats visible in WhatsApp tab
-- **Zoho Email Integration**: SMTP-based brochure email via Zoho (smtppro.zoho.in), admin endpoint to send brochure emails, public endpoint for auto-confirmation on lead capture
+- **Territory Tab**: Zone performance cards, district penetration table, zone filter buttons, zero-lead districts, cross-sell opportunities
+- **Meta Pixel + Google Ads**: Pixel script in index.html (placeholder ID), GA4 lead event tracking, Google Ads conversion stub
+- **Interakt WhatsApp Nurture**: Automated nurture sequences (hot/warm/cold), follow-up scheduler, nurture stats in WhatsApp tab
+- **Zoho Email Integration**: SMTP-based brochure email via Zoho
 
 ### Zone/Territory + IP Geolocation + Lead Intelligence — Mar 29, 2026
-- IP Geolocation auto-detect via ip-api.com
-- 4-Zone Hyderabad Mapping with 130+ localities
-- Equal Department Scoring (ALL 13 divisions = 25pts)
-- Lead Auto-Scoring (0-100), Auto-Routing to Agile Healthcare
-- Visitor Event Tracking, Territory Penetration API, Zone Analytics API
+- IP Geolocation, 4-Zone Hyderabad Mapping, Equal Department Scoring, Lead Auto-Scoring, Visitor Event Tracking
 
-### Framer Motion Animations — Mar 28, 2026
-- Page transitions, scroll-triggered section animations, modal and dropdown animations
-
-### Universal Lead Capture System — Mar 28, 2026
-- LeadCaptureModal on ALL WhatsApp/enquiry touchpoints
-- Captures: Name, Hospital, Department, Phone, Email, District
-
-### UX Audit + Dark Premium Theme — Mar 28, 2026
-- Agile Healthcare branding, WhatsApp dropdown, consolidated CTAs, 4-column footer
-
-### Core Platform
-- 810+ products, 13 divisions, AI chatbot, Admin CRM, analytics tabs, auto-seed
+### Earlier Features
+- Framer Motion Animations, Universal Lead Capture, UX Audit + Dark Premium Theme
+- Core Platform: 810+ products, 13 divisions, AI chatbot, Admin CRM, auto-seed
 
 ## Key API Endpoints
-- `GET /api/geo/detect` — IP geolocation
-- `POST /api/geo/track` — Visitor event tracking
-- `GET /api/geo/zones` — Zone data with lead counts
-- `GET /api/geo/zone-analytics` — Zone-level CRM analytics
+- `GET /api/geo/zone-analytics` — All 4 zones with accounts, hospitals, penetration %, missing divisions
+- `GET /api/geo/hospital-intelligence` — Hospital multi-department tracking, upsell opportunities
+- `GET /api/geo/competitive-intelligence` — 24 competitor brands tracked, division threats, Meril counters
 - `GET /api/geo/territory-penetration` — District x Division penetration
-- `GET /api/geo/visitor-insights` — Search/visit analytics
+- `GET /api/geo/visitor-insights` — Search/visit analytics by zone
 - `POST /api/admin/email/send-brochure` — Send brochure email (admin)
 - `POST /api/email/lead-confirmation` — Auto-send lead confirmation (public)
-- `GET /api/admin/automation/stats` — Nurture sequence statistics
+
+## Admin Dashboard Tabs (6 total)
+1. **CRM Leads** — Funnel, scores, sources, districts, recent leads
+2. **Territory** — All 4 zones, penetration %, marketing gaps, district table
+3. **Hospitals** — Multi-department engagement, upsell opportunities, depth scoring
+4. **Competitive Intel** — 24 tracked brands, division threats, Meril alternatives
+5. **Search Intelligence** — Chatbot queries, confidence, no-match patterns
+6. **WhatsApp** — Conversations, delivery, nurture automation stats
 
 ## Pending Items
 - **P0**: Replace Meta Pixel PIXEL_ID_PLACEHOLDER with actual Pixel ID
-- **P0**: Replace Google Ads Conversion ID (AW-PLACEHOLDER/PLACEHOLDER) with actual ID
+- **P0**: Replace Google Ads Conversion ID placeholder with actual ID
 - **P1**: Manual review of blockers via Admin Review Dashboard
 - **P2**: Consent management (opt-in/opt-out)
 - **P2**: Archive legacy phase scripts
 - **P2**: File 008 (corrupted DOCX) — BLOCKED (awaiting user file)
 
 ## Future/Backlog
-- Hospital Account Intelligence (multi-department engagement tracking)
-- Competitive intelligence (competitor product searches)
 - Reorder prediction based on consumption patterns
 
 ## Known Constraints
-- ip-api.com free tier: 45 requests/min (sufficient for B2B traffic)
-- WhatsApp free-form replies only within 24h
-- Meta Pixel console warning expected until real Pixel ID is configured
-- Emergent LLM Key budget — avoid batch LLM scripts
+- ip-api.com free tier: 45 requests/min
+- Meta Pixel console warning expected until real Pixel ID configured
+- Competitive Intel shows 0 mentions until real doctors search for competitor brands
