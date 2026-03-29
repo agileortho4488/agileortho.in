@@ -84,11 +84,11 @@ export default function SiteHeader() {
         className="sticky top-0 z-50 border-b border-white/[0.06] bg-[#0A0A0A]/80 backdrop-blur-xl supports-[backdrop-filter]:bg-[#0A0A0A]/70"
       >
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2 sm:px-6">
-          <Link data-testid="site-logo-link" to="/" className="flex items-center gap-3 shrink-0">
-            <img src="/agile_healthcare_logo.png" alt="Agile Healthcare" className="h-12 sm:h-14 w-auto invert" data-testid="site-logo-mark" />
-            <div className="hidden sm:block leading-tight">
-              <span className="text-base font-bold text-white tracking-tight" style={{ fontFamily: 'Outfit' }}>AGILE HEALTHCARE</span>
-              <span className="block text-[9px] text-[#D4AF37] font-semibold tracking-[0.15em] uppercase">Meril Authorized</span>
+          <Link data-testid="site-logo-link" to="/" className="flex items-center gap-2.5 shrink-0">
+            <img src="/agile_healthcare_logo.png" alt="Agile Healthcare" className="h-10 sm:h-14 w-auto invert" data-testid="site-logo-mark" />
+            <div className="leading-tight">
+              <span className="text-sm sm:text-base font-bold text-white tracking-tight" style={{ fontFamily: 'Outfit' }}>AGILE HEALTHCARE</span>
+              <span className="hidden sm:block text-[9px] text-[#D4AF37] font-semibold tracking-[0.15em] uppercase">Meril Authorized</span>
             </div>
           </Link>
 
