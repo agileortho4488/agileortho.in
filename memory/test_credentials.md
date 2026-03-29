@@ -1,6 +1,6 @@
 # Test Credentials
 
-## Admin Dashboard
+## Admin Login
 - URL: /admin/login
-- Username: admin
-- Password: kOpcELYcEvkVtyDAE5-2uw
+- Password: AgileHealth2026admin
+- Note: Password-only field (no username needed). Use the eye icon to toggle visibility.

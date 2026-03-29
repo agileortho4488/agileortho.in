@@ -140,4 +140,18 @@ async def seed_catalog():
     await catalog_skus_col.create_index("sku_code")
     await catalog_skus_col.create_index("brand")
 
+    # Seed admin auth fallback (hashed password stored in DB)
+    from helpers import hash_password
+    admin_pw = os.environ.get("ADMIN_PASSWORD", "AgileHealth2026admin")
+    await mongo_db["admin_config"].update_one(
+        {"type": "admin_auth"},
+        {"$set": {
+            "type": "admin_auth",
+            "password_hash": hash_password(admin_pw),
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        }},
+        upsert=True,
+    )
+    print("Admin auth fallback seeded")
+
     print("Catalog seed complete with indexes")

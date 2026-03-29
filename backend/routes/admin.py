@@ -20,9 +20,24 @@ router = APIRouter()
 
 @router.post("/api/admin/login")
 async def admin_login(body: AdminLogin):
-    if body.password == ADMIN_PASSWORD:
+    import logging
+    logger = logging.getLogger("admin")
+
+    # Primary check: env var
+    if ADMIN_PASSWORD and body.password == ADMIN_PASSWORD:
         token = create_token({"sub": "admin", "role": "super_admin"})
         return {"token": token, "role": "super_admin"}
+
+    # Fallback: check hashed password in DB
+    from db import db as mongo_db
+    admin_config = await mongo_db["admin_config"].find_one({"type": "admin_auth"})
+    if admin_config:
+        stored_hash = admin_config.get("password_hash", "")
+        if hash_password(body.password) == stored_hash:
+            token = create_token({"sub": "admin", "role": "super_admin"})
+            return {"token": token, "role": "super_admin"}
+
+    logger.warning(f"Admin login failed. ENV password set: {bool(ADMIN_PASSWORD)}, ENV len: {len(ADMIN_PASSWORD) if ADMIN_PASSWORD else 0}, Input len: {len(body.password)}")
     raise HTTPException(401, "Invalid credentials")
 
 
