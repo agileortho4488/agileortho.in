@@ -13,23 +13,44 @@ router = APIRouter()
 followup_col = db["followup_queue"]
 automation_logs_col = db["automation_logs"]
 
-# Follow-up sequences by lead temperature
+# B2B Medical Device Sales Pipeline — Staged Nurture Journey
+# Based on industry best practices: 6-stage pipeline, spaced touchpoints,
+# value-driven content, never more than 1 message per stage window.
+# Goal: Build trust, not annoy. Let the physical sales team close.
+
 FOLLOWUP_SEQUENCES = {
     "hot": [
-        {"delay_hours": 1, "type": "quick_followup", "msg": "Hi {name}! Thanks for your interest in {product}. I can arrange a quick call with our product specialist for {product} — would that work for you?"},
-        {"delay_hours": 6, "type": "specialist_connect", "msg": "Hi {name}, just following up! Our {division} specialist is available today. Should I schedule a 5-min call for you? Reply YES and I'll set it up."},
-        {"delay_hours": 24, "type": "catalog_share", "msg": "Hi {name}! Here's more info on {product} you were interested in. Our team can prepare a custom quotation for your hospital. Reply QUOTE to get started."},
-        {"delay_hours": 72, "type": "offer", "msg": "Hi {name}, we have special bulk pricing available for {division} products this week. Would you like me to send you the details?"},
+        # Stage 1: Immediate acknowledgment (within 1 hour)
+        {"delay_hours": 1, "type": "acknowledge", "stage": "engaged",
+         "msg": "Hi {name}, thank you for your interest in {product}. Our {division} specialist for your region will reach out to discuss specifications and availability. — Agile Healthcare"},
+        # Stage 2: Specialist introduction (next business day)
+        {"delay_hours": 24, "type": "specialist_intro", "stage": "qualified",
+         "msg": "Hi {name}, our field representative has been briefed about your {product} requirements. They'll coordinate a convenient time for a product demo at your facility. Ref: Agile Healthcare — Meril Authorized"},
+        # Stage 3: Value reinforcement (Day 5 — clinical evidence)
+        {"delay_hours": 120, "type": "clinical_proof", "stage": "proposal",
+         "msg": "Hi {name}, quick note — Meril {product} is backed by 15+ years of clinical data across 4,000+ hospitals in India. Happy to share relevant case studies for your department. — Agile Healthcare"},
+        # Stage 4: Check-in (Day 14 — only if no response)
+        {"delay_hours": 336, "type": "gentle_checkin", "stage": "negotiation",
+         "msg": "Hi {name}, just checking in. If you need a revised quotation or have questions about {product}, our team is a message away. No rush — we're here when you're ready."},
     ],
     "warm": [
-        {"delay_hours": 2, "type": "quick_followup", "msg": "Hi {name}! Thanks for chatting with us about {division} products. Is there anything specific you'd like to know more about?"},
-        {"delay_hours": 24, "type": "info_share", "msg": "Hi {name}! Just wanted to share — we serve 100+ hospitals across Telangana with Meril {division} devices. Can I help you find the right products for your practice?"},
-        {"delay_hours": 72, "type": "catalog_share", "msg": "Hi {name}, thought you might be interested — we have a complete range of {division} products. Reply CATALOG and I'll share our latest product guide."},
-        {"delay_hours": 168, "type": "reconnect", "msg": "Hi {name}! It's been a while since we connected. Our {division} range has new additions. Would you like a quick update?"},
+        # Stage 1: Thank you (within 2 hours)
+        {"delay_hours": 2, "type": "thank_you", "stage": "engaged",
+         "msg": "Hi {name}, thanks for exploring our {division} range. If you'd like product specifications or pricing, just reply here and we'll have the details sent over. — Agile Healthcare"},
+        # Stage 2: Educational value (Day 3)
+        {"delay_hours": 72, "type": "education", "stage": "discovery",
+         "msg": "Hi {name}, FYI — we support 1,800+ healthcare facilities across Telangana with Meril {division} devices. Our team can arrange a no-obligation product overview at your convenience."},
+        # Stage 3: Soft follow-up (Day 10)
+        {"delay_hours": 240, "type": "soft_followup", "stage": "proposal",
+         "msg": "Hi {name}, wanted to share that we have comprehensive pricing available for {division} products. Reply QUOTE if you'd like us to prepare something specific for your facility. — Agile Healthcare"},
     ],
     "cold": [
-        {"delay_hours": 24, "type": "gentle_followup", "msg": "Hi! Thanks for reaching out to Agile Ortho. We're Telangana's authorized Meril distributor. Can I help you with any medical device needs?"},
-        {"delay_hours": 168, "type": "value_prop", "msg": "Hi! Did you know Agile Ortho offers competitive bulk pricing + free delivery across all 33 districts of Telangana? Let us know if we can help!"},
+        # Stage 1: Simple acknowledgment (Day 1)
+        {"delay_hours": 24, "type": "acknowledge", "stage": "prospecting",
+         "msg": "Hi, thanks for reaching out to Agile Healthcare — Telangana's authorized Meril Life Sciences franchise. We serve all 33 districts. Let us know how we can help with your medical device needs."},
+        # Stage 2: Awareness (Day 7 — only once)
+        {"delay_hours": 168, "type": "awareness", "stage": "discovery",
+         "msg": "Hi, just a quick note — Agile Healthcare offers Meril's full range across 13 clinical divisions (Ortho, Cardio, Spine, ENT & more) with competitive institutional pricing. We're here if you need anything."},
     ],
 }
 
@@ -351,6 +372,16 @@ async def get_automation_stats(_=Depends(admin_required)):
             "whatsapp_sourced": wa_leads,
             "by_score": lead_breakdown,
             "by_stage": stages,
+        },
+        "pipeline_info": {
+            "stages": ["prospecting", "engaged", "discovery", "qualified", "proposal", "negotiation", "won", "lost"],
+            "nurture_approach": "B2B staged journey — max 1 message per stage window, value-driven, no spam",
+            "hot_touchpoints": 4,
+            "warm_touchpoints": 3,
+            "cold_touchpoints": 2,
+            "hot_span_days": 14,
+            "warm_span_days": 10,
+            "cold_span_days": 7,
         },
     }
 
