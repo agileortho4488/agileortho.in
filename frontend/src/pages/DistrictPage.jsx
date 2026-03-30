@@ -6,7 +6,7 @@ import {
   ArrowRight, Mail, Dumbbell, Disc, Replace, Wrench
 } from "lucide-react";
 import { getDistrictBySlug, TELANGANA_DISTRICTS } from "../lib/districts";
-import { SEO, buildBreadcrumbSchema } from "../components/SEO";
+import { SEO, buildBreadcrumbSchema, buildFAQSchema } from "../components/SEO";
 
 const DIVISION_ICONS = {
   "Joint Replacement": Replace,
@@ -53,9 +53,9 @@ export default function DistrictPage() {
   const localBusinessSchema = {
     "@context": "https://schema.org",
     "@type": "MedicalBusiness",
-    name: `Agile Ortho - Medical Device Distributor in ${district.name}`,
-    description: `Authorized Meril Life Sciences distributor serving hospitals, clinics, and diagnostic centers in ${district.name}, Telangana. Orthopedic implants, cardiovascular stents, diagnostics, surgical instruments and more.`,
-    url: `https://www.agileortho.in/districts/${district.slug}`,
+    name: `Agile Healthcare - Medical Device Distributor in ${district.name}`,
+    description: `Authorized Meril Life Sciences distributor serving hospitals, clinics, and diagnostic centers in ${district.name}, Telangana.`,
+    url: `https://agileortho.in/districts/${district.slug}`,
     telephone: "+917416216262",
     address: {
       "@type": "PostalAddress",
@@ -69,6 +69,26 @@ export default function DistrictPage() {
     }
   };
 
+  // District-specific FAQs for rich search results
+  const districtFaqs = [
+    {
+      question: `Who is the authorized Meril medical device distributor in ${district.name}?`,
+      answer: `Agile Healthcare is the authorized Meril Life Sciences master franchise distributor for ${district.name} and all 33 districts of Telangana. We supply 810+ medical devices across 13 clinical divisions including ${district.medicalFocus.slice(0, 3).join(", ")}.`,
+    },
+    {
+      question: `What medical devices are available in ${district.name}, Telangana?`,
+      answer: `We supply ${district.medicalFocus.join(", ")} devices from Meril Life Sciences to hospitals in ${district.name}. Products include orthopedic implants, cardiovascular stents, diagnostic analyzers, and surgical instruments. All products are CDSCO registered and ISO 13485 certified.`,
+    },
+    {
+      question: `Which hospitals in ${district.name} does Agile Healthcare serve?`,
+      answer: `We serve major healthcare institutions in ${district.name} including ${district.hospitals.slice(0, 4).join(", ")}${district.hospitals.length > 4 ? " and more" : ""}. We supply to both government and private hospitals, clinics, and diagnostic centers.`,
+    },
+    {
+      question: `How to order medical devices in ${district.name}?`,
+      answer: `Contact Agile Healthcare at +91 74162 16262, WhatsApp +91 74165 21222, or email info@agileortho.in. We offer direct dispatch from our Hyderabad warehouse to ${district.name} with fast turnaround for urgent requirements.`,
+    },
+  ];
+
   const nearby = TELANGANA_DISTRICTS.filter(
     (d) => d.slug !== district.slug
   ).slice(0, 6);
@@ -79,7 +99,7 @@ export default function DistrictPage() {
         title={`Medical Devices in ${district.name}, Telangana`}
         description={`Authorized Meril Life Sciences distributor in ${district.name}, Telangana. Bulk supply of orthopedic implants, cardiovascular stents, diagnostic analyzers, surgical instruments for hospitals and clinics. ${district.tagline}.`}
         canonical={`/districts/${district.slug}`}
-        jsonLd={[localBusinessSchema, buildBreadcrumbSchema(breadcrumbs)]}
+        jsonLd={[localBusinessSchema, buildBreadcrumbSchema(breadcrumbs), buildFAQSchema(districtFaqs)]}
       />
 
       {/* ===== DARK HERO ===== */}
@@ -241,6 +261,33 @@ export default function DistrictPage() {
               <span key={badge} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-sm bg-[#0A0A0A] border border-white/10 text-sm font-medium text-white/70 shadow-sm">
                 <BadgeCheck size={16} className="text-[#2DD4BF]" /> {badge}
               </span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ===== FAQ SECTION (for SEO rich results) ===== */}
+      <section className="py-16 bg-[#0A0A0A]" data-testid="district-faq">
+        <div className="max-w-4xl mx-auto px-6">
+          <div className="text-center mb-10">
+            <p className="text-[#2DD4BF] text-xs font-bold uppercase tracking-[0.2em] mb-3">Frequently Asked</p>
+            <h2 className="text-2xl lg:text-3xl font-bold text-white tracking-tight">
+              Medical Devices in {district.name} — FAQs
+            </h2>
+          </div>
+          <div className="space-y-4">
+            {districtFaqs.map((faq, i) => (
+              <details
+                key={i}
+                className="group bg-white/5 border border-white/[0.06] rounded-sm overflow-hidden"
+                data-testid={`district-faq-${i}`}
+              >
+                <summary className="flex items-center justify-between px-6 py-4 cursor-pointer select-none">
+                  <span className="text-sm font-semibold text-white/80 group-open:text-[#2DD4BF] transition-colors pr-4">{faq.question}</span>
+                  <ChevronRight size={16} className="text-white/30 shrink-0 group-open:rotate-90 transition-transform" />
+                </summary>
+                <div className="px-6 pb-5 text-sm text-white/45 leading-relaxed">{faq.answer}</div>
+              </details>
             ))}
           </div>
         </div>
