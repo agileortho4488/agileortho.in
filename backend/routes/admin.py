@@ -108,7 +108,7 @@ async def admin_pipeline(_=Depends(admin_required)):
     statuses = ["new", "contacted", "qualified", "negotiation", "won", "lost"]
     pipeline_data = {}
     for s in statuses:
-        cursor = leads_col.find({"status": s}).sort("score_value", -1)
+        cursor = leads_col.find({"status": s}).sort("score_value", -1).limit(100)
         docs = await cursor.to_list(100)
         pipeline_data[s] = serialize_docs(docs)
     return {"pipeline": pipeline_data}

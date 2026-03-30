@@ -3,7 +3,7 @@ Self-Learning Engine — Analyzes chatbot + WhatsApp conversations,
 extracts product interests, enriches leads, and builds FAQ cache
 for smarter chatbot responses. Runs as a background task.
 """
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from collections import Counter
 from db import db, leads_col
 import re
@@ -108,7 +108,7 @@ async def learn_from_all_conversations():
     # 1. Analyze WhatsApp conversations → enrich leads
     wa_convs = await wa_conversations_col.find(
         {"messages.0": {"$exists": True}},
-        {"_id": 0, "phone": 1, "messages": 1, "customer_name": 1}
+        {"_id": 0, "phone": 1, "messages": {"$slice": -50}, "customer_name": 1}
     ).to_list(500)
 
     for conv in wa_convs:
@@ -138,7 +138,7 @@ async def learn_from_all_conversations():
     # 2. Analyze chatbot conversations → build FAQ cache + enrich sessions
     chatbot_convs = await chatbot_conversations_col.find(
         {"turns.0": {"$exists": True}},
-        {"_id": 0, "session_id": 1, "turns": 1}
+        {"_id": 0, "session_id": 1, "turns": {"$slice": -50}}
     ).to_list(500)
 
     faq_counter = Counter()
@@ -189,11 +189,12 @@ async def learn_from_all_conversations():
                 "co_occurrence": count,
             })
 
-    # 5. Analyze chatbot telemetry for trending products
+    # 5. Analyze chatbot telemetry for trending products (last 7 days only)
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
     telemetry = await chatbot_telemetry_col.find(
-        {"event_type": "query", "query": {"$exists": True, "$ne": ""}},
+        {"event_type": "query", "query": {"$exists": True, "$ne": ""}, "timestamp": {"$gte": cutoff}},
         {"_id": 0, "query": 1, "confidence": 1, "timestamp": 1}
-    ).to_list(1000)
+    ).sort("timestamp", -1).limit(1000).to_list(1000)
 
     division_demand = Counter()
     for t in telemetry:
@@ -228,7 +229,7 @@ async def learn_from_all_conversations():
         {"source": {"$in": ["website", "website_enquiry", "homepage_hero", "catalog"]},
          "product_insights": {"$exists": False}},
         {"_id": 1, "id": 1, "product_interest": 1, "department": 1, "inquiry_type": 1}
-    ).to_list(200)
+    ).limit(200).to_list(200)
 
     for lead in website_leads:
         text = f"{lead.get('product_interest', '')} {lead.get('department', '')} {lead.get('inquiry_type', '')}"
