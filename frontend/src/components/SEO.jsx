@@ -1,8 +1,8 @@
 import { Helmet, HelmetProvider } from "react-helmet-async";
 
-const SITE_URL = "https://www.agileortho.in";
+const SITE_URL = "https://agileortho.in";
 const SITE_NAME = "Agile Healthcare";
-const DEFAULT_IMAGE = "https://www.agileortho.in/ao_logo_horizontal.png";
+const DEFAULT_IMAGE = "https://agileortho.in/ao_logo_horizontal.png";
 
 export function SEOProvider({ children }) {
   return <HelmetProvider>{children}</HelmetProvider>;

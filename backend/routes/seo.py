@@ -6,7 +6,7 @@ from db import catalog_products_col, db
 
 router = APIRouter()
 
-SITE_URL = "https://www.agileortho.in"
+SITE_URL = "https://agileortho.in"
 
 
 @router.get("/api/seo/robots.txt", response_class=PlainTextResponse)
@@ -120,7 +120,7 @@ async def sitemap_xml():
 @router.get("/api/seo/llms.txt", response_class=PlainTextResponse)
 async def llms_txt():
     return f"""# Agile Healthcare — llms.txt
-# https://www.agileortho.in
+# https://agileortho.in
 
 ## About
 Agile Healthcare (Agile Orthopedics Pvt Ltd) is the authorized Meril Life Sciences master franchise distributor for the entire state of Telangana, India. We supply 810+ verified medical devices across 13 clinical divisions to hospitals, clinics, and diagnostic centers in all 33 districts.

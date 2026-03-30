@@ -1,5 +1,5 @@
 # Agile Healthcare — llms.txt
-# https://www.agileortho.in
+# https://agileortho.in
 
 ## About
 Agile Healthcare (Agile Orthopedics Pvt Ltd) is the authorized Meril Life Sciences master franchise distributor for the entire state of Telangana, India. We supply 810+ verified medical devices across 13 clinical divisions to hospitals, clinics, and diagnostic centers in all 33 districts.
@@ -12,7 +12,7 @@ Agile Healthcare (Agile Orthopedics Pvt Ltd) is the authorized Meril Life Scienc
 - Phone: +91 74162 16262
 - WhatsApp: +91 74165 21222
 - Email: info@agileortho.in
-- Website: https://www.agileortho.in
+- Website: https://agileortho.in
 
 ## Product Divisions (13)
 1. Trauma & Orthopedic Implants — Locking plates, intramedullary nails, screws
@@ -39,8 +39,8 @@ Agile Healthcare (Agile Orthopedics Pvt Ltd) is the authorized Meril Life Scienc
 Hyderabad Metro (4 Zones, 1,891+ facilities), Warangal, Nizamabad, Karimnagar, Khammam, Nalgonda, Mahbubnagar, Adilabad, Sangareddy, Medak, Siddipet, Kamareddy, Jagtial, Peddapalli, Mancherial, Nirmal, Suryapet, Yadadri Bhuvanagiri, Vikarabad, Jangaon, Mahabubabad, Rajanna Sircilla, Bhadradri Kothagudem, and all other Telangana districts.
 
 ## Key Pages
-- Home: https://www.agileortho.in/
-- Product Catalog: https://www.agileortho.in/catalog
-- About Us: https://www.agileortho.in/about
-- Contact: https://www.agileortho.in/contact
-- Service Areas: https://www.agileortho.in/districts
+- Home: https://agileortho.in/
+- Product Catalog: https://agileortho.in/catalog
+- About Us: https://agileortho.in/about
+- Contact: https://agileortho.in/contact
+- Service Areas: https://agileortho.in/districts
