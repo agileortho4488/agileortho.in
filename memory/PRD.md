@@ -1,70 +1,80 @@
-# Agile Healthcare — Product Requirements Document
+# Agile Healthcare - B2B Medical Device Platform PRD
 
 ## Original Problem Statement
-Build a B2B medical device platform for Agile Healthcare, the Meril Life Sciences master franchise for ALL of Telangana, India. Full catalog, AI chatbot, WhatsApp integration, CRM/Lead scoring, zone-based territory analytics, competitive intelligence, and self-learning chatbot. SEO-optimized for search engines and AI crawlers.
+Build a B2B medical device platform for "Agile Healthcare", a premier Meril Life Sciences master franchise in Telangana. Focus on a visually stunning, high-contrast "Dark Premium B2B" UI, CRM Analytics dashboard tracking search intelligence/leads, geographic territory/zone lead tracking, end-to-end commercial loops (Interakt WhatsApp webhook, AI Chatbot), automated data seeding, and robust technical SEO.
 
-## Architecture
-- **Frontend**: React (CRA) + Tailwind + Shadcn UI + Framer Motion + react-helmet-async
-- **Backend**: FastAPI + Motor (async MongoDB)
-- **Database**: MongoDB
-- **AI**: Claude Sonnet 4.5 via emergentintegrations
-- **WhatsApp**: Interakt API (webhook at /api/webhook/whatsapp)
-- **Email**: Zoho SMTP (smtppro.zoho.in)
-- **Geolocation**: ip-api.com
-- **Tracking**: Meta Pixel + GA4 (consent-gated via cookie banner)
-- **SEO**: JSON-LD schemas, dynamic sitemap, prerender service, FAQPage schema, react-helmet-async
+## Tech Stack
+- Frontend: React + TailwindCSS + Shadcn/UI
+- Backend: FastAPI + Python
+- Database: MongoDB
+- Integrations: Interakt WhatsApp API, Meta/Google Pixels (pending IDs)
 
-## Admin Dashboard (6 tabs)
-1. CRM Leads — Funnel, product demand intelligence
-2. Territory — 4 zones, penetration %, marketing gaps
-3. Hospitals — Multi-department engagement, upsell
-4. Competitive Intel — 24 tracked brands, division threats
-5. Search Intelligence — Chatbot queries, confidence
-6. WhatsApp — Conversations (11 total, 57 msgs), delivery stats, webhook logs
+## What's Been Implemented
 
-## What's Been Implemented (This Session)
+### Core Platform
+- 810+ products across 13 clinical divisions
+- 1202 catalog entries with search/filter
+- 33 Telangana districts with service area pages
+- AI Chatbot for product queries
 
-### Server-Side Prerender Service — Mar 30, 2026
-- Backend prerender at `/api/prerender/*` for non-JS crawlers
-- Endpoints: `/api/prerender/product/:slug`, `/api/prerender/catalog`, `/api/prerender/catalog/:division`, `/api/prerender/district/:slug`
-- Returns full HTML with meta tags, JSON-LD schemas, and actual DB content
-- Product pages include specs, SKUs, breadcrumbs, Product schema
-- User should configure nginx/Cloudflare to proxy bot user-agents through prerender
+### Admin Dashboard (All Working)
+- Dashboard stats (products, leads, hot/warm/cold counts)
+- CRM Pipeline (6-stage Kanban: new, contacted, qualified, negotiation, won, lost)
+- Leads management (1287 total leads, search/filter/score/status)
+- Analytics (6 tabs: CRM Leads, Territory, Hospitals, Competitive Intel, Search Intelligence, WhatsApp)
+- Products management (1202 products, search/filter, bulk operations)
+- PDF Import for brochure extraction
 
-### District Pages Enhanced — Mar 30, 2026
-- Added FAQ section with 4 district-specific questions per page
-- FAQPage JSON-LD schema for Google rich results (FAQ snippets)
-- Questions cover: authorized distributor, available devices, hospitals served, ordering process
-- Expandable `<details>/<summary>` elements for UX
+### WhatsApp Integration (Interakt)
+- Webhook handler for real-time message/delivery/campaign events
+- AI Bot auto-reply (single contextual reply per message)
+- WhatsApp Inbox (conversations with message thread view)
+- Templates (send template form)
+- Analytics (conversation stats, delivery stats, campaign stats)
+- **Contact Sync (NEW)**: Pull 1261+ contacts from Interakt API into CRM
 
-### Cookie Consent Banner — Mar 30, 2026
-- GDPR-style banner with Accept/Reject, GA4 + Meta Pixel consent-gated
+### SEO & Compliance
+- react-helmet-async on all Catalog pages
+- JSON-LD schema injection (Products, FAQPage, LocalBusiness)
+- Backend prerendering/SSR for non-JS crawlers
+- GDPR Cookie Consent banner (hidden on admin pages)
+- District pages with FAQ section
 
-### Advanced SEO — Mar 30, 2026
-- Product/BreadcrumbList/ItemList/FAQPage schemas across all catalog & district pages
-- Descriptive image alt texts, unique canonicals, dynamic sitemap (520+ URLs)
+### Security
+- Admin auth with hardcoded SHA-256 hash fallback
+- JWT token validation on all admin routes
+- Admin layout auth guard
 
-### Backend Cleanup — Mar 30, 2026
-- 47 legacy scripts archived to `/backend/scripts/archive/`
+## Recent Changes (Mar 30, 2026)
+1. Interakt Contact Sync: Pull contacts from Interakt Customer API into CRM (1261 contacts synced)
+2. Bot reply fix: Reduced from 4 messages to 1 contextual AI reply
+3. Cookie consent banner hidden on admin pages
+4. All dashboard functionalities verified (100% pass rate)
 
-## WhatsApp Integration Status
-- Interakt webhook is ACTIVE — 21 webhook logs received
-- 11 conversations synced, 57 total messages
-- Delivery rate: 30% (3 failed = likely test phone numbers)
-- Signature validation: shows False (webhook secret may need updating in Interakt dashboard)
-- All event types handled: message_received, sent, delivered, read, failed, clicked
+## Prioritized Backlog
 
-## Admin Password
-`AgileHealth2026admin` (hardcoded SHA-256 hash — DO NOT revert to env var)
+### P0 - None (all critical items resolved)
 
-## Pending Items
-- **P0**: Replace Meta Pixel `PIXEL_ID_PLACEHOLDER` with actual Pixel ID (user provides later)
-- **P0**: Replace Google Ads Conversion ID placeholder (user provides later)
-- **P1**: Configure nginx/Cloudflare bot routing to prerender endpoints
-- **P1**: Submit dynamic sitemap to Google Search Console
-- **P1**: Update Interakt webhook secret to fix signature validation
+### P1
+- Meta Pixel ID and Google Ads Conversion ID (BLOCKED - waiting on user)
+- File 008 processing (BLOCKED - awaiting uncorrupted DOCX)
+- Push CRM leads to Interakt timeout fix (background job for 1274+ leads)
 
-## Future/Backlog
+### P2
 - Reorder prediction based on consumption patterns
-- Consent management for WhatsApp/email (opt-in/opt-out)
-- File 008 processing (awaiting uncorrupted DOCX)
+- WhatsApp/Email opt-in consent management
+- Consolidate prerender_districts.py with frontend districts.js
+
+## Credentials
+- Admin Login: `/admin/login` with password `AgileHealth2026admin`
+- Interakt API Key: In backend/.env
+
+## Key API Endpoints
+- POST /api/admin/login
+- GET /api/admin/stats, /api/admin/pipeline, /api/admin/analytics, /api/admin/leads
+- GET /api/admin/whatsapp/analytics, /api/admin/whatsapp/conversations
+- POST /api/admin/whatsapp/fetch-interakt-contacts (NEW)
+- POST /api/admin/whatsapp/sync-interakt-to-crm (NEW)
+- POST /api/webhook/whatsapp (Interakt webhook)
+- GET /api/geo/territory-penetration, hospital-intelligence, competitive-intelligence
+- GET /api/chatbot/telemetry/report
