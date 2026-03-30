@@ -1,17 +1,28 @@
 User-agent: *
 Allow: /
+Disallow: /admin/
+Disallow: /admin/*
 
-# Sitemaps
-Sitemap: https://www.orthoconnect.in/sitemap.xml
+User-agent: Googlebot
+Allow: /
 
-# Disallow admin pages
-Disallow: /admin
-Disallow: /admin/dashboard
+User-agent: Bingbot
+Allow: /
 
-# Allow all other pages
-Allow: /surgeons
-Allow: /education
-Allow: /about
-Allow: /contact
-Allow: /doctor/
-Allow: /orthopaedic-surgeons-*
+User-agent: DuckDuckBot
+Allow: /
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+Sitemap: https://www.agileortho.in/sitemap.xml
+Host: https://www.agileortho.in

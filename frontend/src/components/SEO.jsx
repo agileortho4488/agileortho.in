@@ -1,7 +1,7 @@
 import { Helmet, HelmetProvider } from "react-helmet-async";
 
 const SITE_URL = "https://www.agileortho.in";
-const SITE_NAME = "Agile Ortho";
+const SITE_NAME = "Agile Healthcare";
 const DEFAULT_IMAGE = "https://www.agileortho.in/ao_logo_horizontal.png";
 
 export function SEOProvider({ children }) {
@@ -9,8 +9,8 @@ export function SEOProvider({ children }) {
 }
 
 export function SEO({ title, description, canonical, image, type = "website", jsonLd, noIndex = false }) {
-  const fullTitle = title ? `${title} | ${SITE_NAME}` : `${SITE_NAME} | Mobility Revolutionised - Authorized Meril Life Sciences Distributor`;
-  const metaDescription = description || "Authorized Meril Life Sciences master distributor for Telangana. Orthopedic implants, cardiovascular stents, diagnostics, ENT, endo-surgical, and infection prevention devices for hospitals and clinics.";
+  const fullTitle = title ? `${title} | ${SITE_NAME}` : `${SITE_NAME} | Meril Medical Device Distributor in Hyderabad & Telangana`;
+  const metaDescription = description || "Authorized Meril Life Sciences master franchise distributor in Telangana. 810+ orthopedic implants, cardiovascular stents, trauma kits, spine, ENT & diagnostic devices for hospitals across 33 districts.";
   const metaImage = image || DEFAULT_IMAGE;
   const canonicalUrl = canonical ? `${SITE_URL}${canonical}` : undefined;
 
@@ -54,8 +54,8 @@ export function buildOrganizationSchema() {
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: "Agile Orthopedics Private Limited",
-    alternateName: "Agile Ortho",
+    name: "Agile Healthcare",
+    alternateName: "Agile Orthopedics Private Limited",
     url: SITE_URL,
     logo: `${SITE_URL}/ao_logo_horizontal.png`,
     description: "Authorized Meril Life Sciences master franchise distributor serving hospitals, clinics, and diagnostic centers across all 33 districts of Telangana.",
@@ -82,7 +82,7 @@ export function buildLocalBusinessSchema() {
   return {
     "@context": "https://schema.org",
     "@type": "MedicalBusiness",
-    name: "Agile Ortho - Medical Device Distributor",
+    name: "Agile Healthcare - Meril Medical Device Distributor in Hyderabad",
     image: `${SITE_URL}/ao_logo_horizontal.png`,
     url: SITE_URL,
     telephone: "+917416216262",
@@ -137,7 +137,7 @@ export function buildProductSchema(product, imageUrl) {
       priceCurrency: "INR",
       seller: {
         "@type": "Organization",
-        name: "Agile Ortho"
+        name: "Agile Healthcare"
       }
     }
   };

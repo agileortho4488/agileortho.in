@@ -84,11 +84,11 @@ export default function Home() {
                 className="text-4xl sm:text-5xl lg:text-6xl font-light tracking-tight text-white leading-[1.1]"
                 data-testid="hero-title" style={{ fontFamily: 'Outfit' }}
               >
-                Precision Medical
+                Meril Medical
                 <br />
                 <span className="text-gradient-gold font-medium">Devices</span> for
                 <br />
-                Telangana
+                Hyderabad & Telangana
               </motion.h1>
 
               <motion.p
@@ -204,7 +204,7 @@ export default function Home() {
             <div className="text-center mb-12">
               <span className="text-xs font-bold text-[#D4AF37] tracking-[0.2em] uppercase">Product Divisions</span>
               <h2 className="mt-2 text-2xl sm:text-3xl lg:text-4xl font-medium tracking-tight text-white" style={{ fontFamily: 'Outfit' }}>
-                Clinical Categories
+                Meril Clinical Divisions
               </h2>
               <p className="mt-3 text-sm text-white/50 max-w-md mx-auto">Select a division to explore verified products with specifications and SKU details</p>
             </div>
@@ -310,7 +310,7 @@ export default function Home() {
           <ScaleIn>
             <div className="text-center max-w-2xl mx-auto">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-light tracking-tight text-white" style={{ fontFamily: 'Outfit' }}>
-              Equip Your Hospital with <span className="text-[#D4AF37] font-medium">Precision Meril</span> Products
+              Equip Your Hospital with <span className="text-[#D4AF37] font-medium">Meril</span> Medical Devices
             </h2>
             <p className="mt-4 text-sm sm:text-base text-white/55">
               Connect with our product specialists for bulk quotes, hospital procurement, and technical specifications.
