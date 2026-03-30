@@ -2,14 +2,14 @@
 import os
 import requests as req
 from datetime import datetime, timezone
-from db import wa_message_status_col
 
-INTERAKT_API_KEY = (os.environ.get("INTERAKT_API_KEY", "") or "").strip('"').strip("'")
-INTERAKT_API_URL = "https://api.interakt.ai/v1/public/message/"
+
+def _get_api_key():
+    return (os.environ.get("INTERAKT_API_KEY", "") or "").strip('"').strip("'")
 
 
 def interakt_auth_header():
-    return f"Basic {INTERAKT_API_KEY}"
+    return f"Basic {_get_api_key()}"
 
 
 def clean_phone_number(phone: str):
@@ -19,7 +19,12 @@ def clean_phone_number(phone: str):
     return clean
 
 
+INTERAKT_API_URL = "https://api.interakt.ai/v1/public/message/"
+
+
 async def send_whatsapp_message(phone: str, text: str, country_code: str = "+91", callback_data: str = "wa_bot_reply"):
+    from db import wa_message_status_col  # Lazy import to avoid startup crash
+
     headers = {
         "Authorization": interakt_auth_header(),
         "Content-Type": "application/json",
