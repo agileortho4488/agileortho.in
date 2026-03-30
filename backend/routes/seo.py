@@ -40,7 +40,7 @@ User-agent: Google-Extended
 Allow: /
 
 # Sitemaps
-Sitemap: {SITE_URL}/sitemap.xml
+Sitemap: {SITE_URL}/api/sitemap.xml
 
 # Host
 Host: {SITE_URL}
@@ -48,6 +48,9 @@ Host: {SITE_URL}
 
 
 @router.get("/api/seo/sitemap.xml")
+@router.head("/api/seo/sitemap.xml")
+@router.get("/api/sitemap.xml")
+@router.head("/api/sitemap.xml")
 async def sitemap_xml():
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
