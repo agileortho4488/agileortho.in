@@ -251,19 +251,10 @@ async def handle_wa_incoming(phone: str, message_text: str, customer_name: str =
         }
     )
 
-    # IMPROVEMENT 1: Instant acknowledgment for first-time users
-    if is_new:
-        await send_whatsapp_message(phone, WELCOME_MSG, callback_data="welcome")
-        welcome_msg = {
-            "role": "assistant", "content": WELCOME_MSG,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "channel": "whatsapp", "type": "welcome",
-        }
-        await wa_conversations_col.update_one(
-            {"phone": phone}, {"$push": {"messages": welcome_msg}}
-        )
+    # NOTE: Welcome message removed — Interakt's own auto-reply handles greeting.
+    # Our bot only sends ONE contextual AI reply per incoming message.
 
-    # IMPROVEMENT 2: Product search + shorter WhatsApp prompt
+    # Product search + shorter WhatsApp prompt
     relevant_products = await search_relevant_products(message_text)
     product_context = format_product_context(relevant_products)
     system_prompt = WA_SYSTEM_PROMPT.replace("{product_context}", product_context)
