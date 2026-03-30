@@ -65,8 +65,8 @@
     }
   },
   "test_environment": {
-    "backend_url": "https://medtech-b2b-portal.preview.emergentagent.com",
-    "frontend_url": "https://medtech-b2b-portal.preview.emergentagent.com",
+    "backend_url": "https://territory-lead-hub.preview.emergentagent.com",
+    "frontend_url": "https://territory-lead-hub.preview.emergentagent.com",
     "test_mobile": "9876543210",
     "admin_password": "admin"
   }
