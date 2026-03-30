@@ -10,6 +10,7 @@ import {
 import { getCatalogProduct, submitLead } from "../lib/api";
 import { toast } from "sonner";
 import LeadCaptureModal from "../components/LeadCaptureModal";
+import { SEO, buildProductSchema, buildBreadcrumbSchema } from "../components/SEO";
 
 const API = process.env.REACT_APP_BACKEND_URL;
 const DISTRICTS = ["Hyderabad","Rangareddy","Medchal-Malkajgiri","Sangareddy","Nalgonda","Warangal","Karimnagar","Khammam","Nizamabad","Adilabad","Mahabubnagar","Medak","Siddipet","Suryapet","Jagtial","Peddapalli","Kamareddy","Mancherial","Wanaparthy","Nagarkurnool","Vikarabad","Jogulamba Gadwal","Rajanna Sircilla","Kumuram Bheem","Mulugu","Narayanpet","Mahabubabad","Jayashankar","Jangaon","Nirmal","Yadadri","Bhadradri","Hanumakonda"];
@@ -170,8 +171,48 @@ export default function CatalogProductDetail() {
   const divSlug = product.division_slug || product.division?.toLowerCase().replace(/\s/g, "-") || "trauma";
   const divName = product.division || "Trauma";
 
+  // SEO: Build descriptive alt text for product images
+  const productAltText = [
+    product.product_name_display,
+    product.brand ? `by ${product.brand}` : null,
+    product.material ? `made of ${product.material}` : null,
+    product.category ? `(${product.category})` : null,
+    "— Meril medical device available from Agile Healthcare, Telangana"
+  ].filter(Boolean).join(" ");
+
+  // SEO: Build JSON-LD schemas
+  const productJsonLd = [
+    buildProductSchema(
+      { ...product, product_name: product.product_name_display, division: divName },
+      imageUrl
+    ),
+    buildBreadcrumbSchema([
+      { name: "Home", url: "/" },
+      { name: "Product Catalog", url: "/catalog" },
+      { name: divName, url: `/catalog/${divSlug}` },
+      ...(product.category ? [{ name: product.category, url: `/catalog/${divSlug}?category=${encodeURIComponent(product.category)}` }] : []),
+      { name: product.product_name_display }
+    ])
+  ];
+
+  const productSeoDescription = [
+    product.description,
+    product.brand ? `Brand: ${product.brand}.` : null,
+    product.material ? `Material: ${product.material}.` : null,
+    skus.length > 0 ? `${skus.length} SKU variants available.` : null,
+    "Order from Agile Healthcare — authorized Meril distributor in Telangana."
+  ].filter(Boolean).join(" ").slice(0, 300);
+
   return (
     <div className="min-h-screen bg-[#0A0A0A] font-[Manrope]" data-testid="catalog-product-detail">
+      <SEO
+        title={`${product.product_name_display}${product.brand ? ` — ${product.brand}` : ''} | ${divName}`}
+        description={productSeoDescription}
+        canonical={`/catalog/products/${product.slug}`}
+        image={imageUrl}
+        type="product"
+        jsonLd={productJsonLd}
+      />
       {/* ===== HERO BANNER ===== */}
       <section className="bg-[#0D0D0D] relative overflow-hidden" data-testid="catalog-detail-hero">
         <div className="absolute inset-0 opacity-10"><div className="w-full h-full bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-amber-500 via-transparent to-transparent" /></div>
@@ -215,7 +256,7 @@ export default function CatalogProductDetail() {
               <div className="bg-white/5 border border-white/[0.06] rounded-sm overflow-hidden">
                 <div className="aspect-square flex items-center justify-center overflow-hidden p-6">
                   {imageUrl && !isbrochureImage ? (
-                    <img src={imageUrl} alt={product.product_name_display} className="w-full h-full object-contain" data-testid="catalog-detail-image" />
+                    <img src={imageUrl} alt={productAltText} className="w-full h-full object-contain" data-testid="catalog-detail-image" />
                   ) : (
                     <CategoryPlaceholder category={product.category} division={divName} />
                   )}
@@ -232,7 +273,7 @@ export default function CatalogProductDetail() {
               {imageUrl && isbrochureImage && (
                 <div className="bg-[#0A0A0A] border border-white/10 rounded-sm p-3 flex items-center gap-3" data-testid="catalog-brochure-thumbnail">
                   <div className="w-16 h-20 bg-white/5 rounded-sm overflow-hidden border border-white/[0.06] shrink-0">
-                    <img src={imageUrl} alt="Brochure" className="w-full h-full object-cover" />
+                    <img src={imageUrl} alt={`Product brochure for ${product.product_name_display} — ${divName} medical device by Meril`} className="w-full h-full object-cover" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-bold text-white/70 flex items-center gap-1.5"><BookOpen size={12} className="text-[#D4AF37]" /> Product Brochure</p>

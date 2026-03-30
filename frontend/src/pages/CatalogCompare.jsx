@@ -5,6 +5,7 @@ import {
   Bone, HeartPulse, Microscope, Activity, Search
 } from "lucide-react";
 import { toast } from "sonner";
+import { SEO } from "../components/SEO";
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -90,6 +91,11 @@ export default function CatalogCompare() {
 
   return (
     <div className="min-h-screen bg-white/5">
+      <SEO
+        title="Compare Medical Devices"
+        description="Compare specifications of Meril medical devices side-by-side. Find the right product for your hospital."
+        noIndex={true}
+      />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="flex items-center gap-3 mb-8">

@@ -12,6 +12,7 @@ import { COMPANY } from "@/lib/constants";
 import { FadeUp, StaggerContainer, StaggerItem, ScaleIn } from "@/lib/motion";
 import { useVisitor } from "@/context/VisitorContext";
 import LeadCaptureModal from "@/components/LeadCaptureModal";
+import { SEO, buildOrganizationSchema, buildLocalBusinessSchema } from "@/components/SEO";
 
 const DIVISION_ICONS = {
   "Trauma": Bone, "Cardiovascular": HeartPulse, "Joint Replacement": Activity,
@@ -53,10 +54,16 @@ export default function Home() {
 
   return (
     <div className="bg-[#0A0A0A]">
+      <SEO
+        title="Meril Medical Device Distributor in Hyderabad & Telangana"
+        description={`Agile Healthcare is the authorized Meril Life Sciences master franchise for Telangana. Browse ${totalProducts > 0 ? totalProducts + '+' : '810+'} verified medical devices across ${divisions.length || 13} clinical divisions — Trauma, Cardiovascular, Joint Replacement, Diagnostics and more.`}
+        canonical="/"
+        jsonLd={[buildOrganizationSchema(), buildLocalBusinessSchema()]}
+      />
       {/* ===== HERO ===== */}
       <section className="relative min-h-[88vh] flex items-center overflow-hidden" data-testid="hero-section">
         <div className="absolute inset-0">
-          <img src={HERO_BG} alt="" className="w-full h-full object-cover opacity-25" />
+          <img src={HERO_BG} alt="Meril Life Sciences medical devices — surgical implants, cardiovascular stents, and diagnostic equipment for hospitals in Hyderabad and Telangana" className="w-full h-full object-cover opacity-25" />
           <div className="absolute inset-0 bg-gradient-to-r from-[#0A0A0A] via-[#0A0A0A]/85 to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-transparent to-[#0A0A0A]/50" />
         </div>

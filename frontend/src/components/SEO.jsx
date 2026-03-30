@@ -38,11 +38,19 @@ export function SEO({ title, description, canonical, image, type = "website", js
       {/* Canonical */}
       {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
 
-      {/* JSON-LD */}
+      {/* JSON-LD — supports single schema or array of schemas */}
       {jsonLd && (
-        <script type="application/ld+json">
-          {JSON.stringify(jsonLd)}
-        </script>
+        Array.isArray(jsonLd)
+          ? jsonLd.filter(Boolean).map((schema, i) => (
+              <script key={`jsonld-${i}`} type="application/ld+json">
+                {JSON.stringify(schema)}
+              </script>
+            ))
+          : (
+            <script type="application/ld+json">
+              {JSON.stringify(jsonLd)}
+            </script>
+          )
       )}
     </Helmet>
   );
@@ -123,23 +131,28 @@ export function buildProductSchema(product, imageUrl) {
     sku: product.sku_code || undefined,
     brand: {
       "@type": "Brand",
-      name: product.manufacturer || "Meril Life Sciences"
+      name: product.brand || product.manufacturer || "Meril Life Sciences"
     },
     category: product.division,
     image: imageUrl || undefined,
+    material: product.material || undefined,
     manufacturer: {
       "@type": "Organization",
-      name: product.manufacturer || "Meril Life Sciences"
+      name: product.manufacturer || "Meril Life Sciences",
+      url: "https://merillife.com"
     },
     offers: {
       "@type": "Offer",
       availability: "https://schema.org/InStock",
       priceCurrency: "INR",
+      url: `${SITE_URL}/catalog/products/${product.slug || ''}`,
       seller: {
         "@type": "Organization",
-        name: "Agile Healthcare"
+        name: "Agile Healthcare",
+        url: SITE_URL
       }
-    }
+    },
+    additionalType: "https://schema.org/MedicalDevice"
   };
 }
 
@@ -162,11 +175,11 @@ export function buildItemListSchema(products, divisionName) {
     "@type": "ItemList",
     name: divisionName ? `${divisionName} Medical Devices` : "Medical Devices Catalog",
     numberOfItems: products.length,
-    itemListElement: products.slice(0, 12).map((p, i) => ({
+    itemListElement: products.slice(0, 20).map((p, i) => ({
       "@type": "ListItem",
       position: i + 1,
-      name: p.product_name,
-      url: `${SITE_URL}/products/${p.id}`
+      name: p.product_name_display || p.product_name,
+      url: `${SITE_URL}/catalog/products/${p.slug || p.id}`
     }))
   };
 }

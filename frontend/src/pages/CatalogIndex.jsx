@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Search, ChevronRight, Bone, HeartPulse, Activity, Microscope, ShieldCheck, Scissors, Wrench, Dumbbell, EarOff, Droplets, Heart, GitBranch, Cpu, ArrowRight } from "lucide-react";
 import { getCatalogDivisions } from "@/lib/api";
+import { SEO, buildBreadcrumbSchema, buildItemListSchema } from "@/components/SEO";
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -69,8 +70,25 @@ export default function CatalogIndex() {
     );
   }
 
+  const catalogJsonLd = divisions.length > 0 ? [
+    buildBreadcrumbSchema([
+      { name: "Home", url: "/" },
+      { name: "Product Catalog" }
+    ]),
+    buildItemListSchema(
+      divisions.map(d => ({ product_name: d.name, id: d.slug })),
+      "All Divisions"
+    )
+  ] : [];
+
   return (
     <div className="min-h-screen bg-[#0A0A0A]" data-testid="catalog-index">
+      <SEO
+        title="Medical Device Catalog — 810+ Meril Products"
+        description={`Browse ${stats.products || '810+'}  verified Meril medical devices across ${stats.divisions || 13} clinical divisions including Trauma, Cardiovascular, Joint Replacement, Diagnostics, and more. Authorized distributor for Telangana hospitals.`}
+        canonical="/catalog"
+        jsonLd={catalogJsonLd.length === 1 ? catalogJsonLd[0] : catalogJsonLd}
+      />
       {/* Header */}
       <div className="border-b border-white/[0.06] py-12 sm:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">

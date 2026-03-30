@@ -6,6 +6,7 @@ import {
   Bone, HeartPulse, Microscope, Activity
 } from "lucide-react";
 import { getCatalogProducts, getCatalogDivision } from "../lib/api";
+import { SEO, buildBreadcrumbSchema, buildItemListSchema } from "../components/SEO";
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -78,8 +79,24 @@ export default function CatalogDivision() {
   const divBrands = divInfo.brands || [];
   const visibleCategories = showAllCategories ? divCategories : divCategories.slice(0, 8);
 
+  const divisionSeoDescription = `Browse ${total} verified ${divInfo.name} medical devices from Meril Life Sciences. Categories include ${divCategories.slice(0, 5).join(', ')}${divCategories.length > 5 ? ' and more' : ''}. Authorized distributor for Telangana hospitals.`;
+  const divisionJsonLd = [
+    buildBreadcrumbSchema([
+      { name: "Home", url: "/" },
+      { name: "Product Catalog", url: "/catalog" },
+      { name: divInfo.name }
+    ]),
+    buildItemListSchema(products, divInfo.name)
+  ];
+
   return (
     <div className="min-h-screen bg-[#0A0A0A]" data-testid="catalog-division-page">
+      <SEO
+        title={`${divInfo.name} Medical Devices — Meril Authorized`}
+        description={divisionSeoDescription}
+        canonical={`/catalog/${divInfo.slug}`}
+        jsonLd={divisionJsonLd}
+      />
       {/* Hero */}
       <section className="bg-[#0D0D0D] border-b border-white/[0.06]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
@@ -214,7 +231,7 @@ export default function CatalogDivision() {
                   data-testid={`catalog-product-card-${p.slug}`}>
                   <div className="aspect-[4/3] bg-[#0D0D0D] flex items-center justify-center overflow-hidden p-5 relative">
                     {hasRealImage ? (
-                      <img src={`${API}/api/files/${p.images[0].storage_path}`} alt={p.product_name_display}
+                      <img src={`${API}/api/files/${p.images[0].storage_path}`} alt={`${p.product_name_display}${p.brand ? ` by ${p.brand}` : ''} — ${divInfo.name} medical device from Meril Life Sciences`}
                         className="max-w-full max-h-full object-contain opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500" loading="lazy" />
                     ) : (
                       <div className="flex flex-col items-center gap-2">
@@ -263,7 +280,7 @@ export default function CatalogDivision() {
                   data-testid={`catalog-product-list-${p.slug}`}>
                   <div className="w-20 h-20 bg-[#0D0D0D] rounded-sm flex items-center justify-center shrink-0 overflow-hidden p-2">
                     {hasRealImage ? (
-                      <img src={`${API}/api/files/${p.images[0].storage_path}`} alt={p.product_name_display} className="w-full h-full object-contain opacity-80" loading="lazy" />
+                      <img src={`${API}/api/files/${p.images[0].storage_path}`} alt={`${p.product_name_display}${p.brand ? ` by ${p.brand}` : ''} — ${divInfo.name} device`} className="w-full h-full object-contain opacity-80" loading="lazy" />
                     ) : (<Bone size={24} className="text-white/10" />)}
                   </div>
                   <div className="flex-1 min-w-0">
