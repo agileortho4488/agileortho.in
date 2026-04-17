@@ -46,7 +46,15 @@ Build a B2B medical device platform for "Agile Healthcare", a premier Meril Life
 - Admin layout auth guard
 
 ## Recent Changes (Apr 17, 2026)
-1. **Product Knowledge Graph Phase 1 shipped** — Mining engine + API + frontend widget
+1. **Next.js/Vercel POC shipped** at `/app/next-app` (parallel to existing React CRA)
+   - Next.js 16 app router, 810 catalog products pre-rendered as static HTML (`generateStaticParams`)
+   - ISR revalidate every 1h, per-product SEO metadata + JSON-LD Product schema
+   - Surgical Decision Engine (KG recommendations) embedded on every product page
+   - Dynamic `sitemap.xml` (811 URLs) and `robots.txt`
+   - Build verified: `yarn build` produces 810 static HTML pages in ~15s
+   - Deploy-ready: Vercel project needs `NEXT_PUBLIC_BACKEND_URL` + `BACKEND_URL` env vars
+   - Admin dashboard stays on React CRA for now (full migration is session 2)
+2. **Product Knowledge Graph Phase 1 shipped** — Mining engine + API + frontend widget
    - `product_relationships` MongoDB collection (5,924 edges: 672 REQUIRES + 5,252 BUNDLE)
    - 443 of 874 live products covered (50.7%)
    - REQUIRES rule: plate↔screw diameter matching with VALID_DIAMETERS whitelist (1.5mm-7.3mm) and BRAND_SCREW_MAP for cross-brand compatibility
@@ -82,7 +90,7 @@ Build a B2B medical device platform for "Agile Healthcare", a premier Meril Life
 
 ### P1
 - Meta Pixel ID and Google Ads Conversion ID (BLOCKED - waiting on user)
-- Next.js / Vercel frontend migration for faster SSG/SSR (paused per user until KG shipped)
+- Next.js / Vercel frontend migration — **POC complete** (Apr 17 2026): 810 product pages pre-rendered as static HTML in `/app/next-app`. Next step: full migration of remaining 24 pages.
 - File 008 processing (BLOCKED - awaiting uncorrupted DOCX)
 - Push CRM leads to Interakt timeout fix (background job for 1274+ leads)
 
