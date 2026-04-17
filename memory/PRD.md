@@ -45,6 +45,17 @@ Build a B2B medical device platform for "Agile Healthcare", a premier Meril Life
 - JWT token validation on all admin routes
 - Admin layout auth guard
 
+## Recent Changes (Apr 17, 2026)
+1. **Product Knowledge Graph Phase 1 shipped** — Mining engine + API + frontend widget
+   - `product_relationships` MongoDB collection (5,924 edges: 672 REQUIRES + 5,252 BUNDLE)
+   - 443 of 874 live products covered (50.7%)
+   - REQUIRES rule: plate↔screw diameter matching with VALID_DIAMETERS whitelist (1.5mm-7.3mm) and BRAND_SCREW_MAP for cross-brand compatibility
+   - BUNDLE rule: same product_family (0.90) + same brand_system+implant_class (0.85)
+   - REORDER rule explicitly skipped (user has separate deployment for that)
+2. **New API endpoints**: `/api/products/{slug}/recommendations`, `/api/admin/knowledge-graph/stats`, `/api/admin/knowledge-graph/rebuild`
+3. **Frontend**: "Surgical Decision Engine" section on product detail page — "Required Together" (gold) + "Complete the System" (teal) bucket grids with confidence badges and reason labels
+4. All 13 backend tests passed (iteration_63.json)
+
 ## Recent Changes (Mar 30, 2026)
 1. Interakt Contact Sync: Pull contacts from Interakt Customer API into CRM (1261 contacts synced)
 2. Bot reply fix: Reduced from 4 messages to 1 contextual AI reply
@@ -65,17 +76,21 @@ Build a B2B medical device platform for "Agile Healthcare", a premier Meril Life
 
 ## Prioritized Backlog
 
-### P0 - None (all critical items resolved)
+### P0
+- Product Knowledge Graph Phase 2 (CRM integration, lead-based recommendations using order history) — blocked on Order Log feature
+- Order Log feature (manual order entry in CRM) — unlocks Phase 2+3
 
 ### P1
 - Meta Pixel ID and Google Ads Conversion ID (BLOCKED - waiting on user)
+- Next.js / Vercel frontend migration for faster SSG/SSR (paused per user until KG shipped)
 - File 008 processing (BLOCKED - awaiting uncorrupted DOCX)
 - Push CRM leads to Interakt timeout fix (background job for 1274+ leads)
 
 ### P2
-- Reorder prediction based on consumption patterns
 - WhatsApp/Email opt-in consent management
 - Consolidate prerender_districts.py with frontend districts.js
+- Incremental React hook dependency warnings cleanup
+- Split large files (AdminAnalytics.jsx, CatalogProductDetail.jsx)
 
 ## Credentials
 - Admin Login: `/admin/login` with password `AgileHealth2026admin`
@@ -90,3 +105,6 @@ Build a B2B medical device platform for "Agile Healthcare", a premier Meril Life
 - POST /api/webhook/whatsapp (Interakt webhook)
 - GET /api/geo/territory-penetration, hospital-intelligence, competitive-intelligence
 - GET /api/chatbot/telemetry/report
+- GET /api/products/{slug}/recommendations (NEW — Knowledge Graph recommendations: must_buy + bundle)
+- GET /api/admin/knowledge-graph/stats (NEW — admin)
+- POST /api/admin/knowledge-graph/rebuild (NEW — admin re-mine graph)
