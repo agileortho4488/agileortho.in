@@ -5,7 +5,8 @@ import {
   Phone, MessageCircle, Mail, Download, FileText, Shield,
   Award, BadgeCheck, Building2, Layers, Link2, GitCompare,
   Stethoscope, ClipboardList, CheckCircle2, Bone, BookOpen,
-  HeartPulse, Microscope, Activity, Search, ChevronDown, ChevronUp
+  HeartPulse, Microscope, Activity, Search, ChevronDown, ChevronUp,
+  Workflow, Zap
 } from "lucide-react";
 import { getCatalogProduct, submitLead } from "../lib/api";
 import { toast } from "sonner";
@@ -121,12 +122,14 @@ export default function CatalogProductDetail() {
   const [skuPage, setSkuPage] = useState(1);
   const [skuExpanded, setSkuExpanded] = useState(true);
   const [relatedBuckets, setRelatedBuckets] = useState(null);
+  const [recommendations, setRecommendations] = useState(null);
   const [leadModal, setLeadModal] = useState({ open: false, inquiryType: "", productInterest: "", whatsappMessage: "", source: "" });
   const SKU_PAGE_SIZE = 30;
 
   useEffect(() => {
     setLoading(true);
     setRelatedBuckets(null);
+    setRecommendations(null);
     window.scrollTo(0, 0);
     getCatalogProduct(slug)
       .then((r) => setProduct(r.data))
@@ -140,6 +143,15 @@ export default function CatalogProductDetail() {
     fetch(`${API}/api/catalog/products/${slug}/related`)
       .then(r => r.ok ? r.json() : null)
       .then(data => { if (data) setRelatedBuckets(data); })
+      .catch(() => {});
+  }, [slug]);
+
+  // Fetch Knowledge Graph recommendations (REQUIRES + BUNDLE)
+  useEffect(() => {
+    if (!slug) return;
+    fetch(`${API}/api/products/${slug}/recommendations`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data?.found) setRecommendations(data); })
       .catch(() => {});
   }, [slug]);
 
@@ -671,6 +683,89 @@ export default function CatalogProductDetail() {
             <Link to="/contact" className="flex items-center gap-2 px-5 py-2.5 bg-[#D4AF37] text-white text-sm font-bold rounded-sm hover:bg-[#F2C94C] transition-colors">Contact Specialist <ChevronRight size={14} /></Link>
           </div>
         </div>
+
+        {/* ════════ KNOWLEDGE GRAPH RECOMMENDATIONS (Surgical Decision Engine) ════════ */}
+        {recommendations && (recommendations.must_buy?.length > 0 || recommendations.bundle?.length > 0) && (
+          <div className="mt-14 space-y-10" data-testid="kg-recommendations">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-8 h-8 rounded-sm bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/30">
+                <Workflow size={16} className="text-[#D4AF37]" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-white tracking-tight">Surgical Decision Engine</h2>
+                <p className="text-xs text-white/45 mt-0.5">Cross-sell intelligence powered by product knowledge graph</p>
+              </div>
+            </div>
+
+            {/* MUST BUY — REQUIRES */}
+            {recommendations.must_buy?.length > 0 && (
+              <div data-testid="kg-must-buy">
+                <div className="mb-4 flex items-center gap-2">
+                  <Zap size={14} className="text-[#D4AF37]" />
+                  <h3 className="text-sm font-bold text-white/90 uppercase tracking-[0.1em]">Required Together</h3>
+                  <span className="text-[10px] text-white/45">Compatible screws, bolts & accessories</span>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {recommendations.must_buy.slice(0, 8).map((item) => (
+                    <Link
+                      key={`must-${item.slug}`}
+                      to={`/catalog/products/${item.slug}`}
+                      className="group bg-[#0A0A0A] border border-[#D4AF37]/20 rounded-sm overflow-hidden hover:border-[#D4AF37]/60 hover:shadow-md transition-all duration-200"
+                      data-testid={`kg-must-buy-${item.slug}`}
+                    >
+                      <div className="h-28 bg-white/5 flex items-center justify-center">
+                        <Bone size={28} className="text-slate-200" />
+                      </div>
+                      <div className="p-3">
+                        <span className="inline-block text-[9px] font-bold uppercase border px-1.5 py-0.5 rounded-md mb-1.5 text-[#D4AF37] bg-[#D4AF37]/10 border-[#D4AF37]/20">
+                          Required · {Math.round(item.confidence * 100)}%
+                        </span>
+                        <h4 className="text-xs font-bold text-white line-clamp-2 group-hover:text-[#D4AF37] transition-colors leading-snug">
+                          {item.product_name}
+                        </h4>
+                        <p className="text-[10px] text-white/45 mt-1 line-clamp-1">{item.reason}</p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* BUNDLE */}
+            {recommendations.bundle?.length > 0 && (
+              <div data-testid="kg-bundle">
+                <div className="mb-4 flex items-center gap-2">
+                  <Layers size={14} className="text-[#2DD4BF]" />
+                  <h3 className="text-sm font-bold text-white/90 uppercase tracking-[0.1em]">Complete the System</h3>
+                  <span className="text-[10px] text-white/45">Bundle components from the same surgical system</span>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {recommendations.bundle.slice(0, 8).map((item) => (
+                    <Link
+                      key={`bun-${item.slug}`}
+                      to={`/catalog/products/${item.slug}`}
+                      className="group bg-[#0A0A0A] border border-[#2DD4BF]/20 rounded-sm overflow-hidden hover:border-[#2DD4BF]/60 hover:shadow-md transition-all duration-200"
+                      data-testid={`kg-bundle-${item.slug}`}
+                    >
+                      <div className="h-28 bg-white/5 flex items-center justify-center">
+                        <Bone size={28} className="text-slate-200" />
+                      </div>
+                      <div className="p-3">
+                        <span className="inline-block text-[9px] font-bold uppercase border px-1.5 py-0.5 rounded-md mb-1.5 text-[#2DD4BF] bg-[#2DD4BF]/10 border-[#2DD4BF]/20">
+                          Bundle · {Math.round(item.confidence * 100)}%
+                        </span>
+                        <h4 className="text-xs font-bold text-white line-clamp-2 group-hover:text-[#2DD4BF] transition-colors leading-snug">
+                          {item.product_name}
+                        </h4>
+                        <p className="text-[10px] text-white/45 mt-1 line-clamp-1">{item.reason}</p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* ════════ RELATED PRODUCTS (Relationship-based) ════════ */}
         {relatedBuckets && (

@@ -24,6 +24,7 @@ from routes.geo import router as geo_router
 from routes.email import router as email_router
 from routes.seo import router as seo_router
 from routes.prerender import router as prerender_router
+from routes.recommendations import router as recommendations_router
 
 app = FastAPI(title="Agile Ortho API")
 
@@ -51,6 +52,7 @@ app.include_router(geo_router)
 app.include_router(email_router)
 app.include_router(seo_router)
 app.include_router(prerender_router)
+app.include_router(recommendations_router)
 
 
 @app.on_event("startup")
@@ -87,6 +89,13 @@ async def startup():
         print("Object storage initialized")
     except Exception as e:
         print(f"Object storage init failed (non-critical): {e}")
+
+    try:
+        from services.knowledge_graph import ensure_indexes as kg_ensure_indexes
+        await kg_ensure_indexes()
+        print("Knowledge graph indexes initialized")
+    except Exception as e:
+        print(f"KG index init failed (non-critical): {e}")
 
     # Start follow-up automation scheduler
     import asyncio
