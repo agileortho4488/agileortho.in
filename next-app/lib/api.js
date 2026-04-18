@@ -62,6 +62,12 @@ export async function listCatalogProducts({ page = 1, limit = 100 } = {}) {
   return data || { products: [], total: 0 };
 }
 
+export async function getDivisions() {
+  assertBackend();
+  const data = await _fetchJSON(`${BACKEND}/api/catalog/divisions`);
+  return data || { divisions: [], total_products: 0 };
+}
+
 /**
  * Bulk prefetch used during build to populate the product cache.
  * After this runs, every subsequent getCatalogProduct(slug) is a map lookup.

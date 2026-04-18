@@ -114,13 +114,6 @@ export default async function ProductPage({ params }) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      {/* ═══ HEADER ═══ */}
-      <header className="border-b border-white/[0.06] py-4 px-6">
-        <Link href="/" className="text-gold font-bold text-sm tracking-widest uppercase">
-          Agile Healthcare · Meril Authorized
-        </Link>
-      </header>
-
       {/* ═══ HERO ═══ */}
       <section className="px-6 py-12 max-w-7xl mx-auto grid md:grid-cols-2 gap-10">
         <div className="bg-white/5 border border-white/10 rounded-sm aspect-square flex items-center justify-center overflow-hidden">
@@ -273,10 +266,7 @@ export default async function ProductPage({ params }) {
         </section>
       )}
 
-      {/* ═══ FOOTER ═══ */}
-      <footer className="border-t border-white/[0.06] mt-16 px-6 py-8 text-center text-xs text-white/45">
-        © {new Date().getFullYear()} Agile Orthopedics Private Limited · Meril Life Sciences Authorized Distributor, Telangana
-      </footer>
+      {/* ═══ FOOTER handled by root layout ═══ */}
     </main>
   );
 }
