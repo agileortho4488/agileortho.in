@@ -145,9 +145,16 @@ export default function AdminLeads() {
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-xs font-semibold ${badge.class}`}>
-                          <BadgeIcon size={12} /> {lead.score}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-xs font-semibold ${badge.class}`}>
+                            <BadgeIcon size={12} /> {lead.score}
+                          </span>
+                          {typeof lead.score_value === "number" && (
+                            <span className="text-xs font-mono text-slate-500" title="Lead score value (0-100)">
+                              {lead.score_value}
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 py-3">
                         <select
@@ -217,6 +224,23 @@ export default function AdminLeads() {
               )}
               {selectedLead.message && (
                 <div><p className="text-xs text-slate-500 mb-1">Message</p><p className="text-sm">{selectedLead.message}</p></div>
+              )}
+
+              {/* AI Score Reasoning */}
+              {(selectedLead.score_reasoning || []).length > 0 && (
+                <div data-testid="lead-score-reasoning">
+                  <p className="text-xs font-bold uppercase tracking-[0.1em] text-slate-600 mb-2">
+                    Why this score? <span className="font-mono text-slate-400 normal-case">({selectedLead.score} · {selectedLead.score_value})</span>
+                  </p>
+                  <div className="space-y-1.5">
+                    {selectedLead.score_reasoning.map((r, i) => (
+                      <div key={i} className="flex items-start gap-2 text-sm bg-emerald-50/40 border border-emerald-100 rounded-sm px-2.5 py-1.5">
+                        <span className="text-xs font-mono font-bold text-emerald-700 shrink-0">+{r.points}</span>
+                        <span className="text-slate-700">{r.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
 
               {/* Notes */}

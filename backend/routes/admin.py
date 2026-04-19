@@ -10,6 +10,7 @@ from models import AdminLogin, LeadUpdate, ProductCreate, ProductUpdate
 from helpers import (
     ADMIN_PASSWORD, create_token, admin_required,
     serialize_doc, serialize_docs, calculate_lead_score,
+    explain_lead_score,
     put_object, get_mime_type, APP_NAME, hash_password,
 )
 
@@ -113,7 +114,17 @@ async def admin_stats(_=Depends(admin_required)):
         "products_by_division": [{"division": d["_id"], "count": d["count"]} for d in division_counts],
         "leads_by_inquiry": [{"type": d["_id"], "count": d["count"]} for d in inquiry_counts],
         "leads_by_district": [{"district": d["_id"] or "Unknown", "count": d["count"]} for d in district_counts],
+        "knowledge_graph": await _kg_stats_safe(),
     }
+
+
+async def _kg_stats_safe():
+    """Return Knowledge Graph stats inline for the dashboard. Never raises."""
+    try:
+        from services.knowledge_graph import graph_stats
+        return await graph_stats()
+    except Exception as e:
+        return {"error": str(e)}
 
 
 # --- Pipeline / Analytics ---
@@ -223,8 +234,12 @@ async def admin_list_leads(
     cursor = leads_col.find(query).sort(sort_by, sort_order).skip(skip).limit(limit)
     docs = await cursor.to_list(limit)
 
+    leads_out = serialize_docs(docs)
+    for ld in leads_out:
+        ld["score_reasoning"] = explain_lead_score(ld)
+
     return {
-        "leads": serialize_docs(docs),
+        "leads": leads_out,
         "total": total,
         "page": page,
         "pages": math.ceil(total / limit) if total > 0 else 1
@@ -239,7 +254,9 @@ async def admin_get_lead(lead_id: str, _=Depends(admin_required)):
         raise HTTPException(400, "Invalid lead ID")
     if not doc:
         raise HTTPException(404, "Lead not found")
-    return serialize_doc(doc)
+    lead = serialize_doc(doc)
+    lead["score_reasoning"] = explain_lead_score(lead)
+    return lead
 
 
 @router.put("/api/admin/leads/{lead_id}")
@@ -267,7 +284,9 @@ async def admin_update_lead(lead_id: str, update: LeadUpdate, _=Depends(admin_re
         raise HTTPException(404, "Lead not found")
 
     doc = await leads_col.find_one({"_id": oid})
-    return serialize_doc(doc)
+    lead = serialize_doc(doc)
+    lead["score_reasoning"] = explain_lead_score(lead)
+    return lead
 
 
 @router.delete("/api/admin/leads/{lead_id}")

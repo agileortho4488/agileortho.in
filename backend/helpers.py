@@ -98,6 +98,37 @@ def calculate_lead_score(lead: dict) -> tuple:
         return "Cold", score_value
 
 
+def explain_lead_score(lead: dict) -> list:
+    """Return a list of human-readable reasons explaining a lead's score.
+
+    Runs the same weight table as ``calculate_lead_score`` but emits a reason
+    string for every rule that fired. Safe to call on any lead doc.
+    """
+    reasons = []
+    inquiry = lead.get("inquiry_type", "")
+    inquiry_weights = {
+        "Bulk Quote": (40, "Bulk-quote inquiry (high commercial intent)"),
+        "Product Info": (20, "Specific product inquiry"),
+        "Brochure Download": (15, "Downloaded brochure"),
+        "WhatsApp Chat": (25, "Started WhatsApp chat"),
+    }
+    if inquiry in inquiry_weights:
+        pts, label = inquiry_weights[inquiry]
+        reasons.append({"points": pts, "label": label})
+    else:
+        reasons.append({"points": 10, "label": "General inquiry"})
+
+    if lead.get("hospital_clinic"):
+        reasons.append({"points": 15, "label": f"Hospital identified: {lead['hospital_clinic']}"})
+    if lead.get("email"):
+        reasons.append({"points": 10, "label": "Email provided"})
+    if lead.get("district"):
+        reasons.append({"points": 10, "label": f"District captured: {lead['district']}"})
+    if lead.get("product_interest"):
+        reasons.append({"points": 15, "label": f"Product interest: {lead['product_interest']}"})
+    return reasons
+
+
 # --- Regex Escape ---
 
 def escape_regex(text):

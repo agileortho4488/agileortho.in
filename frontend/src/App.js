@@ -10,6 +10,7 @@ import AdminProducts from "./pages/AdminProducts";
 import AdminImports from "./pages/AdminImports";
 import AdminWhatsApp from "./pages/AdminWhatsApp";
 import AdminReview from "./pages/AdminReview";
+import AdminKnowledgeGraph from "./pages/AdminKnowledgeGraph";
 import "./App.css";
 
 /**
@@ -39,6 +40,7 @@ function App() {
           <Route path="/admin/imports" element={<AdminImports />} />
           <Route path="/admin/whatsapp" element={<AdminWhatsApp />} />
           <Route path="/admin/review" element={<AdminReview />} />
+          <Route path="/admin/knowledge-graph" element={<AdminKnowledgeGraph />} />
         </Route>
 
         <Route

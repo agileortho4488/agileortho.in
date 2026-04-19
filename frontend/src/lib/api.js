@@ -45,6 +45,14 @@ export const updateAdminProduct = (id, data) => api.put(`/api/admin/products/${i
 export const deleteAdminProduct = (id) => api.delete(`/api/admin/products/${id}`);
 export const reprocessImport = (id) => api.post(`/api/admin/imports/${id}/reprocess`);
 
+// Knowledge Graph APIs
+export const getKnowledgeGraphStats = () => api.get("/api/admin/knowledge-graph/stats");
+export const getKnowledgeGraphTop = (limit = 12) => api.get("/api/admin/knowledge-graph/top", { params: { limit } });
+export const rebuildKnowledgeGraph = () => api.post("/api/admin/knowledge-graph/rebuild");
+
+// IndexNow APIs
+export const indexNowSubmitAll = () => api.post("/api/admin/indexnow/submit-all-products");
+
 // Product Image APIs
 export const uploadProductImages = (productId, files) => {
   const formData = new FormData();

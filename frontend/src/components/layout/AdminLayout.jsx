@@ -1,6 +1,6 @@
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, Users, Package, LogOut, ChevronRight, BarChart3, Kanban, FileUp, MessageCircle, ClipboardCheck } from "lucide-react";
+import { LayoutDashboard, Users, Package, LogOut, ChevronRight, BarChart3, Kanban, FileUp, MessageCircle, ClipboardCheck, Network } from "lucide-react";
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -41,6 +41,7 @@ export const AdminLayout = () => {
     { to: "/admin/pipeline", icon: Kanban, label: "Pipeline" },
     { to: "/admin/leads", icon: Users, label: "Leads" },
     { to: "/admin/analytics", icon: BarChart3, label: "Analytics" },
+    { to: "/admin/knowledge-graph", icon: Network, label: "Knowledge Graph" },
     { to: "/admin/products", icon: Package, label: "Products" },
     { to: "/admin/imports", icon: FileUp, label: "PDF Import" },
     { to: "/admin/whatsapp", icon: MessageCircle, label: "WhatsApp" },
