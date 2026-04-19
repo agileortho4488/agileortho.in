@@ -45,6 +45,24 @@ Build a B2B medical device platform for "Agile Healthcare", a premier Meril Life
 - JWT token validation on all admin routes
 - Admin layout auth guard
 
+## Recent Changes (Apr 19, 2026 — Admin Enhancements, iteration_65)
+1. **Dashboard KPI refresh + Knowledge Graph card** — `/app/frontend/src/pages/AdminDashboard.jsx`
+   - New 4-KPI row: Leads Today, Last 7 Days, Last 30 Days, Review Pending
+   - Auto-refresh every 60s + manual Refresh button
+   - Clickable Knowledge Graph summary card (edges + coverage bar) linking to `/admin/knowledge-graph`
+2. **New Knowledge Graph admin page** — `/app/frontend/src/pages/AdminKnowledgeGraph.jsx`
+   - Stat cards (Total Edges, REQUIRES, BUNDLE, Products Covered), catalog coverage progress bar
+   - Top Cross-Sell Hubs list (top products by incoming recommendation count)
+   - "Rebuild Graph" (re-mines all relationships) + "Ping IndexNow" one-click actions
+   - Registered at `/admin/knowledge-graph`; sidebar nav updated
+3. **Lead Scoring visibility** — `/app/frontend/src/pages/AdminLeads.jsx` + backend
+   - New `explain_lead_score(lead)` helper in `helpers.py` returns `[{points, label}]`
+   - `/api/admin/leads`, `/api/admin/leads/{id}` (GET & PUT) now include `score_reasoning`
+   - Drawer shows "Why this score?" breakdown with point contributions
+   - Table now shows numeric score value alongside the Hot/Warm/Cold badge
+4. **Enhanced `/api/admin/stats`** — added `leads_today`, `leads_7d`, `leads_30d`, `review_pending`, and inline `knowledge_graph` block
+5. Tests: 11/11 backend pytest + 100% frontend coverage (iteration_65)
+
 ## Recent Changes (Apr 19, 2026)
 1. **Admin split from public website** — `/app/frontend` (React CRA) is now admin-only
    - Deleted 15 public pages/components (Home, Catalog, Products, ProductDetail, Districts, About, Contact, Chat, ChatWidget, CookieConsent, SEO, SiteHeader, SiteFooter, Layout, PageTransition, VisitorContext, lib/districts, lib/constants, AdminBulkUpload)
