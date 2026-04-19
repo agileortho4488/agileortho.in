@@ -302,6 +302,18 @@ async def catalog_product_list(
             "semantic_system_type": doc.get("semantic_system_type"),
             "semantic_material_default": doc.get("semantic_material_default"),
             "semantic_coating_default": doc.get("semantic_coating_default"),
+            # Rich fields used by the public product page detail sections
+            "description_live": doc.get("description_live", ""),
+            "description_shadow": doc.get("description_shadow", ""),
+            "technical_specifications": doc.get("technical_specifications", {}),
+            "semantic_anatomy_scope": doc.get("semantic_anatomy_scope", []),
+            "semantic_procedure_scope": doc.get("semantic_procedure_scope") or doc.get("proposed_semantic_procedure_scope", []),
+            "semantic_implant_class": doc.get("semantic_implant_class", ""),
+            "proposed_semantic_use_case_tags": doc.get("proposed_semantic_use_case_tags", []),
+            "pack_size": doc.get("pack_size", ""),
+            "size_variables": doc.get("size_variables", []),
+            "material_canonical": doc.get("material_canonical", ""),
+            "sku_code": doc.get("sku_code", ""),
         })
 
     return {
