@@ -250,6 +250,82 @@ async def admin_list_leads(
     }
 
 
+@router.get("/api/admin/leads/export.csv")
+async def admin_export_leads_csv(
+    source: str = "",
+    score: str = "",
+    status: str = "",
+    district: str = "",
+    exclude_template: str = "",
+    _=Depends(admin_required),
+):
+    """Export leads as CSV with format: phone,name (phone prefixed with +91).
+
+    Query params:
+      source=google_maps         — filter by source
+      exclude_template=<name>    — drop any lead that already received this template
+                                   (via outbound_sends_col) — for dedup on bulk sends
+    """
+    import csv as _csv
+    import io as _io
+    from fastapi.responses import StreamingResponse as _SR
+
+    query = {"phone_whatsapp": {"$nin": [None, ""]}}
+    if source:
+        query["source"] = source
+    if score:
+        query["score"] = score
+    if status:
+        query["status"] = status
+    if district:
+        query["district"] = district
+
+    # Dedup: exclude phones that already received a given template
+    excluded_phones = set()
+    if exclude_template:
+        from db import db as _db
+        async for s in _db["outbound_sends"].find(
+            {"template_name": exclude_template, "status": "sent"},
+            {"_id": 0, "phone": 1},
+        ):
+            if s.get("phone"):
+                excluded_phones.add(s["phone"])
+        if excluded_phones:
+            query["phone_whatsapp"] = {
+                "$nin": list(excluded_phones) + [None, ""]
+            }
+
+    buf = _io.StringIO()
+    w = _csv.writer(buf)
+    w.writerow(["phone", "name"])
+    count = 0
+    async for d in leads_col.find(query, {"_id": 0, "phone_whatsapp": 1, "name": 1, "hospital_clinic": 1}):
+        ph = (d.get("phone_whatsapp") or "").strip()
+        if not ph:
+            continue
+        # Ensure 10-digit → prefix +91
+        digits = "".join(c for c in ph if c.isdigit())
+        if digits.startswith("91") and len(digits) > 10:
+            digits = digits[2:]
+        if len(digits) != 10:
+            continue  # skip malformed
+        name = (d.get("name") or d.get("hospital_clinic") or "").strip().replace("\n", " ")
+        w.writerow([f"+91{digits}", name])
+        count += 1
+
+    buf.seek(0)
+
+    def _stream():
+        yield buf.getvalue()
+
+    filename = f"leads_{source or 'all'}_{count}_rows.csv"
+    return _SR(
+        _stream(),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
 @router.get("/api/admin/leads/{lead_id}")
 async def admin_get_lead(lead_id: str, _=Depends(admin_required)):
     try:

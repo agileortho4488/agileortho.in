@@ -4,7 +4,7 @@ import api from "../lib/api";
 import { toast } from "sonner";
 import {
   Search, Flame, Thermometer, Snowflake, Phone, Mail, Trash2, Eye, X, ChevronLeft, ChevronRight,
-  MessageCircle, Globe, MapPin, Database, Loader2, Zap,
+  MessageCircle, Globe, MapPin, Database, Loader2, Zap, Download,
 } from "lucide-react";
 
 const SCORE_BADGES = {
@@ -62,6 +62,38 @@ export default function AdminLeads() {
     } catch (e) {
       toast.error(e?.response?.data?.detail || "Scrape trigger failed");
       setScraping(false);
+    }
+  };
+
+  const downloadCsv = async () => {
+    const excludeTemplate = window.prompt(
+      "Template name to EXCLUDE (skip leads that already received it).\n\nLeave blank to export all leads.\n\nExample: ao_optin_v1 or website_launch",
+      ""
+    );
+    if (excludeTemplate === null) return; // cancelled
+    try {
+      const API_URL = process.env.REACT_APP_BACKEND_URL;
+      const token = localStorage.getItem("admin_token");
+      const params = new URLSearchParams();
+      if (filters.source) params.set("source", filters.source);
+      if (filters.score) params.set("score", filters.score);
+      if (filters.status) params.set("status", filters.status);
+      if (excludeTemplate.trim()) params.set("exclude_template", excludeTemplate.trim());
+
+      const res = await fetch(`${API_URL}/api/admin/leads/export.csv?${params}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = res.headers.get("Content-Disposition")?.split("filename=")[1] || "leads.csv";
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("CSV downloaded");
+    } catch (e) {
+      toast.error(`Export failed: ${e.message}`);
     }
   };
 
@@ -147,6 +179,14 @@ export default function AdminLeads() {
             >
               {scraping ? <Loader2 size={14} className="animate-spin" /> : <MapPin size={14} />}
               {scraping ? "Scraping..." : "Bulk Scrape Telangana"}
+            </button>
+            <button
+              onClick={downloadCsv}
+              className="inline-flex items-center gap-2 px-3 py-2 bg-indigo-500 hover:bg-indigo-400 text-white font-bold rounded-sm text-sm"
+              data-testid="download-csv-btn"
+              title="Download CSV of leads (phone,name) — exclude any who already received a template"
+            >
+              <Download size={14} /> Export CSV
             </button>
             <a
               href="/admin/market-intelligence"
