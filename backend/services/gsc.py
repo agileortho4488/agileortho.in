@@ -12,10 +12,18 @@ One-time admin setup (in Google Cloud Console, 3 minutes):
 Runtime: admin clicks "Connect Search Console" in the Leads page → OAuth flow
 → refresh token stored in `app_config`. Daily/on-demand import pulls top
 queries and inserts them into `leads_col` with source="gsc_warm".
+
+PKCE NOTE: Google's newly-created OAuth clients default to requiring PKCE
+(a code_verifier sent with the token exchange). Because our authorization_url
+and callback live in two separate HTTP requests, we must persist the
+code_verifier between them. We key it by the OAuth `state` parameter.
 """
 from __future__ import annotations
 
 import os
+import secrets
+import hashlib
+import base64
 from datetime import datetime, timezone, timedelta
 from typing import Optional
 
@@ -31,6 +39,7 @@ CLIENT_ID = os.environ.get("GOOGLE_OAUTH_CLIENT_ID") or ""
 CLIENT_SECRET = os.environ.get("GOOGLE_OAUTH_CLIENT_SECRET") or ""
 
 app_config_col = mongo_db["app_config"]
+oauth_state_col = mongo_db["oauth_state"]
 
 
 def _now() -> datetime:
@@ -44,7 +53,6 @@ def _iso(dt: datetime) -> str:
 def _redirect_uri() -> str:
     backend = os.environ.get("REACT_APP_BACKEND_URL") or ""
     if not backend:
-        # Fall back to BACKEND_URL / explicit override
         backend = os.environ.get("BACKEND_URL") or ""
     return f"{backend.rstrip('/')}/api/admin/gsc/callback"
 
@@ -65,26 +73,58 @@ def _client_config() -> dict:
     }
 
 
-def build_auth_url() -> tuple:
+def _gen_pkce_pair() -> tuple:
+    """Return (code_verifier, code_challenge) for Google OAuth PKCE flow."""
+    # Per RFC 7636: 43-128 char URL-safe string
+    verifier = secrets.token_urlsafe(64)[:96]
+    digest = hashlib.sha256(verifier.encode("ascii")).digest()
+    challenge = base64.urlsafe_b64encode(digest).decode("ascii").rstrip("=")
+    return verifier, challenge
+
+
+async def build_auth_url() -> tuple:
     """Return (auth_url, state) for redirecting the admin to Google."""
     if not is_configured():
         raise RuntimeError("Google OAuth client not configured (see GOOGLE_OAUTH_CLIENT_ID)")
+
+    code_verifier, code_challenge = _gen_pkce_pair()
     flow = Flow.from_client_config(_client_config(), scopes=SCOPES)
     flow.redirect_uri = _redirect_uri()
     url, state = flow.authorization_url(
         access_type="offline",
         prompt="consent",
         include_granted_scopes="true",
+        code_challenge=code_challenge,
+        code_challenge_method="S256",
+    )
+    # Persist the verifier so /callback can retrieve it
+    await oauth_state_col.update_one(
+        {"state": state},
+        {"$set": {
+            "state": state,
+            "code_verifier": code_verifier,
+            "provider": "gsc",
+            "created_at": _iso(_now()),
+        }},
+        upsert=True,
     )
     return url, state
 
 
-async def handle_callback(code: str) -> dict:
-    """Exchange auth code for tokens, persist, and return a status summary."""
+async def handle_callback(code: str, state: str) -> dict:
+    """Exchange auth code for tokens using the state-mapped code_verifier."""
+    st_doc = await oauth_state_col.find_one({"state": state, "provider": "gsc"})
+    if not st_doc:
+        raise RuntimeError("OAuth state not found or already used — please restart the flow")
+    code_verifier = st_doc.get("code_verifier")
+
     flow = Flow.from_client_config(_client_config(), scopes=SCOPES)
     flow.redirect_uri = _redirect_uri()
+    if code_verifier:
+        flow.code_verifier = code_verifier
     flow.fetch_token(code=code)
     creds = flow.credentials
+
     doc = {
         "type": "gsc_oauth",
         "access_token": creds.token,
@@ -96,6 +136,8 @@ async def handle_callback(code: str) -> dict:
     await app_config_col.update_one(
         {"type": "gsc_oauth"}, {"$set": doc}, upsert=True
     )
+    # Cleanup state (single-use)
+    await oauth_state_col.delete_one({"state": state})
     return {"connected": True, "scope": doc["scope"]}
 
 

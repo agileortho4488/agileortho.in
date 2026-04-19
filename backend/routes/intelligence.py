@@ -69,16 +69,16 @@ async def gsc_connect(_=Depends(admin_required)):
             "Google OAuth not configured. Set GOOGLE_OAUTH_CLIENT_ID and "
             "GOOGLE_OAUTH_CLIENT_SECRET in backend/.env, then restart backend.",
         )
-    url, state = gsc_svc.build_auth_url()
+    url, state = await gsc_svc.build_auth_url()
     return {"auth_url": url, "state": state, "redirect_uri": gsc_svc._redirect_uri()}
 
 
 @router.get("/api/admin/gsc/callback")
 async def gsc_callback(request: Request):
-    """OAuth callback — Google redirects here with ?code=..."""
+    """OAuth callback — Google redirects here with ?code=...&state=..."""
     code = request.query_params.get("code")
+    state = request.query_params.get("state", "")
     error = request.query_params.get("error")
-    # Redirect back to the admin UI regardless of outcome; pass status via query param
     frontend_base = os.environ.get("REACT_APP_BACKEND_URL") or ""
     target = f"{frontend_base.rstrip('/')}/admin/leads"
     if error:
@@ -86,7 +86,7 @@ async def gsc_callback(request: Request):
     if not code:
         return RedirectResponse(f"{target}?gsc=error&reason=no_code")
     try:
-        await gsc_svc.handle_callback(code)
+        await gsc_svc.handle_callback(code, state)
         return RedirectResponse(f"{target}?gsc=connected")
     except Exception as e:
         return RedirectResponse(f"{target}?gsc=error&reason={str(e)[:80]}")
