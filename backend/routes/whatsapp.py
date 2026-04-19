@@ -605,20 +605,39 @@ async def whatsapp_webhook(request: Request):
         message_text = message.get("message", "")
 
         # Interactive reply → encode row/button id as text so the funnel can route it.
-        # Interakt delivers interactive replies with message.type == "interactive" and a nested
-        # interactive.list_reply.id / interactive.button_reply.id (mirroring WhatsApp Cloud API).
+        # Interakt delivers interactive replies in TWO possible shapes:
+        #   (a) structured:  message.type=="interactive", message.interactive.{list_reply|button_reply}.id
+        #   (b) stringified: message.message == '{"type":"list_reply","list_reply":{"id":"div:..."}}'
+        #       (this is what Interakt actually does for the public API)
         msg_type = (message.get("type") or "").lower()
         interactive_block = message.get("interactive") or {}
-        if msg_type == "interactive" and interactive_block:
+
+        # Shape (b): parse JSON blob from message.message
+        if isinstance(message_text, str) and message_text.strip().startswith("{") and "list_reply" in message_text + "button_reply":
+            try:
+                parsed = json.loads(message_text)
+                itype = (parsed.get("type") or "").lower()
+                if itype == "list_reply":
+                    rid = (parsed.get("list_reply") or {}).get("id", "")
+                    if rid:
+                        message_text = rid
+                elif itype == "button_reply":
+                    bid = (parsed.get("button_reply") or {}).get("id", "")
+                    if bid:
+                        message_text = bid
+            except Exception:
+                pass
+        # Shape (a): structured interactive field
+        elif msg_type == "interactive" and interactive_block:
             itype = (interactive_block.get("type") or "").lower()
             if itype == "list_reply":
                 rid = (interactive_block.get("list_reply") or {}).get("id", "")
                 if rid:
-                    message_text = rid  # e.g., "div:Trauma"
+                    message_text = rid
             elif itype == "button_reply":
                 bid = (interactive_block.get("button_reply") or {}).get("id", "")
                 if bid:
-                    message_text = bid  # e.g., "act:quote"
+                    message_text = bid
 
         if phone and message_text:
             conv = await wa_conversations_col.find_one({"phone": phone})

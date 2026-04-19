@@ -26,6 +26,7 @@ from routes.seo import router as seo_router
 from routes.prerender import router as prerender_router
 from routes.recommendations import router as recommendations_router
 from routes.indexnow import router as indexnow_router
+from routes.prospects import router as prospects_router
 
 app = FastAPI(title="Agile Ortho API")
 
@@ -55,6 +56,7 @@ app.include_router(seo_router)
 app.include_router(prerender_router)
 app.include_router(recommendations_router)
 app.include_router(indexnow_router)
+app.include_router(prospects_router)
 
 
 @app.on_event("startup")
@@ -115,6 +117,13 @@ async def startup():
             print(f"WhatsApp funnel mode: {cfg['mode']}")
     except Exception as e:
         print(f"Funnel mode load failed (non-critical): {e}")
+
+    try:
+        from services.apify import ensure_indexes as apify_ensure
+        await apify_ensure()
+        print("Prospects/Apify indexes initialized")
+    except Exception as e:
+        print(f"Apify index init failed (non-critical): {e}")
 
     # Start follow-up automation scheduler
     import asyncio
