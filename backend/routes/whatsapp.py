@@ -162,6 +162,26 @@ I can help you with:
 
 What are you looking for today?"""
 
+async def _ensure_wa_lead(phone: str, customer_name: str, first_message: str):
+    """Ensure a lead exists for this phone number (idempotent)."""
+    existing = await leads_col.find_one({"phone_whatsapp": phone})
+    if existing:
+        return
+    await leads_col.insert_one({
+        "name": customer_name or f"WhatsApp {phone}",
+        "phone_whatsapp": phone,
+        "hospital_clinic": "", "email": "", "district": "",
+        "inquiry_type": "WhatsApp Chat",
+        "product_interest": (first_message or "")[:100],
+        "source": "whatsapp",
+        "score": "Cold", "score_value": 15,
+        "status": "new",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    })
+
+
+
 
 def chunk_message(text: str, max_len: int = 300) -> list:
     """Split long AI response into WhatsApp-friendly chunks."""
@@ -191,6 +211,7 @@ def chunk_message(text: str, max_len: int = 300) -> list:
 async def handle_wa_incoming(phone: str, message_text: str, customer_name: str = ""):
     from routes.chat import search_relevant_products, format_product_context
     from routes.automation import update_lead_from_conversation, schedule_followups
+    from services.whatsapp_funnel import try_handle_funnel
 
     session_id = f"wa-{phone}"
     conv = await wa_conversations_col.find_one({"phone": phone})
@@ -225,6 +246,40 @@ async def handle_wa_incoming(phone: str, message_text: str, customer_name: str =
             "$inc": {"unread": 1},
         }
     )
+
+    # --- 1) Try the Conversational Funnel first ---
+    funnel_replies = await try_handle_funnel(phone, message_text, customer_name or "")
+    if funnel_replies:
+        for i, reply in enumerate(funnel_replies):
+            await send_whatsapp_message(phone, reply, callback_data=f"funnel_{i}")
+            if i < len(funnel_replies) - 1:
+                await asyncio.sleep(1.0)
+            # Save bot reply in transcript
+            await wa_conversations_col.update_one(
+                {"phone": phone},
+                {
+                    "$push": {"messages": {
+                        "role": "assistant",
+                        "content": reply,
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                        "channel": "whatsapp",
+                        "source": "funnel",
+                    }},
+                    "$set": {"updated_at": datetime.now(timezone.utc).isoformat()},
+                }
+            )
+
+        # Ensure a lead exists (first-touch) — funnel will upgrade it later
+        if not conv.get("lead_created"):
+            await _ensure_wa_lead(phone, customer_name, message_text)
+            await wa_conversations_col.update_one(
+                {"phone": phone}, {"$set": {"lead_created": True}}
+            )
+            asyncio.create_task(track_user_in_interakt(
+                phone, name=customer_name or f"WhatsApp {phone}",
+                tags=["whatsapp-lead", "funnel-entered"]
+            ))
+        return funnel_replies[-1]
 
     # NOTE: Welcome message removed — Interakt's own auto-reply handles greeting.
     # Our bot only sends ONE contextual AI reply per incoming message.
@@ -992,3 +1047,48 @@ async def sync_interakt_contacts_to_crm(_=Depends(admin_required)):
         "updated": updated,
         "skipped": skipped,
     }
+
+
+
+# --- WhatsApp Funnel (automated catalog walk) ---
+
+@router.get("/api/admin/whatsapp/funnel-analytics")
+async def get_funnel_analytics(_=Depends(admin_required)):
+    """Return conversion funnel counts + per-division breakdown + recent events."""
+    from services.whatsapp_funnel import funnel_analytics
+    return await funnel_analytics()
+
+
+@router.post("/api/admin/whatsapp/funnel-simulate")
+async def simulate_funnel(request: Request, _=Depends(admin_required)):
+    """Dry-run the funnel engine for a given phone + message (no WhatsApp send).
+
+    Body: {"phone": "9198...", "message": "hi"}
+    Returns the reply(ies) the funnel would send + the resulting state.
+    """
+    from services.whatsapp_funnel import try_handle_funnel, _get_funnel_state
+    body = await request.json()
+    phone = body.get("phone", "")
+    message = body.get("message", "")
+    if not phone or not message:
+        raise HTTPException(400, "phone and message required")
+    replies = await try_handle_funnel(phone, message, body.get("customer_name", ""))
+    state = await _get_funnel_state(phone)
+    return {
+        "handled": replies is not None,
+        "replies": replies or [],
+        "state": state,
+    }
+
+
+@router.post("/api/admin/whatsapp/funnel-reset")
+async def reset_funnel(request: Request, _=Depends(admin_required)):
+    """Reset the funnel state for a given phone so next message starts fresh."""
+    body = await request.json()
+    phone = body.get("phone", "")
+    if not phone:
+        raise HTTPException(400, "phone required")
+    await wa_conversations_col.update_one(
+        {"phone": phone}, {"$unset": {"funnel": ""}}
+    )
+    return {"phone": phone, "reset": True}

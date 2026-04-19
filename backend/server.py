@@ -99,6 +99,13 @@ async def startup():
     except Exception as e:
         print(f"KG index init failed (non-critical): {e}")
 
+    try:
+        from services.whatsapp_funnel import ensure_indexes as funnel_ensure_indexes
+        await funnel_ensure_indexes()
+        print("WhatsApp funnel indexes initialized")
+    except Exception as e:
+        print(f"Funnel index init failed (non-critical): {e}")
+
     # Start follow-up automation scheduler
     import asyncio
     from routes.automation import followup_scheduler
