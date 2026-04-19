@@ -9,6 +9,7 @@ import {
   listCatalogProducts,
   backendFileUrl,
 } from "@/lib/api";
+import { WhatsAppCTA, WhatsAppIconButton } from "@/components/WhatsAppCTA";
 
 export const revalidate = 3600; // ISR: regenerate page every hour
 
@@ -166,13 +167,14 @@ export default async function ProductPage({ params }) {
               {product.description_live}
             </p>
           )}
-          <div className="flex gap-3 pt-6">
-            <a
-              href="https://wa.me/917416521222"
-              className="px-6 py-3 bg-gold text-ink text-sm font-bold rounded-sm hover:bg-[#F2C94C] transition-colors"
-            >
-              Request Quote
-            </a>
+          <div className="flex gap-3 pt-6 flex-wrap">
+            <WhatsAppCTA
+              productName={product.product_name_display || product.product_name}
+              brand={product.brand}
+              slug={slug}
+              label={`Ask about ${product.product_name_display || product.product_name}`}
+              testid="product-wa-cta"
+            />
             <a
               href="tel:+917416521222"
               className="px-6 py-3 border border-white/20 text-sm font-semibold rounded-sm hover:border-gold transition-colors flex items-center gap-2"
@@ -207,25 +209,34 @@ export default async function ProductPage({ params }) {
               </div>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {mustBuy.slice(0, 8).map((item) => (
-                  <Link
+                  <div
                     key={`mb-${item.slug}`}
-                    href={`/catalog/products/${item.slug}`}
-                    className="group bg-ink border border-gold/20 rounded-sm overflow-hidden hover:border-gold/60 transition-colors"
+                    className="group relative bg-ink border border-gold/20 rounded-sm overflow-hidden hover:border-gold/60 transition-colors"
                     data-testid={`kg-must-buy-${item.slug}`}
                   >
-                    <div className="h-28 bg-white/5 flex items-center justify-center">
-                      <Bone size={28} className="text-slate-200" />
+                    <Link href={`/catalog/products/${item.slug}`} className="block">
+                      <div className="h-28 bg-white/5 flex items-center justify-center">
+                        <Bone size={28} className="text-slate-200" />
+                      </div>
+                      <div className="p-3">
+                        <span className="inline-block text-[9px] font-bold uppercase border px-1.5 py-0.5 rounded-md mb-1.5 text-gold bg-gold/10 border-gold/20">
+                          Required · {Math.round((item.confidence || 0) * 100)}%
+                        </span>
+                        <h4 className="text-xs font-bold line-clamp-2 group-hover:text-gold transition-colors leading-snug">
+                          {item.product_name}
+                        </h4>
+                        <p className="text-[10px] text-white/45 mt-1 line-clamp-1">{item.reason}</p>
+                      </div>
+                    </Link>
+                    <div className="px-3 pb-3">
+                      <WhatsAppIconButton
+                        productName={item.product_name}
+                        slug={item.slug}
+                        tone="gold"
+                        testid={`wa-mb-${item.slug}`}
+                      />
                     </div>
-                    <div className="p-3">
-                      <span className="inline-block text-[9px] font-bold uppercase border px-1.5 py-0.5 rounded-md mb-1.5 text-gold bg-gold/10 border-gold/20">
-                        Required · {Math.round((item.confidence || 0) * 100)}%
-                      </span>
-                      <h4 className="text-xs font-bold line-clamp-2 group-hover:text-gold transition-colors leading-snug">
-                        {item.product_name}
-                      </h4>
-                      <p className="text-[10px] text-white/45 mt-1 line-clamp-1">{item.reason}</p>
-                    </div>
-                  </Link>
+                  </div>
                 ))}
               </div>
             </div>
@@ -240,25 +251,34 @@ export default async function ProductPage({ params }) {
               </div>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {bundle.slice(0, 8).map((item) => (
-                  <Link
+                  <div
                     key={`bn-${item.slug}`}
-                    href={`/catalog/products/${item.slug}`}
-                    className="group bg-ink border border-teal/20 rounded-sm overflow-hidden hover:border-teal/60 transition-colors"
+                    className="group relative bg-ink border border-teal/20 rounded-sm overflow-hidden hover:border-teal/60 transition-colors"
                     data-testid={`kg-bundle-${item.slug}`}
                   >
-                    <div className="h-28 bg-white/5 flex items-center justify-center">
-                      <Bone size={28} className="text-slate-200" />
+                    <Link href={`/catalog/products/${item.slug}`} className="block">
+                      <div className="h-28 bg-white/5 flex items-center justify-center">
+                        <Bone size={28} className="text-slate-200" />
+                      </div>
+                      <div className="p-3">
+                        <span className="inline-block text-[9px] font-bold uppercase border px-1.5 py-0.5 rounded-md mb-1.5 text-teal bg-teal/10 border-teal/20">
+                          Bundle · {Math.round((item.confidence || 0) * 100)}%
+                        </span>
+                        <h4 className="text-xs font-bold line-clamp-2 group-hover:text-teal transition-colors leading-snug">
+                          {item.product_name}
+                        </h4>
+                        <p className="text-[10px] text-white/45 mt-1 line-clamp-1">{item.reason}</p>
+                      </div>
+                    </Link>
+                    <div className="px-3 pb-3">
+                      <WhatsAppIconButton
+                        productName={item.product_name}
+                        slug={item.slug}
+                        tone="teal"
+                        testid={`wa-bn-${item.slug}`}
+                      />
                     </div>
-                    <div className="p-3">
-                      <span className="inline-block text-[9px] font-bold uppercase border px-1.5 py-0.5 rounded-md mb-1.5 text-teal bg-teal/10 border-teal/20">
-                        Bundle · {Math.round((item.confidence || 0) * 100)}%
-                      </span>
-                      <h4 className="text-xs font-bold line-clamp-2 group-hover:text-teal transition-colors leading-snug">
-                        {item.product_name}
-                      </h4>
-                      <p className="text-[10px] text-white/45 mt-1 line-clamp-1">{item.reason}</p>
-                    </div>
-                  </Link>
+                  </div>
                 ))}
               </div>
             </div>

@@ -7,6 +7,7 @@ import {
   searchCatalogProducts,
   backendFileUrl,
 } from "@/lib/api";
+import { WhatsAppIconButton } from "@/components/WhatsAppCTA";
 
 export const revalidate = 3600;
 
@@ -96,42 +97,52 @@ export default async function DivisionPage({ params }) {
               const imgPath = p.images?.[0]?.storage_path;
               const imgUrl = imgPath ? backendFileUrl(imgPath) : null;
               return (
-                <Link
+                <div
                   key={p.slug}
-                  href={`/catalog/products/${p.slug}`}
-                  className="group card-premium rounded-sm overflow-hidden block"
+                  className="group card-premium rounded-sm overflow-hidden block relative"
                   data-testid={`division-product-${p.slug}`}
                 >
-                  {imgUrl ? (
-                    <div className="aspect-[4/3] bg-[#0D0D0D] overflow-hidden flex items-center justify-center p-4">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={imgUrl}
-                        alt={p.product_name}
-                        className="max-w-full max-h-full object-contain opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500"
-                        loading="lazy"
-                      />
-                    </div>
-                  ) : (
-                    <div className="aspect-[4/3] bg-[#0D0D0D] flex items-center justify-center">
-                      <Bone size={32} className="text-white/10" />
-                    </div>
-                  )}
-                  <div className="p-4">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#D4AF37] mb-1.5">
-                      {p.category || p.division_canonical}
-                    </p>
-                    <h3 className="text-sm font-semibold text-white line-clamp-2 group-hover:text-[#D4AF37] transition-colors leading-snug" style={{ fontFamily: "Outfit" }}>
-                      {p.product_name_display || p.product_name}
-                    </h3>
-                    {p.semantic_brand_system && (
-                      <p className="mt-1 text-[11px] text-white/45 line-clamp-1">{p.semantic_brand_system}</p>
+                  <Link href={`/catalog/products/${p.slug}`} className="block">
+                    {imgUrl ? (
+                      <div className="aspect-[4/3] bg-[#0D0D0D] overflow-hidden flex items-center justify-center p-4">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={imgUrl}
+                          alt={p.product_name}
+                          className="max-w-full max-h-full object-contain opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500"
+                          loading="lazy"
+                        />
+                      </div>
+                    ) : (
+                      <div className="aspect-[4/3] bg-[#0D0D0D] flex items-center justify-center">
+                        <Bone size={32} className="text-white/10" />
+                      </div>
                     )}
-                    <div className="mt-3 flex items-center gap-1 text-[11px] text-[#D4AF37] opacity-0 group-hover:opacity-100 transition-all font-medium">
-                      View details <ArrowRight size={10} />
+                    <div className="p-4 pb-3">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-[#D4AF37] mb-1.5">
+                        {p.category || p.division_canonical}
+                      </p>
+                      <h3 className="text-sm font-semibold text-white line-clamp-2 group-hover:text-[#D4AF37] transition-colors leading-snug" style={{ fontFamily: "Outfit" }}>
+                        {p.product_name_display || p.product_name}
+                      </h3>
+                      {p.semantic_brand_system && (
+                        <p className="mt-1 text-[11px] text-white/45 line-clamp-1">{p.semantic_brand_system}</p>
+                      )}
+                      <div className="mt-3 flex items-center gap-1 text-[11px] text-[#D4AF37] opacity-0 group-hover:opacity-100 transition-all font-medium">
+                        View details <ArrowRight size={10} />
+                      </div>
                     </div>
+                  </Link>
+                  <div className="px-4 pb-4">
+                    <WhatsAppIconButton
+                      productName={p.product_name_display || p.product_name}
+                      brand={p.semantic_brand_system || ""}
+                      slug={p.slug}
+                      tone="gold"
+                      testid={`wa-div-${p.slug}`}
+                    />
                   </div>
-                </Link>
+                </div>
               );
             })}
           </div>

@@ -45,6 +45,18 @@ Build a B2B medical device platform for "Agile Healthcare", a premier Meril Life
 - JWT token validation on all admin routes
 - Admin layout auth guard
 
+## Recent Changes (Apr 19, 2026 — WhatsApp Deep-links on Public Site)
+1. **Pre-filled WhatsApp CTAs on every product card** — `/app/next-app/components/WhatsAppCTA.jsx` (new reusable client component)
+   - `buildWhatsAppLink()` — generates `wa.me/{phone}?text=...` with product name, brand, slug ref
+   - `<WhatsAppCTA>` — primary pill button for product detail hero (replaces static "Request Quote")
+   - `<WhatsAppIconButton>` — compact pill for listing cards + KG recommendation cards (stopPropagation on click)
+2. **Product detail page** (`/app/next-app/app/catalog/products/[slug]/page.jsx`)
+   - Hero CTA now reads "Ask about {Product Name}" with pre-filled message
+   - Must-buy and Bundle recommendation cards each get a WhatsApp pill
+3. **Division listing page** (`/app/next-app/app/catalog/[divisionSlug]/page.jsx`) — every product card has a WhatsApp pill under the name
+4. Pre-filled message format: `Hi Agile Ortho, I'd like a quote for *{Product Name}*. Brand: {Brand}. (ref: {slug}) Please share availability & bulk pricing.` — this keyword triggers the funnel engine to jump the user straight into that product/division
+5. Next.js build verified: all 810 product pages + 13 division pages regenerated cleanly
+
 ## Recent Changes (Apr 19, 2026 — WhatsApp Funnel, iteration_66)
 1. **Fully automated WhatsApp Conversational Funnel** — `/app/backend/services/whatsapp_funnel.py`
    - State machine: `root → division_picker → product_picker → product_detail → quote|brochure|agent`
