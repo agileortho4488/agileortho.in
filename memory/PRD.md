@@ -45,6 +45,23 @@ Build a B2B medical device platform for "Agile Healthcare", a premier Meril Life
 - JWT token validation on all admin routes
 - Admin layout auth guard
 
+## Recent Changes (Apr 19, 2026 — GSC OAuth + Unified Leads Dashboard)
+1. **Google Search Console OAuth 2.0 integration** — `services/gsc.py` + `routes/intelligence.py`
+   - OAuth flow: admin clicks "Connect GSC" → redirected to Google → callback stores refresh token in `app_config`
+   - Auto-refresh expired access tokens
+   - `/api/admin/gsc/{status, connect, callback, sites, import}` endpoints
+2. **Unified Leads dashboard** — no separate prospects page per user request
+   - `AdminLeads.jsx` now shows a **Sources bar** at top with GSC connect/import actions
+   - New **Source column** on the leads table with colored badges (WhatsApp / WA Funnel / Interakt / Website / GSC Search / Google Maps / IndiaMART)
+   - **Source filter dropdown** added to existing filters
+   - Lead detail drawer shows GSC-specific metrics (clicks, impressions, CTR, position, country, landing page) when source=gsc_warm
+3. **GSC import → leads** — one click fetches top 50 search queries from last 28 days, inserts each as a Hot/Warm/Cold lead with:
+   - `source: "gsc_warm"`
+   - `score_value = clicks × 8 + (30 - position) + ctr × 200` (clipped 0-100)
+   - Dedupe by (source, query) so re-runs update in place
+4. **Backend `/api/admin/leads` now supports `source` query param**
+5. **One-time setup required from user**: create OAuth client in Google Cloud Console + paste `GOOGLE_OAUTH_CLIENT_ID` and `GOOGLE_OAUTH_CLIENT_SECRET` into `backend/.env`
+
 ## Recent Changes (Apr 19, 2026 — Market Intelligence Phase 1 + Prospects Foundation)
 1. **Google Trends dashboard** at `/admin/market-intelligence` (`AdminMarketIntelligence.jsx`)
    - 7 keyword presets (Default + 6 Meril divisions) + custom keyword input (max 5)

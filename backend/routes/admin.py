@@ -208,6 +208,7 @@ async def admin_list_leads(
     score: Optional[str] = None,
     status: Optional[str] = None,
     district: Optional[str] = None,
+    source: Optional[str] = None,
     search: Optional[str] = None,
     sort_by: str = "created_at",
     sort_order: int = -1,
@@ -221,12 +222,15 @@ async def admin_list_leads(
         query["status"] = status
     if district:
         query["district"] = district
+    if source:
+        query["source"] = source
     if search:
         query["$or"] = [
             {"name": {"$regex": search, "$options": "i"}},
             {"hospital_clinic": {"$regex": search, "$options": "i"}},
             {"phone_whatsapp": {"$regex": search, "$options": "i"}},
             {"email": {"$regex": search, "$options": "i"}},
+            {"product_interest": {"$regex": search, "$options": "i"}},
         ]
 
     total = await leads_col.count_documents(query)
