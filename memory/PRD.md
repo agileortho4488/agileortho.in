@@ -45,6 +45,13 @@ Build a B2B medical device platform for "Agile Healthcare", a premier Meril Life
 - JWT token validation on all admin routes
 - Admin layout auth guard
 
+## Recent Changes (Apr 19, 2026 — Interactive Funnel Fix, live-verified)
+- **BUG FIX**: Interakt API was rejecting the interactive payload because I used `type: "Interactive"`. Correct type names are `"InteractiveList"` and `"InteractiveButton"` (separate types, revealed via Interakt's own error response).
+- **Schema fix**: The WhatsApp Cloud API interactive block must be wrapped inside `data.message`, not `data` directly.
+- **Live-verified**: `/api/admin/whatsapp/funnel-test-interactive` now passes Interakt validation — only blocker is the 24h session window (recipient must have messaged the business number in last 24h).
+- Default mode switched back to `interactive`.
+- Admin config endpoint now accurately reports `interactive_supported: true` with the session-window note.
+
 ## Recent Changes (Apr 19, 2026 — Interactive Funnel Upgrade, iteration_67)
 1. **WhatsApp Funnel now supports native Interactive List + Reply Button UI** via Interakt session messages
    - `send_whatsapp_interactive_list()` and `send_whatsapp_interactive_buttons()` hit the same `/v1/public/message/` endpoint with `type: "Interactive"` (verified correct casing)

@@ -187,8 +187,8 @@ async def send_whatsapp_interactive_list(
         "countryCode": country_code,
         "phoneNumber": clean_phone,
         "callbackData": callback_data,
-        "type": "Interactive",
-        "data": data_block,
+        "type": "InteractiveList",
+        "data": {"message": data_block},
     }
     try:
         resp = req.post(INTERAKT_API_URL, json=payload, headers=headers, timeout=15)
@@ -248,8 +248,8 @@ async def send_whatsapp_interactive_buttons(
         "countryCode": country_code,
         "phoneNumber": clean_phone,
         "callbackData": callback_data,
-        "type": "Interactive",
-        "data": data_block,
+        "type": "InteractiveButton",
+        "data": {"message": data_block},
     }
     try:
         resp = req.post(INTERAKT_API_URL, json=payload, headers=headers, timeout=15)
@@ -1283,7 +1283,6 @@ async def reset_funnel(request: Request, _=Depends(admin_required)):
 @router.get("/api/admin/whatsapp/funnel-config")
 async def get_funnel_config(_=Depends(admin_required)):
     """Return current funnel runtime mode + whether interactive is available."""
-    # Config lives in MongoDB so operators can flip modes without deploys
     from db import db as mongo_db
     cfg = await mongo_db["app_config"].find_one({"type": "whatsapp_funnel"}, {"_id": 0})
     mode = (cfg or {}).get("mode") or (os.environ.get("WHATSAPP_FUNNEL_MODE", "text") or "text")
@@ -1292,6 +1291,13 @@ async def get_funnel_config(_=Depends(admin_required)):
         "allowed_modes": ["text", "interactive"],
         "business_number": WHATSAPP_NUMBER,
         "interakt_configured": bool(INTERAKT_API_KEY),
+        "interactive_supported": True,
+        "interactive_note": (
+            "Interactive messages (type: InteractiveList / InteractiveButton) are sent as "
+            "session messages — they only deliver when the customer has messaged you within "
+            "the last 24 hours. Outside that window, Interakt returns an error and the funnel "
+            "auto-falls-back to text."
+        ),
     }
 
 
@@ -1351,5 +1357,17 @@ async def test_interactive(request: Request, _=Depends(admin_required)):
             header_text=p["header"],
             footer_text=p["footer"],
             callback_data="admin_test_list",
+        )
+
+    # Surface Interakt's full error message verbatim so the admin sees why it failed
+    if not r.get("success"):
+        api_msg = ""
+        data = r.get("data") or {}
+        if isinstance(data, dict):
+            api_msg = data.get("message") or ""
+        r["error_message"] = (
+            f"Interakt rejected the payload ({r.get('status_code','?')}): {api_msg or r.get('error','unknown')}. "
+            "Common cause: the recipient hasn't messaged your WhatsApp number in the last 24 hours "
+            "(session window closed). Ask them to send any message first, then retry."
         )
     return r

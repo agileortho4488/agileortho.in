@@ -86,7 +86,9 @@ export default function AdminWhatsAppFunnel() {
       if (res.data.success) {
         toast.success(`Interactive ${flavor} sent to ${testPhone}`);
       } else {
-        toast.error(`Send failed: ${res.data.status_code || ""} ${res.data.error || JSON.stringify(res.data.data)?.slice(0, 120)}`);
+        const msg = res.data.error_message || res.data.error ||
+          (res.data.data && res.data.data.message) || "send failed";
+        toast.error(msg, { duration: 10000 });
       }
     } catch (err) {
       toast.error("Test send failed: " + (err?.response?.data?.detail || err?.message || "unknown"));
@@ -138,10 +140,10 @@ export default function AdminWhatsAppFunnel() {
               <div className="w-9 h-9 rounded flex items-center justify-center bg-white text-emerald-600 shrink-0 border border-emerald-200">
                 <Sparkles size={16} />
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-sm font-bold text-slate-900">Funnel Render Mode</p>
                 <p className="text-xs text-slate-600 mt-0.5">
-                  <b>Text</b>: numbered menus, works anytime. <b>Interactive</b>: native WhatsApp list + button UI (only inside 24h session window, falls back to text on API error).
+                  <b>Text</b>: numbered menus, works today on all accounts. <b>Interactive</b>: requires an approved Interakt template for native list/button UI (see note below).
                 </p>
               </div>
             </div>
@@ -162,6 +164,11 @@ export default function AdminWhatsAppFunnel() {
               </button>
             </div>
           </div>
+          {config.interactive_supported === false && config.interactive_note && (
+            <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-sm px-3 py-2 mt-3 leading-relaxed" data-testid="interactive-limitation-note">
+              <b>Heads up:</b> {config.interactive_note}
+            </p>
+          )}
         </div>
       )}
 
