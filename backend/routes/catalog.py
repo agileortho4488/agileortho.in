@@ -446,7 +446,13 @@ async def catalog_product_detail(slug: str):
         "semantic_coating_default": doc.get("semantic_coating_default"),
         "semantic_parent_brand": doc.get("semantic_parent_brand"),
         "semantic_anatomy_scope": doc.get("semantic_anatomy_scope", []),
+        "semantic_procedure_scope": doc.get("semantic_procedure_scope") or doc.get("proposed_semantic_procedure_scope", []),
         "semantic_confidence": doc.get("semantic_confidence"),
+        "proposed_semantic_use_case_tags": doc.get("proposed_semantic_use_case_tags", []),
+        "proposed_clinical_subtitle": doc.get("proposed_clinical_subtitle", ""),
+        "proposed_reasoning_summary": doc.get("proposed_reasoning_summary", ""),
+        "material_canonical": doc.get("material_canonical", ""),
+        "size_variables": doc.get("size_variables", []),
     }
 
 

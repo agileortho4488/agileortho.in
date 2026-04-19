@@ -185,6 +185,167 @@ export default async function ProductPage({ params }) {
         </div>
       </section>
 
+      {/* ═══ PRODUCT DETAILS — description, specs, clinical metadata ═══ */}
+      <section className="px-6 py-10 max-w-7xl mx-auto border-t border-white/10" data-testid="product-details">
+        <div className="grid md:grid-cols-3 gap-8">
+          <div className="md:col-span-2 space-y-8">
+            {/* Extended description */}
+            {(product.description_live || product.description_shadow) && (
+              <div data-testid="product-description">
+                <h2 className="text-lg font-bold mb-3 flex items-center gap-2">
+                  <Bone size={16} className="text-gold" /> Product overview
+                </h2>
+                <div className="text-sm text-white/70 leading-relaxed space-y-3">
+                  {product.description_live && <p>{product.description_live}</p>}
+                  {product.description_shadow && product.description_shadow !== product.description_live && (
+                    <p className="text-white/55 border-l-2 border-gold/30 pl-3 italic">
+                      {product.description_shadow}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Technical specifications table */}
+            {product.technical_specifications && typeof product.technical_specifications === "object" && Object.keys(product.technical_specifications).length > 0 && (
+              <div data-testid="product-specs">
+                <h2 className="text-lg font-bold mb-3 flex items-center gap-2">
+                  <Workflow size={16} className="text-gold" /> Technical specifications
+                </h2>
+                <div className="border border-white/10 rounded-sm overflow-hidden">
+                  <table className="w-full text-sm">
+                    <tbody className="divide-y divide-white/10">
+                      {Object.entries(product.technical_specifications).map(([k, v]) => (
+                        <tr key={k} className="hover:bg-white/5">
+                          <td className="py-2 px-3 text-white/50 font-medium w-1/3 capitalize">{k.replace(/_/g, " ")}</td>
+                          <td className="py-2 px-3 text-white/85">
+                            {Array.isArray(v) ? v.join(", ") : typeof v === "object" ? JSON.stringify(v) : String(v)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Clinical scope cards */}
+            {(product.semantic_procedure_scope?.length > 0 || product.semantic_anatomy_scope?.length > 0) && (
+              <div data-testid="product-clinical">
+                <h2 className="text-lg font-bold mb-3 flex items-center gap-2">
+                  <BadgeCheck size={16} className="text-gold" /> Clinical scope
+                </h2>
+                <div className="grid md:grid-cols-2 gap-4">
+                  {product.semantic_procedure_scope?.length > 0 && (
+                    <div className="border border-white/10 rounded-sm p-4">
+                      <p className="text-[10px] uppercase tracking-widest text-gold font-bold mb-2">Procedures</p>
+                      <ul className="space-y-1.5">
+                        {product.semantic_procedure_scope.map((p) => (
+                          <li key={p} className="text-sm text-white/80 flex items-start gap-2">
+                            <span className="text-gold mt-0.5">•</span> {p}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {product.semantic_anatomy_scope?.length > 0 && (
+                    <div className="border border-white/10 rounded-sm p-4">
+                      <p className="text-[10px] uppercase tracking-widest text-gold font-bold mb-2">Anatomical focus</p>
+                      <ul className="space-y-1.5">
+                        {product.semantic_anatomy_scope.map((a) => (
+                          <li key={a} className="text-sm text-white/80 flex items-start gap-2">
+                            <span className="text-gold mt-0.5">•</span> {a}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Use cases / indications */}
+            {product.proposed_semantic_use_case_tags?.length > 0 && (
+              <div data-testid="product-use-cases">
+                <h2 className="text-lg font-bold mb-3 flex items-center gap-2">
+                  <Zap size={16} className="text-gold" /> Indications & use cases
+                </h2>
+                <div className="flex flex-wrap gap-2">
+                  {product.proposed_semantic_use_case_tags.map((t) => (
+                    <span key={t} className="text-xs bg-white/5 border border-white/10 px-3 py-1.5 rounded-sm text-white/80">
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Sidebar — quick facts */}
+          <aside className="space-y-4" data-testid="product-sidebar">
+            <div className="border border-white/10 rounded-sm p-4 bg-white/5">
+              <p className="text-[10px] uppercase tracking-widest text-gold font-bold mb-3">Quick facts</p>
+              <dl className="space-y-2.5 text-sm">
+                {product.sku_code && (
+                  <div>
+                    <dt className="text-white/45 text-xs">SKU</dt>
+                    <dd className="text-white font-mono text-xs">{product.sku_code}</dd>
+                  </div>
+                )}
+                {product.pack_size && (
+                  <div>
+                    <dt className="text-white/45 text-xs">Pack size</dt>
+                    <dd className="text-white/90">{product.pack_size}</dd>
+                  </div>
+                )}
+                {product.size_variables?.length > 0 && (
+                  <div>
+                    <dt className="text-white/45 text-xs">Sizes available</dt>
+                    <dd className="text-white/90">{product.size_variables.join(", ")}</dd>
+                  </div>
+                )}
+                {product.material_canonical && (
+                  <div>
+                    <dt className="text-white/45 text-xs">Material</dt>
+                    <dd className="text-white/90">{product.material_canonical}</dd>
+                  </div>
+                )}
+                {product.semantic_system_type && (
+                  <div>
+                    <dt className="text-white/45 text-xs">System type</dt>
+                    <dd className="text-white/90">{product.semantic_system_type}</dd>
+                  </div>
+                )}
+                {product.semantic_implant_class && (
+                  <div>
+                    <dt className="text-white/45 text-xs">Implant class</dt>
+                    <dd className="text-white/90 capitalize">{String(product.semantic_implant_class).replace(/_/g, " ")}</dd>
+                  </div>
+                )}
+                {product.parent_brand && (
+                  <div>
+                    <dt className="text-white/45 text-xs">Parent brand</dt>
+                    <dd className="text-white/90">{product.parent_brand}</dd>
+                  </div>
+                )}
+              </dl>
+            </div>
+
+            {product.brochure_url && (
+              <a
+                href={backendFileUrl(product.brochure_url)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block border border-gold/40 bg-gold/10 rounded-sm p-3 text-center text-sm font-bold text-gold hover:bg-gold/20 transition-colors"
+                data-testid="product-brochure-download"
+              >
+                📄 Download brochure PDF
+              </a>
+            )}
+          </aside>
+        </div>
+      </section>
+
       {/* ═══ SURGICAL DECISION ENGINE (Knowledge Graph Recommendations) ═══ */}
       {(mustBuy.length > 0 || bundle.length > 0) && (
         <section className="px-6 py-12 max-w-7xl mx-auto" data-testid="kg-recommendations">
