@@ -1,5 +1,16 @@
 # Agile Healthcare - B2B Medical Device Platform PRD
 
+## Recent Changes (Feb 2026 — GSC Insights → Apify Buyers Flow, live-verified)
+1. **GSC panel rendered on Market Intelligence page** (`AdminMarketIntelligence.jsx`)
+   - Connect button (when disconnected) / "Connected" badge (when linked)
+   - Site selector auto-populated from `/api/admin/gsc/sites` (prefers `agileortho.in`)
+   - "Load queries (last 28d)" → pulls top 100 GSC queries as **insights** (NOT leads)
+   - Each query row: clicks / impressions / CTR / position + an orange **"Find Buyers"** button
+   - "Find Buyers" fires `POST /api/admin/gsc/find-buyers` → Apify Google Maps scraper scrapes Telangana clinics matching that query → inserts them into `leads_col` as `source: google_maps` with phone/address/category/rating
+2. **AdminLeads.jsx cleaned up** — GSC pseudo-leads deleted, Sources bar added with CTA pointing to Market Intel for new-lead acquisition
+3. **Data-testid anchors** (for testing agent): `gsc-panel`, `gsc-status-connected`, `gsc-connect-btn`, `gsc-site-select`, `gsc-load-queries-btn`, `gsc-queries-table`, `find-buyers-<query-prefix>`
+4. Live-verified with real Google Search Console data: 100 queries loaded, UI renders end-to-end
+
 ## Original Problem Statement
 Build a B2B medical device platform for "Agile Healthcare", a premier Meril Life Sciences master franchise in Telangana. Focus on a visually stunning, high-contrast "Dark Premium B2B" UI, CRM Analytics dashboard tracking search intelligence/leads, geographic territory/zone lead tracking, end-to-end commercial loops (Interakt WhatsApp webhook, AI Chatbot), automated data seeding, and robust technical SEO.
 

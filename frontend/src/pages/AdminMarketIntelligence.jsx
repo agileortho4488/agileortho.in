@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import {
   TrendingUp, MapPin, Search, RefreshCw, Sparkles, Flame,
-  CheckCircle2, Download, Target,
+  CheckCircle2, Download, Target, Link2, Users, Loader2,
 } from "lucide-react";
 import api from "../lib/api";
 
@@ -211,6 +211,123 @@ export default function AdminMarketIntelligence() {
           {data.error}
         </div>
       )}
+
+      {/* Google Search Console — search intent insights */}
+      <div className="bg-white border border-slate-200 rounded-sm p-5 mb-6" data-testid="gsc-panel">
+        <div className="flex items-center gap-2 mb-4 flex-wrap">
+          <Target size={16} className="text-indigo-600" />
+          <h3 className="text-sm font-bold text-slate-900">Google Search Console — Search Intent</h3>
+          <span className="text-xs text-slate-400">(What people actually typed to find your site)</span>
+          <div className="ml-auto flex items-center gap-2">
+            {gscStatus?.connected ? (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold rounded-sm bg-emerald-50 text-emerald-700 border border-emerald-200" data-testid="gsc-status-connected">
+                <CheckCircle2 size={11} /> Connected
+              </span>
+            ) : (
+              <button
+                onClick={connectGsc}
+                disabled={!gscStatus?.configured}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white rounded-sm text-xs font-semibold hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                data-testid="gsc-connect-btn"
+                title={gscStatus?.configured ? "" : "Set GOOGLE_OAUTH_CLIENT_ID & SECRET in backend/.env"}
+              >
+                <Link2 size={12} /> Connect Google Search Console
+              </button>
+            )}
+          </div>
+        </div>
+
+        {gscStatus?.connected && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 flex-wrap">
+              <label className="text-xs text-slate-500 uppercase tracking-wide shrink-0">Site:</label>
+              <select
+                value={gscSite}
+                onChange={(e) => setGscSite(e.target.value)}
+                className="px-2.5 py-1.5 border border-slate-200 rounded-sm text-sm bg-white min-w-[240px]"
+                data-testid="gsc-site-select"
+              >
+                {gscSites.length === 0 ? (
+                  <option value="">No verified sites found</option>
+                ) : (
+                  gscSites.map((s) => <option key={s} value={s}>{s}</option>)
+                )}
+              </select>
+              <button
+                onClick={loadGscQueries}
+                disabled={!gscSite || gscBusy}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white rounded-sm text-xs font-semibold hover:bg-indigo-700 disabled:opacity-50"
+                data-testid="gsc-load-queries-btn"
+              >
+                {gscBusy ? <Loader2 size={12} className="animate-spin" /> : <Download size={12} />}
+                {gscBusy ? "Loading..." : "Load queries (last 28d)"}
+              </button>
+              {gscQueries?.queries?.length > 0 && (
+                <span className="text-xs text-slate-500">{gscQueries.queries.length} queries loaded</span>
+              )}
+            </div>
+
+            {gscQueries?.queries?.length > 0 && (
+              <div className="border border-slate-200 rounded-sm overflow-hidden" data-testid="gsc-queries-table">
+                <div className="max-h-[420px] overflow-y-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-slate-50 sticky top-0">
+                      <tr className="text-left">
+                        <th className="px-3 py-2 text-xs font-bold uppercase tracking-wide text-slate-600">Search Query</th>
+                        <th className="px-3 py-2 text-xs font-bold uppercase tracking-wide text-slate-600 text-right">Clicks</th>
+                        <th className="px-3 py-2 text-xs font-bold uppercase tracking-wide text-slate-600 text-right">Impr.</th>
+                        <th className="px-3 py-2 text-xs font-bold uppercase tracking-wide text-slate-600 text-right">CTR</th>
+                        <th className="px-3 py-2 text-xs font-bold uppercase tracking-wide text-slate-600 text-right">Pos.</th>
+                        <th className="px-3 py-2 text-xs font-bold uppercase tracking-wide text-slate-600">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {gscQueries.queries.slice(0, 100).map((q) => {
+                        const busy = findingBuyers === q.query;
+                        return (
+                          <tr key={q.query} className="hover:bg-slate-50" data-testid={`gsc-row-${q.query.slice(0, 30)}`}>
+                            <td className="px-3 py-2 text-slate-800 font-medium">{q.query}</td>
+                            <td className="px-3 py-2 text-right font-mono text-xs text-slate-700">{q.clicks ?? 0}</td>
+                            <td className="px-3 py-2 text-right font-mono text-xs text-slate-500">{q.impressions ?? 0}</td>
+                            <td className="px-3 py-2 text-right font-mono text-xs text-slate-500">{q.ctr ? (q.ctr * 100).toFixed(1) + "%" : "—"}</td>
+                            <td className="px-3 py-2 text-right font-mono text-xs text-slate-500">{q.position ? q.position.toFixed(1) : "—"}</td>
+                            <td className="px-3 py-2">
+                              <button
+                                onClick={() => findBuyersForQuery(q.query)}
+                                disabled={busy}
+                                className="inline-flex items-center gap-1 px-2 py-1 bg-orange-600 text-white rounded-sm text-[11px] font-semibold hover:bg-orange-700 disabled:opacity-50"
+                                data-testid={`find-buyers-${q.query.slice(0, 30)}`}
+                              >
+                                {busy ? <Loader2 size={10} className="animate-spin" /> : <Users size={10} />}
+                                {busy ? "Scraping..." : "Find Buyers"}
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="px-3 py-2 bg-slate-50 text-[11px] text-slate-500 border-t border-slate-200">
+                  <b>Find Buyers:</b> Scrapes Google Maps across Telangana for clinics/vendors matching the query — new leads land in the CRM within a minute.
+                </div>
+              </div>
+            )}
+
+            {gscQueries && (!gscQueries.queries || gscQueries.queries.length === 0) && (
+              <p className="text-xs text-slate-500 py-2">No queries returned. Try a different site or wait for Google to collect more data.</p>
+            )}
+          </div>
+        )}
+
+        {gscStatus && !gscStatus.connected && (
+          <p className="text-xs text-slate-500">
+            {gscStatus.configured
+              ? "Connect your Google account to pull the real search queries people typed to find your products — then scrape Google Maps for buyers matching those queries."
+              : "Google OAuth not configured. Set GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET in backend/.env."}
+          </p>
+        )}
+      </div>
 
       {/* Interest Over Time — ASCII-style sparkline */}
       <div className="bg-white border border-slate-200 rounded-sm p-5 mb-6" data-testid="mi-iot">
