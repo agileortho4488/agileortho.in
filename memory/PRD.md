@@ -1,5 +1,14 @@
 # Agile Healthcare - B2B Medical Device Platform PRD
 
+## Recent Changes (Feb 2026 — Autopilot Bulk Scrape)
+1. **Daily auto-scraper** (`services/apify.py`) — fires 6 AM IST every day, scrapes 6 medical query types × 20 Telangana districts × 10 results (up to 1,200 clinics/day).
+2. **Queries expanded**: orthopedic hospital, multi-specialty, trauma center, joint replacement clinic, spine surgery clinic, endoscopy center.
+3. **Districts expanded**: 5 → 20 (covers Hyderabad, Rangareddy, Warangal, Karimnagar, Khammam, Nizamabad, Sangareddy, Nalgonda, Adilabad, Mahabubnagar, Siddipet, Suryapet, Jagtial, Peddapalli, Kamareddy, Mancherial, Vikarabad, Hanumakonda, Mahabubabad, Medchal).
+4. **Idempotency**: same phone = update in place; `status=new` preserved if human hasn't touched it.
+5. **Bulk Scrape button** on `/admin/leads` Sources bar for force-trigger (backup to daily cron).
+6. **Territory analytics** now auto-populates from `google_maps` leads → Analytics → Territory tab lights up without manual work.
+7. **First live run verified**: 233+ clinics added across 24 districts in 7 minutes, 0 errors.
+
 ## Recent Changes (Feb 2026 — MVP-C + MVP-A Outbound Engine)
 1. **New Outbound Engine** (`services/outbound_engine.py` + `routes/outbound.py` + `pages/AdminOutbound.jsx`)
    - Rule-based WhatsApp outreach scheduler (5-min tick)

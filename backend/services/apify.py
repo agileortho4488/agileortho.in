@@ -13,7 +13,7 @@ from __future__ import annotations
 import os
 import asyncio
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Optional
 
 import httpx
@@ -31,6 +31,10 @@ apify_runs_col = mongo_db["apify_runs"]
 DEFAULT_QUERIES = [
     "orthopedic hospital",
     "multi specialty hospital",
+    "trauma center",
+    "joint replacement clinic",
+    "spine surgery clinic",
+    "endoscopy center",
 ]
 DEFAULT_LOCATIONS = [
     "Hyderabad, Telangana, India",
@@ -38,6 +42,21 @@ DEFAULT_LOCATIONS = [
     "Karimnagar, Telangana, India",
     "Khammam, Telangana, India",
     "Nizamabad, Telangana, India",
+    "Rangareddy, Telangana, India",
+    "Medchal, Telangana, India",
+    "Sangareddy, Telangana, India",
+    "Nalgonda, Telangana, India",
+    "Adilabad, Telangana, India",
+    "Mahabubnagar, Telangana, India",
+    "Siddipet, Telangana, India",
+    "Suryapet, Telangana, India",
+    "Jagtial, Telangana, India",
+    "Peddapalli, Telangana, India",
+    "Kamareddy, Telangana, India",
+    "Mancherial, Telangana, India",
+    "Vikarabad, Telangana, India",
+    "Hanumakonda, Telangana, India",
+    "Mahabubabad, Telangana, India",
 ]
 
 # Keyword → relevant divisions (for auto-tagging prospects)
@@ -251,3 +270,60 @@ async def ensure_indexes():
     await prospects_col.create_index("created_at")
     await apify_runs_col.create_index("run_id", unique=True)
     await apify_runs_col.create_index("status")
+
+
+# ============================================================
+# Daily auto-scrape scheduler — fires 6 AM IST every day
+# ============================================================
+import uuid as _uuid
+from zoneinfo import ZoneInfo as _ZoneInfo
+
+_IST = _ZoneInfo("Asia/Kolkata")
+_auto_task: Optional[asyncio.Task] = None
+
+
+async def _daily_auto_scrape_loop():
+    """Fires a full Telangana scrape once per day at 6 AM IST."""
+    import logging
+    while True:
+        try:
+            now = datetime.now(_IST)
+            # Compute seconds until next 6 AM IST
+            target = now.replace(hour=6, minute=0, second=0, microsecond=0)
+            if now >= target:
+                target = target + timedelta(days=1)
+            delay = (target - now).total_seconds()
+            await asyncio.sleep(max(delay, 60))
+
+            # Check if a scrape already ran in the last 12h (idempotency)
+            cutoff = (datetime.now(timezone.utc) - timedelta(hours=12)).isoformat()
+            recent = await apify_runs_col.find_one({
+                "trigger": "daily_auto",
+                "created_at": {"$gte": cutoff},
+            })
+            if recent:
+                logging.info(f"Daily auto-scrape skipped (recent run exists: {recent.get('run_id')})")
+                continue
+
+            run_id = f"auto_{_uuid.uuid4().hex[:10]}"
+            await apify_runs_col.insert_one({
+                "run_id": run_id,
+                "status": "queued",
+                "trigger": "daily_auto",
+                "queries": DEFAULT_QUERIES,
+                "locations": DEFAULT_LOCATIONS,
+                "max_per_query": 10,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            })
+            asyncio.create_task(run_scrape_job(run_id, DEFAULT_QUERIES, DEFAULT_LOCATIONS, 10))
+            logging.info(f"Daily auto-scrape triggered: {run_id}")
+        except Exception as e:
+            logging.exception(f"daily scrape loop error: {e}")
+            await asyncio.sleep(3600)  # retry in 1h on error
+
+
+def start_daily_scheduler():
+    global _auto_task
+    if _auto_task and not _auto_task.done():
+        return
+    _auto_task = asyncio.create_task(_daily_auto_scrape_loop())

@@ -123,11 +123,12 @@ async def startup():
         print(f"Funnel mode load failed (non-critical): {e}")
 
     try:
-        from services.apify import ensure_indexes as apify_ensure
+        from services.apify import ensure_indexes as apify_ensure, start_daily_scheduler as apify_daily_start
         await apify_ensure()
-        print("Prospects/Apify indexes initialized")
+        apify_daily_start()
+        print("Prospects/Apify indexes + daily auto-scraper initialized")
     except Exception as e:
-        print(f"Apify index init failed (non-critical): {e}")
+        print(f"Apify init failed (non-critical): {e}")
 
     try:
         from services.market_intelligence import ensure_indexes as mi_ensure

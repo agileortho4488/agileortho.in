@@ -4,7 +4,7 @@ import api from "../lib/api";
 import { toast } from "sonner";
 import {
   Search, Flame, Thermometer, Snowflake, Phone, Mail, Trash2, Eye, X, ChevronLeft, ChevronRight,
-  MessageCircle, Globe, MapPin, Database,
+  MessageCircle, Globe, MapPin, Database, Loader2, Zap,
 } from "lucide-react";
 
 const SCORE_BADGES = {
@@ -34,6 +34,36 @@ export default function AdminLeads() {
   const [filters, setFilters] = useState({ score: "", status: "", source: "", search: "" });
   const [selectedLead, setSelectedLead] = useState(null);
   const [noteText, setNoteText] = useState("");
+  const [scraping, setScraping] = useState(false);
+  const [scrapeRun, setScrapeRun] = useState(null);
+
+  const bulkScrape = async () => {
+    if (!window.confirm("This will scrape Google Maps across 20 Telangana districts × 6 medical queries (~120 searches) and auto-insert clinics as Leads. Proceed?")) return;
+    setScraping(true);
+    try {
+      const res = await api.post("/api/admin/prospects/scrape", { max_per_query: 10 });
+      setScrapeRun(res.data);
+      toast.success(`Scrape started: ${res.data.run_id}. New leads will appear in ~3-5 min.`);
+      // Poll for completion
+      const runId = res.data.run_id;
+      const poll = setInterval(async () => {
+        try {
+          const r = await api.get(`/api/admin/prospects/runs/${runId}`);
+          setScrapeRun(r.data);
+          if (r.data.status === "done") {
+            clearInterval(poll);
+            setScraping(false);
+            toast.success(`Scrape done: ${r.data.total_inserted} new leads added (${r.data.total_scraped} scanned)`);
+            fetchLeads();
+          }
+        } catch (e) { console.error(e); }
+      }, 15000);
+      setTimeout(() => { clearInterval(poll); setScraping(false); }, 10 * 60 * 1000);
+    } catch (e) {
+      toast.error(e?.response?.data?.detail || "Scrape trigger failed");
+      setScraping(false);
+    }
+  };
 
   const fetchLeads = () => {
     setLoading(true);
@@ -99,22 +129,49 @@ export default function AdminLeads() {
         </div>
       </div>
 
-      {/* Lead Sources */}
-      <div className="bg-white border border-slate-200 rounded-sm p-3 mb-4" data-testid="lead-sources-bar">
+      {/* Lead Sources & Actions */}
+      <div className="bg-gradient-to-r from-slate-900 to-slate-800 border border-slate-700 rounded-sm p-4 mb-4 text-white" data-testid="lead-sources-bar">
         <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div className="flex items-center gap-2 text-sm">
-            <Database size={14} className="text-slate-400" />
-            <span className="text-xs uppercase tracking-wide font-bold text-slate-600">Sources</span>
-            <span className="text-xs text-slate-500">WhatsApp funnel (auto) · Website form (auto) · Google Maps (via Market Intel → Find Buyers)</span>
+          <div>
+            <h3 className="text-sm font-bold flex items-center gap-2" style={{ fontFamily: "Chivo" }}>
+              <Zap size={14} className="text-emerald-400" /> Lead Acquisition
+            </h3>
+            <p className="text-xs text-slate-300 mt-0.5">One click → scrape 20 Telangana districts → auto-populate leads + territory analytics</p>
           </div>
-          <a
-            href="/admin/market-intelligence"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-emerald-300 text-emerald-700 rounded-sm text-xs font-semibold hover:bg-emerald-50"
-            data-testid="go-to-market-intel-btn"
-          >
-            <Search size={12} /> Find new leads → Market Intel
-          </a>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={bulkScrape}
+              disabled={scraping}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-slate-900 font-bold rounded-sm text-sm"
+              data-testid="bulk-scrape-btn"
+            >
+              {scraping ? <Loader2 size={14} className="animate-spin" /> : <MapPin size={14} />}
+              {scraping ? "Scraping..." : "Bulk Scrape Telangana"}
+            </button>
+            <a
+              href="/admin/market-intelligence"
+              className="inline-flex items-center gap-1.5 px-3 py-2 border border-slate-600 text-slate-200 rounded-sm text-xs font-semibold hover:bg-slate-700"
+              data-testid="go-to-market-intel-btn"
+            >
+              <Search size={12} /> Market Intel (optional)
+            </a>
+          </div>
         </div>
+        {scrapeRun && (
+          <div className="mt-3 pt-3 border-t border-slate-700 text-xs text-slate-300 flex items-center gap-3 flex-wrap" data-testid="scrape-status">
+            <span className="font-mono bg-slate-700 px-1.5 py-0.5 rounded">{scrapeRun.run_id}</span>
+            <span className={`font-bold ${scrapeRun.status === "done" ? "text-emerald-400" : "text-amber-300"}`}>
+              {scrapeRun.status?.toUpperCase()}
+            </span>
+            {scrapeRun.progress && <span>· {scrapeRun.progress}</span>}
+            {scrapeRun.total_inserted !== undefined && (
+              <span>· <b className="text-emerald-400">{scrapeRun.total_inserted} new leads</b> / {scrapeRun.total_scraped} scanned</span>
+            )}
+            {scrapeRun.errors?.length > 0 && (
+              <span className="text-red-300">· {scrapeRun.errors.length} errors</span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Filters */}
