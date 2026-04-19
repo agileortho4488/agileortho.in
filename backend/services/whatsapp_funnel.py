@@ -108,7 +108,7 @@ async def _top_products_for_division(division: str, limit: int = 3) -> list:
             "semantic_brand_system": {"$nin": [None, ""]},
         },
         {"_id": 0, "slug": 1, "product_name": 1, "product_name_display": 1,
-         "brand": 1, "semantic_brand_system": 1, "category": 1},
+         "brand": 1, "semantic_brand_system": 1, "category": 1, "brochure_url": 1},
     ).sort("product_name", 1).limit(limit)
     return await cursor.to_list(limit)
 
@@ -250,11 +250,23 @@ def build_quote_confirmation(name_or_phone: str) -> str:
 
 def build_brochure_reply(product: dict) -> str:
     slug = product.get("slug") or ""
-    url = f"https://www.agileortho.in/catalog/products/{slug}" if slug else "https://www.agileortho.in/catalog"
+    name = product.get("product_name_display") or product.get("product_name") or "Product"
+    product_url = f"https://www.agileortho.in/catalog/products/{slug}" if slug else "https://www.agileortho.in/catalog"
+
+    # Real brochure PDF from object storage (when available)
+    brochure_path = product.get("brochure_url") or ""
+    brochure_line = ""
+    if brochure_path:
+        if brochure_path.startswith("http"):
+            pdf_url = brochure_path
+        else:
+            pdf_url = f"https://www.agileortho.in/api/files/{brochure_path.lstrip('/')}"
+        brochure_line = f"📄 Brochure PDF: {pdf_url}\n"
+
     return (
-        "Here's the full brochure & specs:\n"
-        f"{url}\n\n"
-        "Reply *1* if you'd also like a bulk quote, or *menu* for other products."
+        f"{brochure_line}"
+        f"🔗 Full specs: {product_url}\n\n"
+        f"Reply *1* for a bulk quote on {name[:40]}, or *menu* for other products."
     )
 
 

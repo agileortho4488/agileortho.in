@@ -1,5 +1,14 @@
 # Agile Healthcare - B2B Medical Device Platform PRD
 
+## Recent Changes (Feb 2026 — AI Brochure Enrichment + Admin Control Panel)
+1. **AI handler now enriches every reply** with real links from `catalog_products.brochure_url` + division catalog URLs. No more bare "Catalog: https://www" truncated replies.
+2. **Division-aware**: AI picks division_hint (Trauma/JR/Spine/…); system auto-appends matching catalog + up to 2 brochure PDFs.
+3. **whatsapp_funnel.build_brochure_reply** now returns real PDF object-storage URL (`/api/files/agile-ortho/brochures/...`) instead of generic catalog page.
+4. **New admin panel** `/admin/ai` — stats, inbound feed, per-row "Correct this reply", sandbox tester, live-editable system prompt (hot-swap, no redeploy).
+5. **6 new admin endpoints**: `/api/admin/ai/stats`, `/recent`, `/config` (GET/PUT), `/test`, `/correct/{id}`.
+6. **Custom prompt persisted** in `app_config.type=ai_handler_prompt` — AI hot-reloads on every message.
+7. Brochure coverage: 214 products × division-specific catalogs (JR: 79, Sports Med: 53, Trauma: 47, Urology: 28, Instruments: 7).
+
 ## Recent Changes (Feb 2026 — AI Lead Handler (Angle B))
 1. **New `services/ai_lead_handler.py`** — unified intelligence layer for inbound messages.
    Classifies every WhatsApp reply + website chatbot message into:

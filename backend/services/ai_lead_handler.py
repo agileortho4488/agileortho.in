@@ -58,6 +58,11 @@ RULES (absolute):
 5. If message looks like spam, an irrelevant topic, or automated noise → classify as SPAM / IRRELEVANT and reply empty.
 6. If user asks for a meeting / demo / call → acknowledge + say we'll share a booking link.
 7. Mention the specific clinic name and district you're addressing ONLY if they're present in the CONTEXT section below.
+8. IMPORTANT — when user asks for CATALOG / brochure / product info / details:
+   • Mention specific product NAMES from the PRODUCT CONTEXT block below (if provided).
+   • Tell them we are sending a brochure/catalog link.
+   • DO NOT invent URLs — the system will auto-append the correct division catalog link + available brochures after your reply.
+   • Keep your reply focused on the 2-3 most relevant products to their query.
 
 You MUST respond with VALID JSON in this exact shape (no other text):
 {
@@ -65,6 +70,7 @@ You MUST respond with VALID JSON in this exact shape (no other text):
   "confidence": 0.0-1.0,
   "reply": "<message to send to user, empty string if SPAM/IRRELEVANT>",
   "product_interest": "<short label like 'trauma plates' or 'knee implants', empty if unclear>",
+  "division_hint": "<Trauma | Joint Replacement | Spine | Sports Medicine | Cardiovascular | Endo Surgery | Urology | Instruments | Infection Prevention | Orthobiologics | IVD | Surgical Specialities | empty>",
   "score_suggestion": "Hot" | "Warm" | "Cold",
   "reasoning": "<one sentence why>"
 }
@@ -205,12 +211,16 @@ async def handle_message(
     # Call Claude
     ai_result = await _call_claude(user_prompt, cfg["model"])
 
-    # Inject helpful URLs when AI returned intents that need them
+    # Enrich reply with REAL product/brochure/catalog links from our DB (not AI hallucinations)
     reply = ai_result.get("reply", "")
+    try:
+        reply = await _enrich_reply_with_links(reply, ai_result, query=message)
+    except Exception as e:
+        logging.exception(f"link enrichment failed: {e}")
+
+    # Inject booking link for MEETING
     if ai_result.get("intent") == "MEETING" and reply and cfg["booking_url"] not in reply:
-        reply = f"{reply}\n\nBook a 15-min call: {cfg['booking_url']}"
-    if ai_result.get("intent") == "CATALOG_REQUEST" and reply and cfg["catalog_url"] not in reply:
-        reply = f"{reply}\n\nCatalog: {cfg['catalog_url']}"
+        reply = f"{reply}\n\n📅 Book a 15-min call: {cfg['booking_url']}"
     ai_result["reply"] = reply
 
     # Update lead record + log
@@ -238,16 +248,124 @@ async def handle_message(
 
 
 # ============================================================
-# Claude call with strict JSON parsing
+# Product / brochure lookup — make replies actually useful
 # ============================================================
+DIVISION_SLUG_MAP = {
+    "trauma": "trauma",
+    "joint replacement": "joint-replacement",
+    "spine": "spine",
+    "sports medicine": "sports-medicine",
+    "cardiovascular": "cardiovascular",
+    "endo surgery": "endo-surgery",
+    "urology": "urology",
+    "instruments": "instruments",
+    "infection prevention": "infection-prevention",
+    "orthobiologics": "orthobiologics",
+    "ivd": "ivd",
+    "surgical specialities": "surgical-specialities",
+    "ent": "ent",
+}
+
+PUBLIC_SITE_BASE = os.environ.get("PUBLIC_SITE_BASE", "https://www.agileortho.in")
+FILES_BASE = os.environ.get("PUBLIC_FILES_BASE", "https://www.agileortho.in/api/files")
+
+
+async def _search_relevant_products(query: str, division_hint: str = "", limit: int = 5) -> list:
+    """Return top products matching the query, preferring those with brochures."""
+    if not query and not division_hint:
+        return []
+    catalog_col = mongo_db["catalog_products"]
+    filt = {"status": {"$ne": "draft"}}
+    if division_hint:
+        filt["division_canonical"] = {"$regex": f"^{re.escape(division_hint)}$", "$options": "i"}
+
+    # Prefer those with brochures first
+    or_terms = []
+    if query:
+        for tok in [t for t in re.split(r"\W+", query.lower()) if len(t) > 2][:6]:
+            or_terms.append({"name": {"$regex": tok, "$options": "i"}})
+            or_terms.append({"product_name": {"$regex": tok, "$options": "i"}})
+            or_terms.append({"description": {"$regex": tok, "$options": "i"}})
+    if or_terms:
+        filt["$or"] = or_terms
+
+    docs = await catalog_col.find(
+        filt,
+        {"_id": 0, "name": 1, "product_name": 1, "slug": 1,
+         "division_canonical": 1, "brochure_url": 1}
+    ).limit(50).to_list(50)
+    # Sort: with brochure first
+    docs.sort(key=lambda d: (0 if d.get("brochure_url") else 1))
+    return docs[:limit]
+
+
+def _public_brochure_url(brochure_path: str) -> str:
+    if not brochure_path:
+        return ""
+    if brochure_path.startswith("http"):
+        return brochure_path
+    return f"{FILES_BASE}/{brochure_path.lstrip('/')}"
+
+
+def _division_catalog_url(division_name: str) -> str:
+    if not division_name:
+        return f"{PUBLIC_SITE_BASE}/catalog"
+    slug = DIVISION_SLUG_MAP.get(division_name.strip().lower())
+    if not slug:
+        slug = division_name.strip().lower().replace(" ", "-")
+    return f"{PUBLIC_SITE_BASE}/catalog/{slug}"
+
+
+async def _enrich_reply_with_links(reply: str, ai_result: dict, query: str) -> str:
+    """Append the most helpful links/brochures based on the AI's intent + division hint."""
+    intent = ai_result.get("intent", "")
+    division = (ai_result.get("division_hint") or "").strip()
+    # Only enrich when the user actually wants info/catalog/spec
+    if intent not in ("CATALOG_REQUEST", "PRODUCT_SPEC", "PRICING", "BULK_QUOTE", "GENERAL"):
+        return reply
+
+    products = await _search_relevant_products(query, division_hint=division, limit=3)
+    if not products and not division:
+        return reply
+
+    extras = []
+    # Division landing page
+    if division:
+        extras.append(f"📁 {division} catalog: {_division_catalog_url(division)}")
+
+    # Up to 2 product brochure links
+    added = 0
+    for p in products:
+        brochure = p.get("brochure_url")
+        name = p.get("product_name") or p.get("name") or ""
+        slug = p.get("slug")
+        if brochure and added < 2:
+            extras.append(f"📄 {name} brochure: {_public_brochure_url(brochure)}")
+            added += 1
+        elif slug and added < 2 and not brochure:
+            extras.append(f"🔗 {name}: {PUBLIC_SITE_BASE}/catalog/products/{slug}")
+            added += 1
+
+    if not extras:
+        return reply
+    return (reply.rstrip() + "\n\n" + "\n".join(extras)).strip()
 async def _call_claude(user_prompt: str, model: str) -> dict:
     """Return dict with intent/reply/etc. Falls back gracefully on parse errors."""
+    # Use latest stored custom prompt if admin has edited it
+    active_prompt = SYSTEM_PROMPT
+    try:
+        custom = await app_config_col.find_one({"type": "ai_handler_prompt"}, {"_id": 0})
+        if custom and (custom.get("prompt") or "").strip():
+            active_prompt = custom["prompt"]
+    except Exception:
+        pass
+
     try:
         from emergentintegrations.llm.chat import LlmChat, UserMessage
         chat = LlmChat(
             api_key=EMERGENT_LLM_KEY,
             session_id=f"ai-lead-{uuid.uuid4().hex[:8]}",
-            system_message=SYSTEM_PROMPT,
+            system_message=active_prompt,
         ).with_model("anthropic", model)
         raw = await chat.send_message(UserMessage(text=user_prompt))
     except Exception as e:
@@ -268,6 +386,7 @@ async def _call_claude(user_prompt: str, model: str) -> dict:
         "confidence": float(parsed.get("confidence") or 0.7),
         "reply": (parsed.get("reply") or "").strip(),
         "product_interest": (parsed.get("product_interest") or "").strip(),
+        "division_hint": (parsed.get("division_hint") or "").strip(),
         "score_suggestion": (parsed.get("score_suggestion") or "Cold").strip(),
         "reasoning": (parsed.get("reasoning") or "")[:300],
     }

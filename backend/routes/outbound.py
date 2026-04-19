@@ -32,6 +32,111 @@ async def put_outbound_config(request: Request, _=Depends(admin_required)):
 
 
 # ============================================================
+# AI Lead Handler admin — view recent, correct mistakes
+# ============================================================
+from services import ai_lead_handler as aih
+from db import db as _db_aih
+
+
+@router.get("/api/admin/ai/recent")
+async def ai_recent_interactions(
+    intent: str = "",
+    channel: str = "",
+    limit: int = 50,
+    _=Depends(admin_required),
+):
+    q = {}
+    if intent:
+        q["intent"] = intent.upper()
+    if channel:
+        q["channel"] = channel
+    rows = await _db_aih["ai_interactions"].find(q, {"_id": 0}).sort("created_at", -1).limit(limit).to_list(limit)
+    return {"interactions": rows, "total": len(rows)}
+
+
+@router.get("/api/admin/ai/stats")
+async def ai_stats(_=Depends(admin_required)):
+    pipeline = [
+        {"$group": {"_id": "$intent", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}},
+    ]
+    by_intent = await _db_aih["ai_interactions"].aggregate(pipeline).to_list(20)
+    total = await _db_aih["ai_interactions"].count_documents({})
+    last_24h = await _db_aih["ai_interactions"].count_documents({
+        "created_at": {"$gte": (__import__("datetime").datetime.now(__import__("datetime").timezone.utc)
+                                - __import__("datetime").timedelta(hours=24)).isoformat()}
+    })
+    return {
+        "total_interactions": total,
+        "last_24h": last_24h,
+        "by_intent": [{"intent": r["_id"], "count": r["count"]} for r in by_intent],
+    }
+
+
+@router.get("/api/admin/ai/config")
+async def ai_get_config(_=Depends(admin_required)):
+    cfg = await aih.get_config()
+    # Expose the live system prompt too
+    custom_prompt = await _db_aih["app_config"].find_one({"type": "ai_handler_prompt"}, {"_id": 0})
+    return {
+        **cfg,
+        "system_prompt": (custom_prompt or {}).get("prompt", aih.SYSTEM_PROMPT),
+        "default_prompt": aih.SYSTEM_PROMPT,
+    }
+
+
+@router.put("/api/admin/ai/config")
+async def ai_put_config(request: Request, _=Depends(admin_required)):
+    body = await request.json()
+    # Persist custom system prompt separately if provided
+    if "system_prompt" in body:
+        prompt = body.pop("system_prompt") or ""
+        await _db_aih["app_config"].update_one(
+            {"type": "ai_handler_prompt"},
+            {"$set": {"type": "ai_handler_prompt", "prompt": prompt,
+                      "updated_at": __import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat()}},
+            upsert=True,
+        )
+        # Hot-swap the live prompt
+        if prompt.strip():
+            aih.SYSTEM_PROMPT = prompt
+    return await aih.update_config(body)
+
+
+@router.post("/api/admin/ai/test")
+async def ai_test_message(request: Request, _=Depends(admin_required)):
+    """Test a message against the AI handler without any lead side-effects."""
+    body = await request.json()
+    msg = (body.get("message") or "").strip()
+    if not msg:
+        raise HTTPException(400, "message required")
+    # Run against a throwaway phone so lead updates don't affect real leads
+    return await aih.handle_message(
+        message=msg,
+        channel=body.get("channel", "whatsapp"),
+        phone=body.get("phone", "9100000000"),
+        session_id=body.get("session_id", ""),
+    )
+
+
+@router.post("/api/admin/ai/correct/{interaction_id}")
+async def ai_correct_interaction(interaction_id: str, request: Request, _=Depends(admin_required)):
+    """Mark an AI reply as wrong + store the corrected version for training/review."""
+    body = await request.json()
+    corrected = body.get("corrected_reply", "")
+    note = body.get("note", "")
+    await _db_aih["ai_interactions"].update_one(
+        {"id": interaction_id},
+        {"$set": {
+            "corrected_reply": corrected,
+            "correction_note": note,
+            "corrected_at": __import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat(),
+        }},
+    )
+    return {"ok": True}
+
+
+# ============================================================
 # Rules CRUD
 # ============================================================
 @router.get("/api/admin/outbound/rules")
