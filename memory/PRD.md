@@ -46,7 +46,22 @@ Build a B2B medical device platform for "Agile Healthcare", a premier Meril Life
 - Admin layout auth guard
 
 ## Recent Changes (Apr 19, 2026)
-1. **Full public site ported to Next.js (`/app/next-app`)** — 857 pre-rendered pages total
+1. **Admin split from public website** — `/app/frontend` (React CRA) is now admin-only
+   - Deleted 15 public pages/components (Home, Catalog, Products, ProductDetail, Districts, About, Contact, Chat, ChatWidget, CookieConsent, SEO, SiteHeader, SiteFooter, Layout, PageTransition, VisitorContext, lib/districts, lib/constants, AdminBulkUpload)
+   - Root `/` now redirects to `/admin/login`; 404 page shows admin-only message + link to agileortho.in
+   - Sidebar header links to public site (opens in new tab)
+   - `noindex, nofollow, noarchive` robots meta tag on admin HTML
+   - Page title: "Agile Ortho — Admin Console"
+   - All 8 admin nav items + logout working; 14/14 backend + 11/11 frontend tests passed (iteration_64.json)
+2. **ChatWidget ported to Next.js** at `/app/next-app/components/ChatWidget.jsx`
+   - Connects to existing backend `/api/chatbot/query`, `/api/chatbot/suggestions`, `/api/chatbot/history/{session_id}`
+   - Persistent session_id in localStorage; auto-loads history on reopen
+   - Beautiful floating panel (desktop FAB + full-height mobile drawer), auto-scroll, suggestion chips, WhatsApp handoff
+   - Mounted in root layout so it appears on every public page
+   - Tested end-to-end: real AI responses with deep links into the SSG catalog
+3. **Full public site ported to Next.js (`/app/next-app`)** — 857 pre-rendered pages total
+
+## Recent Changes (Apr 17, 2026)
    - Home, Catalog, About, Contact (server-rendered, ISR 1h)
    - **13 division pages** (`/catalog/[divisionSlug]`) with category chips + product grid (SSG)
    - **810 product pages** with Surgical Decision Engine (SSG)
