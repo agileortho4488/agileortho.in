@@ -65,8 +65,8 @@
     }
   },
   "test_environment": {
-    "backend_url": "https://agile-admin-hub.preview.emergentagent.com",
-    "frontend_url": "https://agile-admin-hub.preview.emergentagent.com",
+    "backend_url": "https://buyer-prospect-map.preview.emergentagent.com",
+    "frontend_url": "https://buyer-prospect-map.preview.emergentagent.com",
     "test_mobile": "9876543210",
     "admin_password": "admin"
   }

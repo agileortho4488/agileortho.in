@@ -220,6 +220,39 @@ async def query_search_analytics(
     return resp
 
 
+async def fetch_queries_insights(site_url: str, days: int = 28, top_n: int = 100) -> dict:
+    """Return GSC search queries as INSIGHTS (not leads) for the intelligence page."""
+    resp = await query_search_analytics(
+        site_url=site_url,
+        days=days,
+        dimensions=["query", "country", "page"],
+        row_limit=top_n,
+    )
+    rows = resp.get("rows", [])
+    queries = []
+    for r in rows:
+        keys = r.get("keys") or []
+        if not keys:
+            continue
+        queries.append({
+            "query": keys[0],
+            "country": keys[1] if len(keys) > 1 else "",
+            "landing_page": keys[2] if len(keys) > 2 else "",
+            "clicks": int(r.get("clicks", 0)),
+            "impressions": int(r.get("impressions", 0)),
+            "ctr": round(float(r.get("ctr", 0)), 4),
+            "position": round(float(r.get("position", 99)), 1),
+        })
+    queries.sort(key=lambda q: (q["clicks"], q["impressions"]), reverse=True)
+    return {
+        "site_url": site_url,
+        "days": days,
+        "total_queries": len(queries),
+        "queries": queries,
+        "fetched_at": _iso(_now()),
+    }
+
+
 async def import_queries_as_leads(site_url: str, days: int = 28, top_n: int = 50) -> dict:
     """
     Pull top search queries and insert them as 'warm' leads.

@@ -117,59 +117,69 @@ async def _fetch_run_items(dataset_id: str) -> list:
 
 
 async def _upsert_prospect(item: dict, source_query: str, source_location: str) -> Optional[dict]:
-    """Insert (or update) a prospect doc; returns doc on insert, None if dup."""
+    """Insert scraped business directly into `leads_col` (dedup by phone)."""
     phone = (item.get("phone") or "").strip()
     name = (item.get("title") or "").strip()
     if not phone and not name:
         return None
 
-    # Normalise Indian phone format
+    # Normalise Indian phone format (10 digits)
     phone_digits = "".join(c for c in phone if c.isdigit())
     if phone_digits.startswith("91") and len(phone_digits) > 10:
         phone_digits = phone_digits[-10:]
     elif len(phone_digits) > 10:
         phone_digits = phone_digits[-10:]
 
-    # Dedupe by phone OR by name+city combo
-    city = (item.get("city") or source_location.split(",")[0]).strip()
-    existing = await prospects_col.find_one({
-        "$or": [
-            {"phone": phone_digits} if phone_digits else {"_never": True},
-            {"name": name, "city": city},
-        ]
-    })
-    if existing:
-        return None
+    # Dedupe by phone in the leads collection
+    from db import leads_col
+    existing = None
+    if phone_digits:
+        existing = await leads_col.find_one({"phone_whatsapp": phone_digits})
+    if not existing:
+        existing = await leads_col.find_one({"name": name, "hospital_clinic": name, "source": "google_maps"})
 
     category = item.get("categoryName") or (item.get("categories") or ["Hospital"])[0]
-    doc = {
+    city = (item.get("city") or source_location.split(",")[0]).strip()
+
+    lead_doc = {
         "name": name,
-        "phone": phone_digits,
-        "phone_raw": phone,
-        "website": item.get("website") or "",
-        "address": item.get("address") or "",
-        "city": city,
-        "district": source_location.split(",")[1].strip() if "," in source_location else "",
-        "state": "Telangana",
-        "category": category,
-        "tags": _tag_divisions(category, source_query),
-        "rating": item.get("totalScore") or 0,
-        "reviews_count": item.get("reviewsCount") or 0,
-        "google_place_id": item.get("placeId") or "",
-        "google_maps_url": item.get("url") or "",
-        "source": "apify_google_maps",
-        "source_query": source_query,
-        "source_location": source_location,
+        "hospital_clinic": name,
+        "phone_whatsapp": phone_digits,
+        "email": "",
+        "district": city,
+        "inquiry_type": "Cold (scraped)",
+        "product_interest": source_query,
+        "source": "google_maps",
         "status": "new",
-        "replied": False,
-        "last_contacted": None,
-        "notes": "",
-        "created_at": _now(),
+        "score": "Cold",
+        "score_value": 20,
+        # Rich metadata so the admin has context
+        "gmaps_category": category,
+        "gmaps_address": item.get("address") or "",
+        "gmaps_website": item.get("website") or "",
+        "gmaps_rating": item.get("totalScore") or 0,
+        "gmaps_reviews": item.get("reviewsCount") or 0,
+        "gmaps_url": item.get("url") or "",
+        "gmaps_place_id": item.get("placeId") or "",
+        "gmaps_search_query": source_query,
+        "gmaps_search_location": source_location,
         "updated_at": _now(),
     }
-    await prospects_col.insert_one(doc)
-    doc.pop("_id", None)
-    return doc
+
+    if existing:
+        # Preserve existing status/score if human has already touched it
+        preserve = {}
+        if existing.get("status") and existing["status"] != "new":
+            preserve["status"] = existing["status"]
+        await leads_col.update_one(
+            {"_id": existing["_id"]},
+            {"$set": {**lead_doc, **preserve}},
+        )
+        return None  # updated, not new
+    else:
+        lead_doc["created_at"] = _now()
+        await leads_col.insert_one(lead_doc)
+        return lead_doc
 
 
 async def run_scrape_job(

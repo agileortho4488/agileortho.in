@@ -4,7 +4,7 @@ import api from "../lib/api";
 import { toast } from "sonner";
 import {
   Search, Flame, Thermometer, Snowflake, Phone, Mail, Trash2, Eye, X, ChevronLeft, ChevronRight,
-  MessageCircle, Globe, MapPin, Database, CheckCircle2, Download,
+  MessageCircle, Globe, MapPin, Database,
 } from "lucide-react";
 
 const SCORE_BADGES = {
@@ -18,12 +18,11 @@ const SOURCE_META = {
   whatsapp_funnel: { label: "WA Funnel", icon: MessageCircle, class: "bg-emerald-50 text-emerald-700 border-emerald-300" },
   interakt_sync: { label: "Interakt", icon: MessageCircle, class: "bg-teal-50 text-teal-700 border-teal-200" },
   website: { label: "Website", icon: Globe, class: "bg-blue-50 text-blue-700 border-blue-200" },
-  gsc_warm: { label: "GSC Search", icon: Search, class: "bg-purple-50 text-purple-700 border-purple-200" },
-  apify_google_maps: { label: "Google Maps", icon: MapPin, class: "bg-orange-50 text-orange-700 border-orange-200" },
+  google_maps: { label: "Google Maps", icon: MapPin, class: "bg-orange-50 text-orange-700 border-orange-200" },
   indiamart_rfq: { label: "IndiaMART", icon: Database, class: "bg-red-50 text-red-700 border-red-200" },
 };
 
-const SOURCE_OPTIONS = ["whatsapp", "whatsapp_funnel", "interakt_sync", "website", "gsc_warm", "apify_google_maps", "indiamart_rfq"];
+const SOURCE_OPTIONS = ["whatsapp", "whatsapp_funnel", "interakt_sync", "website", "google_maps", "indiamart_rfq"];
 const STATUS_OPTIONS = ["new", "contacted", "qualified", "negotiation", "won", "lost"];
 
 export default function AdminLeads() {
@@ -35,10 +34,6 @@ export default function AdminLeads() {
   const [filters, setFilters] = useState({ score: "", status: "", source: "", search: "" });
   const [selectedLead, setSelectedLead] = useState(null);
   const [noteText, setNoteText] = useState("");
-  const [gscStatus, setGscStatus] = useState(null);
-  const [gscBusy, setGscBusy] = useState(false);
-  const [gscSites, setGscSites] = useState([]);
-  const [gscSite, setGscSite] = useState("");
 
   const fetchLeads = () => {
     setLoading(true);
@@ -53,64 +48,18 @@ export default function AdminLeads() {
       .finally(() => setLoading(false));
   };
 
-  const fetchGscStatus = () => {
-    api.get("/api/admin/gsc/status")
-      .then((r) => {
-        setGscStatus(r.data);
-        if (r.data?.connected) {
-          // auto-fetch accessible sites
-          api.get("/api/admin/gsc/sites").then((s) => {
-            const sites = s.data.sites || [];
-            setGscSites(sites);
-            // Prefer agileortho.in domain property as default
-            const pref = sites.find((x) => x.includes("agileortho.in")) || sites[0] || "";
-            setGscSite(pref);
-          }).catch(() => {});
-        }
-      })
-      .catch(() => setGscStatus({ connected: false, configured: false }));
-  };
-
   useEffect(() => { fetchLeads(); }, [page, filters]);
   useEffect(() => {
-    fetchGscStatus();
-    // Handle OAuth redirect
+    // Handle GSC OAuth redirect (flow now lives in Market Intel page)
     const q = new URLSearchParams(window.location.search);
     if (q.get("gsc") === "connected") {
-      toast.success("Google Search Console connected");
+      toast.success("Google Search Console connected — go to Market Intel to see your search queries");
       window.history.replaceState({}, "", window.location.pathname);
     } else if (q.get("gsc") === "error") {
       toast.error("GSC connection failed: " + (q.get("reason") || "unknown"));
       window.history.replaceState({}, "", window.location.pathname);
     }
   }, []);
-
-  const connectGsc = async () => {
-    try {
-      const res = await api.get("/api/admin/gsc/connect");
-      window.location.href = res.data.auth_url;
-    } catch (err) {
-      toast.error(err?.response?.data?.detail || "GSC connect failed");
-    }
-  };
-
-  const importGsc = async () => {
-    if (!gscSite) { toast.error("Pick a site first"); return; }
-    setGscBusy(true);
-    try {
-      const res = await api.post("/api/admin/gsc/import", {
-        site_url: gscSite,
-        days: 28,
-        top_n: 50,
-      });
-      toast.success(`Imported ${res.data.leads_inserted} new + ${res.data.leads_updated} updated from ${gscSite}`);
-      fetchLeads();
-    } catch (err) {
-      toast.error(err?.response?.data?.detail || "GSC import failed");
-    } finally {
-      setGscBusy(false);
-    }
-  };
 
   const handleUpdateStatus = async (id, status) => {
     try {
@@ -156,47 +105,15 @@ export default function AdminLeads() {
           <div className="flex items-center gap-2 text-sm">
             <Database size={14} className="text-slate-400" />
             <span className="text-xs uppercase tracking-wide font-bold text-slate-600">Sources</span>
-            <span className="text-xs text-slate-500">WhatsApp funnel (auto) · Website form (auto) · Google Search Console (below)</span>
+            <span className="text-xs text-slate-500">WhatsApp funnel (auto) · Website form (auto) · Google Maps (via Market Intel → Find Buyers)</span>
           </div>
-          <div className="flex items-center gap-2">
-            {gscStatus?.connected ? (
-              <>
-                <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-50 text-purple-700 border border-purple-200 rounded-sm text-xs font-semibold" data-testid="gsc-connected-badge">
-                  <CheckCircle2 size={12} /> GSC Connected
-                </span>
-                {gscSites.length > 1 && (
-                  <select
-                    value={gscSite}
-                    onChange={(e) => setGscSite(e.target.value)}
-                    className="px-2 py-1 border border-slate-200 rounded-sm text-xs bg-white max-w-[200px]"
-                    data-testid="gsc-site-select"
-                  >
-                    {gscSites.map((s) => <option key={s} value={s}>{s.replace("sc-domain:", "domain: ")}</option>)}
-                  </select>
-                )}
-                <button
-                  onClick={importGsc}
-                  disabled={gscBusy || !gscSite}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 text-white rounded-sm text-xs font-semibold hover:bg-purple-700 disabled:opacity-50"
-                  data-testid="gsc-import-btn"
-                >
-                  <Download size={12} /> {gscBusy ? "Importing..." : "Import Search Queries (28d)"}
-                </button>
-              </>
-            ) : gscStatus?.configured ? (
-              <button
-                onClick={connectGsc}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-purple-300 text-purple-700 rounded-sm text-xs font-semibold hover:bg-purple-50"
-                data-testid="gsc-connect-btn"
-              >
-                <Search size={12} /> Connect Google Search Console
-              </button>
-            ) : (
-              <span className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-sm px-2 py-1" data-testid="gsc-not-configured">
-                GSC OAuth not configured — set GOOGLE_OAUTH_CLIENT_ID / SECRET in backend/.env
-              </span>
-            )}
-          </div>
+          <a
+            href="/admin/market-intelligence"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-emerald-300 text-emerald-700 rounded-sm text-xs font-semibold hover:bg-emerald-50"
+            data-testid="go-to-market-intel-btn"
+          >
+            <Search size={12} /> Find new leads → Market Intel
+          </a>
         </div>
       </div>
 
@@ -370,16 +287,16 @@ export default function AdminLeads() {
                 <div><p className="text-xs text-slate-500">Created</p><p className="font-medium">{new Date(selectedLead.created_at).toLocaleDateString()}</p></div>
               </div>
               {selectedLead.product_interest && (
-                <div><p className="text-xs text-slate-500 mb-1">Product Interest</p><p className="text-sm">{selectedLead.product_interest}</p></div>
+                <div><p className="text-xs text-slate-500 mb-1">Product / Search Query</p><p className="text-sm">{selectedLead.product_interest}</p></div>
               )}
-              {selectedLead.source === "gsc_warm" && (
-                <div className="grid grid-cols-2 gap-3 text-xs bg-purple-50 border border-purple-100 rounded-sm p-3" data-testid="gsc-metrics">
-                  <div><span className="text-slate-500 block">Clicks (28d)</span><span className="font-bold text-purple-700 text-sm">{selectedLead.gsc_clicks ?? 0}</span></div>
-                  <div><span className="text-slate-500 block">Impressions</span><span className="font-bold text-purple-700 text-sm">{selectedLead.gsc_impressions ?? 0}</span></div>
-                  <div><span className="text-slate-500 block">Avg Position</span><span className="font-bold text-purple-700 text-sm">{selectedLead.gsc_position ?? "—"}</span></div>
-                  <div><span className="text-slate-500 block">CTR</span><span className="font-bold text-purple-700 text-sm">{selectedLead.gsc_ctr ? (selectedLead.gsc_ctr * 100).toFixed(1) + "%" : "—"}</span></div>
-                  {selectedLead.gsc_country && <div><span className="text-slate-500 block">Country</span><span className="font-semibold">{selectedLead.gsc_country}</span></div>}
-                  {selectedLead.gsc_landing_page && <div className="col-span-2"><span className="text-slate-500 block">Landing Page</span><a href={selectedLead.gsc_landing_page} target="_blank" rel="noopener noreferrer" className="text-purple-700 underline truncate block text-xs">{selectedLead.gsc_landing_page}</a></div>}
+              {selectedLead.source === "google_maps" && (
+                <div className="grid grid-cols-2 gap-3 text-xs bg-orange-50 border border-orange-100 rounded-sm p-3" data-testid="gmaps-metrics">
+                  {selectedLead.gmaps_category && <div><span className="text-slate-500 block">Category</span><span className="font-semibold text-orange-700">{selectedLead.gmaps_category}</span></div>}
+                  {selectedLead.gmaps_rating ? <div><span className="text-slate-500 block">Rating</span><span className="font-semibold text-orange-700">{selectedLead.gmaps_rating} ⭐ ({selectedLead.gmaps_reviews})</span></div> : null}
+                  {selectedLead.gmaps_address && <div className="col-span-2"><span className="text-slate-500 block">Address</span><span className="font-medium text-slate-800">{selectedLead.gmaps_address}</span></div>}
+                  {selectedLead.gmaps_website && <div className="col-span-2"><span className="text-slate-500 block">Website</span><a href={selectedLead.gmaps_website} target="_blank" rel="noopener noreferrer" className="text-orange-700 underline truncate block text-xs">{selectedLead.gmaps_website}</a></div>}
+                  {selectedLead.gmaps_url && <div className="col-span-2"><a href={selectedLead.gmaps_url} target="_blank" rel="noopener noreferrer" className="text-orange-700 underline text-xs">Open in Google Maps ↗</a></div>}
+                  {selectedLead.gmaps_search_query && <div className="col-span-2"><span className="text-slate-500 block">Found via query</span><span className="font-mono text-xs text-slate-800">{selectedLead.gmaps_search_query}</span></div>}
                 </div>
               )}
               {selectedLead.message && (

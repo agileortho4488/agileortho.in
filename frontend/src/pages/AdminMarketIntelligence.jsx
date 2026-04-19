@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import {
   TrendingUp, MapPin, Search, RefreshCw, Sparkles, Flame,
+  CheckCircle2, Download, Target,
 } from "lucide-react";
 import api from "../lib/api";
 
@@ -29,6 +30,14 @@ export default function AdminMarketIntelligence() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // GSC state
+  const [gscStatus, setGscStatus] = useState(null);
+  const [gscSites, setGscSites] = useState([]);
+  const [gscSite, setGscSite] = useState("");
+  const [gscBusy, setGscBusy] = useState(false);
+  const [gscQueries, setGscQueries] = useState(null);
+  const [findingBuyers, setFindingBuyers] = useState(null);
+
   const load = useCallback((refresh = false) => {
     setLoading(true);
     api.get("/api/admin/intelligence/trends", {
@@ -43,7 +52,73 @@ export default function AdminMarketIntelligence() {
       .finally(() => setLoading(false));
   }, [keywords, geo, timeframe]);
 
+  const fetchGscStatus = useCallback(() => {
+    api.get("/api/admin/gsc/status")
+      .then((r) => {
+        setGscStatus(r.data);
+        if (r.data?.connected) {
+          api.get("/api/admin/gsc/sites").then((s) => {
+            const sites = s.data.sites || [];
+            setGscSites(sites);
+            const pref = sites.find((x) => x.includes("agileortho.in")) || sites[0] || "";
+            setGscSite(pref);
+          }).catch(() => {});
+        }
+      })
+      .catch(() => setGscStatus({ connected: false, configured: false }));
+  }, []);
+
   useEffect(() => { load(false); }, [load]);
+  useEffect(() => {
+    fetchGscStatus();
+    const q = new URLSearchParams(window.location.search);
+    if (q.get("gsc") === "connected") {
+      toast.success("Google Search Console connected");
+      window.history.replaceState({}, "", window.location.pathname);
+    } else if (q.get("gsc") === "error") {
+      toast.error("GSC connection failed: " + (q.get("reason") || "unknown"));
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, [fetchGscStatus]);
+
+  const connectGsc = async () => {
+    try {
+      const res = await api.get("/api/admin/gsc/connect");
+      window.location.href = res.data.auth_url;
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || "GSC connect failed");
+    }
+  };
+
+  const loadGscQueries = async () => {
+    if (!gscSite) return;
+    setGscBusy(true);
+    try {
+      const res = await api.post("/api/admin/gsc/import", {
+        site_url: gscSite, days: 28, top_n: 100,
+      });
+      setGscQueries(res.data);
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || "GSC fetch failed");
+    } finally {
+      setGscBusy(false);
+    }
+  };
+
+  const findBuyersForQuery = async (query) => {
+    setFindingBuyers(query);
+    try {
+      const res = await api.post("/api/admin/gsc/find-buyers", {
+        query, max_per_query: 8,
+      });
+      toast.success(`Scraping "${query}" across Telangana — results will appear in Leads within a minute.`);
+      console.log("find-buyers run_id:", res.data.run_id);
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || "Scrape trigger failed");
+    } finally {
+      setFindingBuyers(null);
+    }
+  };
 
   const iot = data?.interest_over_time || [];
   const regions = data?.interest_by_region || [];

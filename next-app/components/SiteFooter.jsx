@@ -77,7 +77,7 @@ export default function SiteFooter() {
             <span>CIN Registered</span>
             <span className="h-1 w-1 rounded-full bg-white/10" />
             <a
-              href="https://agile-admin-hub.preview.emergentagent.com/admin/login"
+              href="https://buyer-prospect-map.preview.emergentagent.com/admin/login"
               target="_blank"
               rel="noreferrer"
               className="hover:text-[#D4AF37] transition-colors"

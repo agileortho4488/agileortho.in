@@ -100,12 +100,48 @@ async def gsc_sites(_=Depends(admin_required)):
 
 @router.post("/api/admin/gsc/import")
 async def gsc_import(request: Request, _=Depends(admin_required)):
-    """Pull top search queries from GSC and insert them as warm leads."""
+    """Return top GSC search queries as INSIGHTS (not leads).
+
+    Call /api/admin/gsc/find-buyers with a query to scrape Google Maps for
+    actual vendors/hospitals matching that search → those become leads.
+    """
     body = await request.json() if await request.body() else {}
-    site_url = body.get("site_url") or "https://www.agileortho.in/"
+    site_url = body.get("site_url") or "sc-domain:agileortho.in"
     days = int(body.get("days") or 28)
-    top_n = int(body.get("top_n") or 50)
+    top_n = int(body.get("top_n") or 100)
     try:
-        return await gsc_svc.import_queries_as_leads(site_url, days=days, top_n=top_n)
+        return await gsc_svc.fetch_queries_insights(site_url, days=days, top_n=top_n)
     except Exception as e:
-        raise HTTPException(400, f"GSC import failed: {str(e)[:200]}")
+        raise HTTPException(400, f"GSC fetch failed: {str(e)[:200]}")
+
+
+@router.post("/api/admin/gsc/find-buyers")
+async def find_buyers_from_query(request: Request, _=Depends(admin_required)):
+    """Given a GSC search query (e.g. 'foot drop splint near me'), fire an
+    Apify Google Maps scrape for vendors matching that keyword across
+    Telangana. Results are inserted into leads_col as source=google_maps.
+    """
+    from services.apify import run_scrape_job, DEFAULT_LOCATIONS, apify_runs_col
+    import uuid as _uuid
+
+    body = await request.json()
+    query = (body.get("query") or "").strip()
+    if not query:
+        raise HTTPException(400, "query required")
+    locations = body.get("locations") or DEFAULT_LOCATIONS
+    max_per_query = int(body.get("max_per_query") or 8)
+    max_per_query = min(max_per_query, 15)  # cost guardrail
+
+    run_id = f"find_buyers_{_uuid.uuid4().hex[:8]}"
+    import asyncio as _a
+    from datetime import datetime as _dt, timezone as _tz
+    await apify_runs_col.insert_one({
+        "run_id": run_id,
+        "status": "queued",
+        "trigger": "gsc_find_buyers",
+        "query": query,
+        "locations": locations,
+        "created_at": _dt.now(_tz.utc).isoformat(),
+    })
+    _a.create_task(run_scrape_job(run_id, [query], locations, max_per_query))
+    return {"run_id": run_id, "status": "queued", "query": query, "locations": locations}
