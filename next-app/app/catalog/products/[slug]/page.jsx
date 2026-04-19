@@ -230,13 +230,13 @@ export default async function ProductPage({ params }) {
             )}
 
             {/* Clinical scope cards */}
-            {(product.semantic_procedure_scope?.length > 0 || product.semantic_anatomy_scope?.length > 0) && (
+            {(Array.isArray(product.semantic_procedure_scope) && product.semantic_procedure_scope.length > 0 || Array.isArray(product.semantic_anatomy_scope) && product.semantic_anatomy_scope.length > 0) && (
               <div data-testid="product-clinical">
                 <h2 className="text-lg font-bold mb-3 flex items-center gap-2">
                   <BadgeCheck size={16} className="text-gold" /> Clinical scope
                 </h2>
                 <div className="grid md:grid-cols-2 gap-4">
-                  {product.semantic_procedure_scope?.length > 0 && (
+                  {Array.isArray(product.semantic_procedure_scope) && product.semantic_procedure_scope.length > 0 && (
                     <div className="border border-white/10 rounded-sm p-4">
                       <p className="text-[10px] uppercase tracking-widest text-gold font-bold mb-2">Procedures</p>
                       <ul className="space-y-1.5">
@@ -248,7 +248,7 @@ export default async function ProductPage({ params }) {
                       </ul>
                     </div>
                   )}
-                  {product.semantic_anatomy_scope?.length > 0 && (
+                  {Array.isArray(product.semantic_anatomy_scope) && product.semantic_anatomy_scope.length > 0 && (
                     <div className="border border-white/10 rounded-sm p-4">
                       <p className="text-[10px] uppercase tracking-widest text-gold font-bold mb-2">Anatomical focus</p>
                       <ul className="space-y-1.5">
@@ -265,7 +265,7 @@ export default async function ProductPage({ params }) {
             )}
 
             {/* Use cases / indications */}
-            {product.proposed_semantic_use_case_tags?.length > 0 && (
+            {Array.isArray(product.proposed_semantic_use_case_tags) && product.proposed_semantic_use_case_tags.length > 0 && (
               <div data-testid="product-use-cases">
                 <h2 className="text-lg font-bold mb-3 flex items-center gap-2">
                   <Zap size={16} className="text-gold" /> Indications & use cases
@@ -298,7 +298,7 @@ export default async function ProductPage({ params }) {
                     <dd className="text-white/90">{product.pack_size}</dd>
                   </div>
                 )}
-                {product.size_variables?.length > 0 && (
+                {Array.isArray(product.size_variables) && product.size_variables.length > 0 && (
                   <div>
                     <dt className="text-white/45 text-xs">Sizes available</dt>
                     <dd className="text-white/90">{product.size_variables.join(", ")}</dd>
