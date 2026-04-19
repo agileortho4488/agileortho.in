@@ -1,7 +1,12 @@
+import Script from "next/script";
 import "./globals.css";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import ChatWidget from "@/components/ChatWidget";
+import PageviewTracker from "@/components/PageviewTracker";
+
+// Google Analytics 4 — Agile Healthcare main stream
+const GA_MEASUREMENT_ID = "G-MXXC41JFLG";
 
 export const metadata = {
   metadataBase: new URL("https://agileortho.in"),
@@ -22,7 +27,26 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
+      <head>
+        {/* Google Analytics 4 (gtag.js) — loaded afterInteractive for best Core Web Vitals */}
+        <Script
+          strategy="afterInteractive"
+          src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+        />
+        <Script id="ga4-init" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${GA_MEASUREMENT_ID}', {
+              page_path: window.location.pathname,
+              anonymize_ip: true,
+            });
+          `}
+        </Script>
+      </head>
       <body className="bg-[#0A0A0A] text-white antialiased">
+        <PageviewTracker />
         <SiteHeader />
         <main className="min-h-screen pb-20 lg:pb-0">{children}</main>
         <SiteFooter />
