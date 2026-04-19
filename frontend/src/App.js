@@ -1,23 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "sonner";
-import { SEOProvider } from "./components/SEO";
-import { Layout } from "./components/layout/Layout";
 import { AdminLayout } from "./components/layout/AdminLayout";
-import ChatWidget from "./components/ChatWidget";
-import CookieConsent from "./components/CookieConsent";
-import Home from "./pages/Home";
-import Products from "./pages/Products";
-import ProductDetail from "./pages/ProductDetail";
-import ProductFamily from "./pages/ProductFamily";
-import About from "./pages/About";
-import Contact from "./pages/Contact";
-import Chat from "./pages/Chat";
-import CatalogDivision from "./pages/CatalogDivision";
-import CatalogIndex from "./pages/CatalogIndex";
-import CatalogProductDetail from "./pages/CatalogProductDetail";
-import CatalogCompare from "./pages/CatalogCompare";
-import DistrictsIndex from "./pages/DistrictsIndex";
-import DistrictPage from "./pages/DistrictPage";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminPipeline from "./pages/AdminPipeline";
@@ -27,64 +10,66 @@ import AdminProducts from "./pages/AdminProducts";
 import AdminImports from "./pages/AdminImports";
 import AdminWhatsApp from "./pages/AdminWhatsApp";
 import AdminReview from "./pages/AdminReview";
-import { VisitorProvider } from "./context/VisitorContext";
 import "./App.css";
 
+/**
+ * Agile Ortho — Internal Admin Console
+ *
+ * Public website (home, catalog, products, districts, etc.) lives on the
+ * Next.js deployment at https://agileortho.in. This CRA is now **admin-only**:
+ * - /             → redirects to /admin/login
+ * - /admin/login  → password login
+ * - /admin/*      → protected CRM + catalog management routes
+ */
 function App() {
   return (
-    <SEOProvider>
-      <VisitorProvider>
-        <BrowserRouter>
-          <Toaster position="top-right" richColors closeButton />
-        <Routes>
-          {/* Public routes with header/footer */}
-          <Route element={<Layout />}>
-            <Route path="/" element={<Home />} />
-            <Route path="/products" element={<Navigate to="/catalog" replace />} />
-            <Route path="/products/family/:familyName" element={<ProductFamily />} />
-            <Route path="/products/:id" element={<ProductDetail />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/chat" element={<Chat />} />
-            <Route path="/catalog" element={<CatalogIndex />} />
-            <Route path="/catalog/:divisionSlug" element={<CatalogDivision />} />
-            <Route path="/catalog/products/:slug" element={<CatalogProductDetail />} />
-            <Route path="/catalog/compare" element={<CatalogCompare />} />
-            <Route path="/districts" element={<DistrictsIndex />} />
-            <Route path="/districts/:slug" element={<DistrictPage />} />
-          </Route>
+    <BrowserRouter>
+      <Toaster position="top-right" richColors closeButton />
+      <Routes>
+        {/* Root + anything not-matching → admin login */}
+        <Route path="/" element={<Navigate to="/admin/login" replace />} />
+        <Route path="/admin/login" element={<AdminLogin />} />
 
-          {/* Admin login (no layout) */}
-          <Route path="/admin/login" element={<AdminLogin />} />
+        <Route element={<AdminLayout />}>
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/pipeline" element={<AdminPipeline />} />
+          <Route path="/admin/leads" element={<AdminLeads />} />
+          <Route path="/admin/analytics" element={<AdminAnalytics />} />
+          <Route path="/admin/products" element={<AdminProducts />} />
+          <Route path="/admin/imports" element={<AdminImports />} />
+          <Route path="/admin/whatsapp" element={<AdminWhatsApp />} />
+          <Route path="/admin/review" element={<AdminReview />} />
+        </Route>
 
-          {/* Admin routes with sidebar */}
-          <Route element={<AdminLayout />}>
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/pipeline" element={<AdminPipeline />} />
-            <Route path="/admin/leads" element={<AdminLeads />} />
-            <Route path="/admin/analytics" element={<AdminAnalytics />} />
-            <Route path="/admin/products" element={<AdminProducts />} />
-            <Route path="/admin/imports" element={<AdminImports />} />
-            <Route path="/admin/whatsapp" element={<AdminWhatsApp />} />
-            <Route path="/admin/review" element={<AdminReview />} />
-          </Route>
-
-          {/* 404 */}
-          <Route path="*" element={
-            <div className="min-h-screen flex items-center justify-center bg-white font-[Manrope]">
+        <Route
+          path="*"
+          element={
+            <div className="min-h-screen flex items-center justify-center bg-[#0A0A0A] font-[Manrope]">
               <div className="text-center">
-                <h1 className="text-6xl font-bold text-slate-200">404</h1>
-                <p className="text-slate-500 mt-2">Page not found</p>
-                <a href="/" className="text-sm text-teal-600 font-medium mt-3 inline-block hover:text-teal-700">Go Home</a>
+                <h1 className="text-6xl font-bold text-white/20">404</h1>
+                <p className="text-white/50 mt-2">
+                  This area is for admin only. Looking for the public site?
+                </p>
+                <a
+                  href="https://agileortho.in"
+                  className="text-sm text-[#D4AF37] font-medium mt-3 inline-block hover:text-[#F2C94C]"
+                >
+                  Go to agileortho.in →
+                </a>
+                <p className="mt-4">
+                  <a
+                    href="/admin/login"
+                    className="text-sm text-[#2DD4BF] font-medium hover:text-[#5EEAD4]"
+                  >
+                    Admin Login →
+                  </a>
+                </p>
               </div>
             </div>
-          } />
-        </Routes>
-        <ChatWidget />
-        <CookieConsent />
-      </BrowserRouter>
-      </VisitorProvider>
-    </SEOProvider>
+          }
+        />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

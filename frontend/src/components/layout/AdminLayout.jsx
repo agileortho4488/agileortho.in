@@ -65,11 +65,14 @@ export const AdminLayout = () => {
       {/* Sidebar */}
       <aside className="w-56 bg-slate-900 text-white flex flex-col shrink-0" data-testid="admin-sidebar">
         <div className="px-4 py-5 border-b border-slate-800">
-          <Link to="/" className="flex items-center gap-2">
+          <a href="https://agileortho.in" target="_blank" rel="noreferrer" className="flex items-center gap-2 group" data-testid="admin-public-site-link">
             <img src="/ao_monogram_white.png" alt="AO" className="w-7 h-7 rounded-sm" />
-            <span className="text-sm font-bold" style={{ fontFamily: "Chivo" }}>Agile Ortho</span>
-          </Link>
-          <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-widest">Admin Panel</p>
+            <div>
+              <span className="block text-sm font-bold group-hover:text-emerald-400 transition-colors" style={{ fontFamily: "Chivo" }}>Agile Ortho</span>
+              <span className="block text-[9px] text-emerald-500 uppercase tracking-widest">Open public site →</span>
+            </div>
+          </a>
+          <p className="text-[10px] text-slate-500 mt-3 uppercase tracking-widest">Admin Panel</p>
         </div>
         <nav className="flex-1 px-2 py-4 space-y-0.5">
           {links.map(({ to, icon: Icon, label }) => (

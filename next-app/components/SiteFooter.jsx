@@ -75,6 +75,16 @@ export default function SiteFooter() {
             <span>GST: {COMPANY.gst}</span>
             <span className="h-1 w-1 rounded-full bg-white/10" />
             <span>CIN Registered</span>
+            <span className="h-1 w-1 rounded-full bg-white/10" />
+            <a
+              href="https://strange-easley-2.preview.emergentagent.com/admin/login"
+              target="_blank"
+              rel="noreferrer"
+              className="hover:text-[#D4AF37] transition-colors"
+              data-testid="footer-admin-login"
+            >
+              Admin Login
+            </a>
           </div>
         </div>
       </div>

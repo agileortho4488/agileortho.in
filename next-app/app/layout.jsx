@@ -1,6 +1,7 @@
 import "./globals.css";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
+import ChatWidget from "@/components/ChatWidget";
 
 export const metadata = {
   metadataBase: new URL("https://agileortho.in"),
@@ -25,6 +26,7 @@ export default function RootLayout({ children }) {
         <SiteHeader />
         <main className="min-h-screen pb-20 lg:pb-0">{children}</main>
         <SiteFooter />
+        <ChatWidget />
       </body>
     </html>
   );

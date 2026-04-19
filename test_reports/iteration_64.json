@@ -1,0 +1,116 @@
+{
+  "summary": "Iteration 64: Admin Split Testing - All tests PASSED. React admin is now admin-only with proper routing, 404 handling, and all 8 nav items working. Chatbot endpoints return correct response shapes for Next.js ChatWidget integration.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/test_reports/pytest/pytest_results_iter64.xml",
+    "/app/backend/tests/test_admin_split_iter64.py"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_admin_split_iter64.py"
+  ],
+  "success_rate": {
+    "backend": "100% (14/14 pytest tests passed)",
+    "frontend": "100% (11/11 Playwright tests passed)"
+  },
+  "test_credentials": "Admin: POST /api/admin/login with {\"password\": \"AgileHealth2026admin\"}",
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Admin split complete. React CRA at /app/frontend is admin-only. Public site is on Next.js at /app/next-app (deployed to Vercel). All chatbot endpoints working with correct response shapes.",
+  "features_tested": {
+    "root_redirect": {
+      "status": "PASS",
+      "details": "Root URL '/' redirects to '/admin/login'"
+    },
+    "admin_login": {
+      "status": "PASS",
+      "details": "Login with password 'AgileHealth2026admin' returns JWT token and redirects to /admin dashboard"
+    },
+    "admin_404_page": {
+      "status": "PASS",
+      "details": "Unknown URLs (e.g., /catalog, /home) show 404 page with links to agileortho.in and /admin/login"
+    },
+    "bulk_upload_deleted": {
+      "status": "PASS",
+      "details": "/admin/bulk-upload returns 404 (route deleted)"
+    },
+    "public_site_link": {
+      "status": "PASS",
+      "details": "Sidebar shows 'Open public site →' link pointing to https://agileortho.in (opens in new tab)"
+    },
+    "all_8_nav_items": {
+      "status": "PASS",
+      "details": "Dashboard, Pipeline, Leads, Analytics, Products, PDF Import, WhatsApp, Review - all load without errors"
+    },
+    "robots_meta_tag": {
+      "status": "PASS",
+      "details": "HTML meta tag <meta name=\"robots\" content=\"noindex, nofollow, noarchive\"> present"
+    },
+    "page_title": {
+      "status": "PASS",
+      "details": "Page title is 'Agile Ortho — Admin Console'"
+    },
+    "chatbot_query_endpoint": {
+      "status": "PASS",
+      "endpoint": "POST /api/chatbot/query",
+      "details": "Returns {answer, sources, confidence} with correct types"
+    },
+    "chatbot_suggestions_endpoint": {
+      "status": "PASS",
+      "endpoint": "GET /api/chatbot/suggestions",
+      "details": "Returns {suggestions: [...]} array"
+    },
+    "chatbot_history_endpoint": {
+      "status": "PASS",
+      "endpoint": "GET /api/chatbot/history/{session_id}",
+      "details": "Works for new sessions (returns empty messages array)"
+    },
+    "admin_stats_endpoint": {
+      "status": "PASS",
+      "endpoint": "GET /api/admin/stats",
+      "details": "Returns stats with JWT auth, 401 without auth"
+    },
+    "admin_pipeline_endpoint": {
+      "status": "PASS",
+      "endpoint": "GET /api/admin/pipeline",
+      "details": "Returns pipeline data with JWT auth, 401 without auth"
+    },
+    "admin_analytics_endpoint": {
+      "status": "PASS",
+      "endpoint": "GET /api/admin/analytics",
+      "details": "Returns analytics data with JWT auth, 401 without auth"
+    },
+    "no_broken_imports": {
+      "status": "PASS",
+      "details": "No references to deleted files (ChatWidget, SiteHeader, SiteFooter, Layout, Home, Products) in admin code"
+    },
+    "nextjs_chatwidget_exists": {
+      "status": "PASS",
+      "details": "/app/next-app/components/ChatWidget.jsx exists and connects to /api/chatbot/* endpoints"
+    }
+  },
+  "api_endpoints_verified": {
+    "POST /api/chatbot/query": "200 - Returns {answer, sources, confidence}",
+    "GET /api/chatbot/suggestions": "200 - Returns {suggestions: [...]}",
+    "GET /api/chatbot/history/{session_id}": "200 - Returns {messages: [], session_id}",
+    "POST /api/admin/login": "200 - Returns {token, role}",
+    "POST /api/admin/login (wrong password)": "401 - Unauthorized",
+    "GET /api/admin/stats (no auth)": "401 - Missing authorization header",
+    "GET /api/admin/stats (with auth)": "200 - Returns stats",
+    "GET /api/admin/pipeline (no auth)": "401 - Missing authorization header",
+    "GET /api/admin/pipeline (with auth)": "200 - Returns pipeline data",
+    "GET /api/admin/analytics (no auth)": "401 - Missing authorization header",
+    "GET /api/admin/analytics (with auth)": "200 - Returns analytics data",
+    "GET /api/catalog/products": "200 - Regression test passed"
+  }
+}
