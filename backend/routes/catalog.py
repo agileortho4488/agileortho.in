@@ -318,6 +318,12 @@ async def catalog_product_detail(slug: str):
     doc = await catalog_products_col.find_one(
         {**PILOT_FILTER, "slug": slug}, {"_id": 0}
     )
+    # Legacy-slug fallback: if not found under new slug, check slug_legacy
+    # so old indexed URLs (e.g. containing `&`) keep working after slug cleanup.
+    if not doc:
+        doc = await catalog_products_col.find_one(
+            {**PILOT_FILTER, "slug_legacy": slug}, {"_id": 0}
+        )
     if not doc:
         raise HTTPException(status_code=404, detail="Product not found in catalog")
 

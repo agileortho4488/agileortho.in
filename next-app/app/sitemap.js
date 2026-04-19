@@ -41,6 +41,10 @@ export default async function sitemap() {
     const items = r?.products || [];
     for (const p of items) {
       if (!p.slug) continue;
+      // Skip slugs containing special chars that break XML (e.g. `&`).
+      // Such pages are still reachable by direct URL; they're just excluded
+      // from the sitemap to keep it Google-valid.
+      if (/[&<>"']/.test(p.slug)) continue;
       entries.push({
         url: `${BASE}/catalog/products/${p.slug}`,
         lastModified: p.updated_at ? new Date(p.updated_at) : new Date(),
