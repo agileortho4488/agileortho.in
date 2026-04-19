@@ -45,6 +45,25 @@ Build a B2B medical device platform for "Agile Healthcare", a premier Meril Life
 - JWT token validation on all admin routes
 - Admin layout auth guard
 
+## Recent Changes (Apr 19, 2026 — WhatsApp Funnel, iteration_66)
+1. **Fully automated WhatsApp Conversational Funnel** — `/app/backend/services/whatsapp_funnel.py`
+   - State machine: `root → division_picker → product_picker → product_detail → quote|brochure|agent`
+   - On any first inbound message, bot auto-replies with welcome menu listing 13 divisions
+   - Numeric replies 1-13 pick a division → bot sends top 3 products (A/B/C)
+   - Letter A/B/C picks product → bot sends specs + 3 CTAs (1=quote, 2=brochure, 3=agent)
+   - Quote request auto-upgrades lead to `Hot` score 80, `inquiry_type=Bulk Quote`, `source=whatsapp_funnel`
+   - Keyword detection — `trauma`, `plate`, `knee`, `acl`, etc. jump straight to matching division
+   - Text-based (not Interakt templates) → zero manual setup, works out of the box
+   - Graceful fallback to existing AI bot when user strays off-script
+2. **3 new admin endpoints** — `/api/admin/whatsapp/funnel-analytics`, `/funnel-simulate`, `/funnel-reset`
+3. **New admin page** `/admin/whatsapp-funnel` (`AdminWhatsAppFunnel.jsx`) with:
+   - Conversion funnel bars (Started → Division → Product → Quote) with drop-off %
+   - Per-division pick counts
+   - Live simulator (dry-run a conversation without sending WhatsApp)
+   - Recent 25 funnel events stream with from→to transitions
+4. Sidebar link "WA Funnel" added; routes registered
+5. Tests: 10/10 backend pytest + 100% frontend coverage (iteration_66)
+
 ## Recent Changes (Apr 19, 2026 — Admin Enhancements, iteration_65)
 1. **Dashboard KPI refresh + Knowledge Graph card** — `/app/frontend/src/pages/AdminDashboard.jsx`
    - New 4-KPI row: Leads Today, Last 7 Days, Last 30 Days, Review Pending
