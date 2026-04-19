@@ -68,6 +68,21 @@ export async function getDivisions() {
   return data || { divisions: [], total_products: 0 };
 }
 
+export async function getCatalogDivision(slug) {
+  assertBackend();
+  return _fetchJSON(`${BACKEND}/api/catalog/divisions/${slug}`);
+}
+
+export async function searchCatalogProducts(params = {}) {
+  assertBackend();
+  const qs = new URLSearchParams();
+  Object.entries(params).forEach(([k, v]) => {
+    if (v !== undefined && v !== null && v !== "") qs.set(k, v);
+  });
+  const data = await _fetchJSON(`${BACKEND}/api/catalog/products?${qs}`);
+  return data || { products: [], total: 0, page: 1, pages: 1 };
+}
+
 /**
  * Bulk prefetch used during build to populate the product cache.
  * After this runs, every subsequent getCatalogProduct(slug) is a map lookup.

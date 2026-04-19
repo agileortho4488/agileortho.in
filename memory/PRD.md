@@ -45,6 +45,17 @@ Build a B2B medical device platform for "Agile Healthcare", a premier Meril Life
 - JWT token validation on all admin routes
 - Admin layout auth guard
 
+## Recent Changes (Apr 19, 2026)
+1. **Full public site ported to Next.js (`/app/next-app`)** — 857 pre-rendered pages total
+   - Home, Catalog, About, Contact (server-rendered, ISR 1h)
+   - **13 division pages** (`/catalog/[divisionSlug]`) with category chips + product grid (SSG)
+   - **810 product pages** with Surgical Decision Engine (SSG)
+   - **33 district pages** (`/districts/[districtSlug]`) with local SEO (LocalBusiness JSON-LD), hospital lists, medical focus links (SSG)
+   - Districts index, catalog search, contact form wired to `/api/leads`
+   - Sitemap: 861 URLs indexing every page
+   - All pages use site-wide SiteHeader + SiteFooter matching React CRA pixel-for-pixel
+   - Build verified locally: `yarn build` → 857 pages in ~20s, all routes 200
+
 ## Recent Changes (Apr 17, 2026)
 1. **Next.js/Vercel POC shipped** at `/app/next-app` (parallel to existing React CRA)
    - Next.js 16 app router, 810 catalog products pre-rendered as static HTML (`generateStaticParams`)

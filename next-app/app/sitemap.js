@@ -1,13 +1,39 @@
-import { listCatalogProducts } from "@/lib/api";
+import { listCatalogProducts, getDivisions } from "@/lib/api";
+import { TELANGANA_DISTRICTS } from "@/lib/districts";
 
 const BASE = "https://agileortho.in";
 
 export default async function sitemap() {
   const entries = [
     { url: `${BASE}/`, lastModified: new Date(), changeFrequency: "daily", priority: 1 },
+    { url: `${BASE}/catalog`, lastModified: new Date(), changeFrequency: "daily", priority: 0.9 },
+    { url: `${BASE}/districts`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.9 },
+    { url: `${BASE}/about`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.6 },
+    { url: `${BASE}/contact`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.6 },
   ];
 
-  // Page through all products for the sitemap (Next.js SSG builds emit this file)
+  // Division pages
+  const divs = (await getDivisions())?.divisions || [];
+  for (const d of divs) {
+    entries.push({
+      url: `${BASE}/catalog/${d.slug}`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.85,
+    });
+  }
+
+  // District pages
+  for (const d of TELANGANA_DISTRICTS) {
+    entries.push({
+      url: `${BASE}/districts/${d.slug}`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.75,
+    });
+  }
+
+  // All product pages
   let page = 1;
   const limit = 100;
   while (page <= 30) {
