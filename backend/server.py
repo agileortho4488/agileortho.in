@@ -28,6 +28,7 @@ from routes.recommendations import router as recommendations_router
 from routes.indexnow import router as indexnow_router
 from routes.prospects import router as prospects_router
 from routes.intelligence import router as intelligence_router
+from routes.outbound import router as outbound_router
 
 app = FastAPI(title="Agile Ortho API")
 
@@ -59,6 +60,7 @@ app.include_router(recommendations_router)
 app.include_router(indexnow_router)
 app.include_router(prospects_router)
 app.include_router(intelligence_router)
+app.include_router(outbound_router)
 
 
 @app.on_event("startup")
@@ -133,6 +135,15 @@ async def startup():
         print("Market intelligence indexes initialized")
     except Exception as e:
         print(f"MI index init failed (non-critical): {e}")
+
+    # Outbound engine indexes + scheduler
+    try:
+        from services.outbound_engine import ensure_indexes as oe_ensure, start_scheduler as oe_start
+        await oe_ensure()
+        oe_start(interval_seconds=300)  # 5-minute tick
+        print("Outbound engine scheduler started (5-min interval)")
+    except Exception as e:
+        print(f"Outbound engine init failed (non-critical): {e}")
 
     # Start follow-up automation scheduler
     import asyncio

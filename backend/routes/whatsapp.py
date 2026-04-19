@@ -640,6 +640,20 @@ async def whatsapp_webhook(request: Request):
                     message_text = bid
 
         if phone and message_text:
+            # Outbound engine hooks: opt-in detection + reply tracking
+            try:
+                from services.outbound_engine import record_optin, record_reply
+                await record_reply(phone)
+                # Opt-in is signalled by click on "Yes, send catalog" quick-reply button.
+                # Interakt delivers this as message_text == "Yes, send catalog" OR the
+                # button payload id in shape (a)/(b). We accept either the literal label
+                # or explicit opt-in ids.
+                mt_lower = (message_text or "").strip().lower()
+                if mt_lower in ("yes, send catalog", "yes send catalog", "opt:yes", "opt_in"):
+                    await record_optin(phone)
+            except Exception as _e:
+                print(f"[OUTBOUND_HOOK] non-fatal: {_e}")
+
             conv = await wa_conversations_col.find_one({"phone": phone})
             if conv and conv.get("status") == "human":
                 incoming_msg = {
@@ -679,6 +693,15 @@ async def whatsapp_webhook(request: Request):
         if event_type == "message_api_failed":
             update_fields["failure_reason"] = message.get("channel_failure_reason", "")
             update_fields["error_code"] = message.get("channel_error_code", "")
+            # Outbound engine: treat user-blocked / spam-reported as block event
+            try:
+                from services.outbound_engine import record_block_event
+                reason = (message.get("channel_failure_reason") or "").lower()
+                phone_failed = data.get("customer", {}).get("channel_phone_number", "")
+                if phone_failed and any(k in reason for k in ["block", "spam", "user_paused", "recipient", "policy"]):
+                    await record_block_event(phone_failed, reason=reason[:100])
+            except Exception as _e:
+                print(f"[OUTBOUND_HOOK] block-detect failed: {_e}")
         if event_type == "message_api_clicked":
             update_fields["click_type"] = data.get("event", {}).get("click_type", "")
             update_fields["button_text"] = data.get("event", {}).get("button_text", "")

@@ -1,5 +1,17 @@
 # Agile Healthcare - B2B Medical Device Platform PRD
 
+## Recent Changes (Feb 2026 — MVP-C + MVP-A Outbound Engine)
+1. **New Outbound Engine** (`services/outbound_engine.py` + `routes/outbound.py` + `pages/AdminOutbound.jsx`)
+   - Rule-based WhatsApp outreach scheduler (5-min tick)
+   - **Safety stack (MVP-C)**: 2000/day cap, 7-day per-phone cooldown, business-hours only (9 AM – 7 PM IST), auto-pause at 3+ blocks/day
+   - **Opt-in gate**: No outbound to `source:google_maps` leads until they click "Yes, send catalog" on the opt-in template
+   - **Closer loop (MVP-A)**: UTM click tracking at `/api/track/click` auto-upgrades clicker to Warm; opt-in promotes to Warm+Qualified
+   - Admin UI: engine status banner, 5 KPI cards, 7d rollup, rules table with toggle/edit/delete, recent sends log, config modal, manual pause/resume/tick
+   - Hooks in `routes/whatsapp.py` webhook detect opt-in clicks + replies + Meta block events
+2. **Interakt templates spec** at `/app/INTERAKT_TEMPLATES.md` — copy-paste ready for user to submit (ao_optin_v1, ao_catalog_carousel_v1, ao_quote_followup_v1)
+3. New MongoDB collections: `outbound_rules`, `outbound_sends`, `outbound_quality` (daily snapshot)
+4. Admin sidebar + App routing updated: `/admin/outbound`
+
 ## Recent Changes (Feb 2026 — GSC Insights → Apify Buyers Flow, live-verified)
 1. **GSC panel rendered on Market Intelligence page** (`AdminMarketIntelligence.jsx`)
    - Connect button (when disconnected) / "Connected" badge (when linked)
