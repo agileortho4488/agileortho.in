@@ -132,6 +132,141 @@ async def track_event_in_interakt(phone: str, event_name: str, event_traits: dic
         return {"success": False, "error": str(e)}
 
 
+# -- Interactive Messages (List / Button) — session messages inside 24h window --
+
+async def send_whatsapp_interactive_list(
+    phone: str,
+    body_text: str,
+    sections: list,
+    button_label: str = "Choose",
+    header_text: str = "",
+    footer_text: str = "",
+    country_code: str = "+91",
+    callback_data: str = "funnel_list",
+):
+    """Send a WhatsApp Interactive List message via Interakt session API.
+
+    `sections` shape: [{"title": "...", "rows": [{"id": "...", "title": "...", "description": "..."}]}]
+    Returns {success, message_id, data} — on failure we never raise, caller
+    may fall back to plain text.
+    """
+    headers = {"Authorization": interakt_auth_header(), "Content-Type": "application/json"}
+    clean_phone = clean_phone_number(phone)
+
+    # Enforce WhatsApp character limits (silent truncation is safer than API reject)
+    def _trunc(s, n):
+        return (s or "")[:n]
+    sane_sections = []
+    for s in sections[:10]:
+        sane_sections.append({
+            "title": _trunc(s.get("title", ""), 24),
+            "rows": [
+                {
+                    "id": _trunc(r["id"], 200),
+                    "title": _trunc(r["title"], 23),
+                    **({"description": _trunc(r["description"], 72)} if r.get("description") else {}),
+                }
+                for r in s.get("rows", [])[:10]
+            ],
+        })
+
+    data_block = {
+        "type": "list",
+        "body": {"text": _trunc(body_text, 1024)},
+        "action": {
+            "button": _trunc(button_label, 20),
+            "sections": sane_sections,
+        },
+    }
+    if header_text:
+        data_block["header"] = {"type": "text", "text": _trunc(header_text, 60)}
+    if footer_text:
+        data_block["footer"] = {"text": _trunc(footer_text, 60)}
+
+    payload = {
+        "countryCode": country_code,
+        "phoneNumber": clean_phone,
+        "callbackData": callback_data,
+        "type": "Interactive",
+        "data": data_block,
+    }
+    try:
+        resp = req.post(INTERAKT_API_URL, json=payload, headers=headers, timeout=15)
+        result = resp.json() if resp.content else {}
+        msg_id = result.get("id", "")
+        if msg_id:
+            await wa_message_status_col.insert_one({
+                "message_id": msg_id,
+                "phone": clean_phone,
+                "type": "interactive_list",
+                "status": "queued",
+                "callback_data": callback_data,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            })
+        return {
+            "success": resp.status_code in (200, 201),
+            "status_code": resp.status_code,
+            "data": result,
+            "message_id": msg_id,
+        }
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+async def send_whatsapp_interactive_buttons(
+    phone: str,
+    body_text: str,
+    buttons: list,
+    header_text: str = "",
+    footer_text: str = "",
+    country_code: str = "+91",
+    callback_data: str = "funnel_buttons",
+):
+    """Send a WhatsApp Interactive Reply Buttons message (max 3 buttons)."""
+    headers = {"Authorization": interakt_auth_header(), "Content-Type": "application/json"}
+    clean_phone = clean_phone_number(phone)
+
+    def _trunc(s, n):
+        return (s or "")[:n]
+
+    sane_buttons = [
+        {"type": "reply", "reply": {"id": _trunc(b["id"], 200), "title": _trunc(b["title"], 20)}}
+        for b in buttons[:3]
+    ]
+
+    data_block = {
+        "type": "button",
+        "body": {"text": _trunc(body_text, 1024)},
+        "action": {"buttons": sane_buttons},
+    }
+    if header_text:
+        data_block["header"] = {"type": "text", "text": _trunc(header_text, 60)}
+    if footer_text:
+        data_block["footer"] = {"text": _trunc(footer_text, 60)}
+
+    payload = {
+        "countryCode": country_code,
+        "phoneNumber": clean_phone,
+        "callbackData": callback_data,
+        "type": "Interactive",
+        "data": data_block,
+    }
+    try:
+        resp = req.post(INTERAKT_API_URL, json=payload, headers=headers, timeout=15)
+        result = resp.json() if resp.content else {}
+        msg_id = result.get("id", "")
+        return {
+            "success": resp.status_code in (200, 201),
+            "status_code": resp.status_code,
+            "data": result,
+            "message_id": msg_id,
+        }
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+
+
 WA_SYSTEM_PROMPT = """You are Agile Ortho's WhatsApp sales assistant. You're chatting on WhatsApp — be BRIEF and conversational.
 
 RULES:
@@ -248,22 +383,54 @@ async def handle_wa_incoming(phone: str, message_text: str, customer_name: str =
     )
 
     # --- 1) Try the Conversational Funnel first ---
-    funnel_replies = await try_handle_funnel(phone, message_text, customer_name or "")
+    funnel_mode = (os.environ.get("WHATSAPP_FUNNEL_MODE", "text") or "text").strip().lower()
+    funnel_replies = await try_handle_funnel(phone, message_text, customer_name or "", mode=funnel_mode)
     if funnel_replies:
-        for i, reply in enumerate(funnel_replies):
-            await send_whatsapp_message(phone, reply, callback_data=f"funnel_{i}")
+        for i, payload in enumerate(funnel_replies):
+            ptype = payload.get("type", "text")
+            sent_ok = False
+            if ptype == "interactive_list" and funnel_mode == "interactive":
+                r = await send_whatsapp_interactive_list(
+                    phone,
+                    body_text=payload.get("body", ""),
+                    sections=payload.get("sections", []),
+                    button_label=payload.get("button", "Choose"),
+                    header_text=payload.get("header", ""),
+                    footer_text=payload.get("footer", ""),
+                    callback_data=f"funnel_list_{i}",
+                )
+                sent_ok = r.get("success", False)
+            elif ptype == "interactive_buttons" and funnel_mode == "interactive":
+                r = await send_whatsapp_interactive_buttons(
+                    phone,
+                    body_text=payload.get("body", ""),
+                    buttons=payload.get("buttons", []),
+                    header_text=payload.get("header", ""),
+                    footer_text=payload.get("footer", ""),
+                    callback_data=f"funnel_buttons_{i}",
+                )
+                sent_ok = r.get("success", False)
+
+            # Fallback to text if interactive send failed OR it was already text
+            if not sent_ok:
+                text_body = payload.get("text") or payload.get("body") or ""
+                await send_whatsapp_message(phone, text_body, callback_data=f"funnel_{i}")
+
             if i < len(funnel_replies) - 1:
                 await asyncio.sleep(1.0)
-            # Save bot reply in transcript
+
+            # Save bot reply transcript (use human-readable body)
+            transcript = payload.get("text") or payload.get("body") or ""
             await wa_conversations_col.update_one(
                 {"phone": phone},
                 {
                     "$push": {"messages": {
                         "role": "assistant",
-                        "content": reply,
+                        "content": transcript,
                         "timestamp": datetime.now(timezone.utc).isoformat(),
                         "channel": "whatsapp",
                         "source": "funnel",
+                        "payload_type": ptype,
                     }},
                     "$set": {"updated_at": datetime.now(timezone.utc).isoformat()},
                 }
@@ -279,7 +446,8 @@ async def handle_wa_incoming(phone: str, message_text: str, customer_name: str =
                 phone, name=customer_name or f"WhatsApp {phone}",
                 tags=["whatsapp-lead", "funnel-entered"]
             ))
-        return funnel_replies[-1]
+        last = funnel_replies[-1]
+        return last.get("text") or last.get("body") or ""
 
     # NOTE: Welcome message removed — Interakt's own auto-reply handles greeting.
     # Our bot only sends ONE contextual AI reply per incoming message.
@@ -435,6 +603,22 @@ async def whatsapp_webhook(request: Request):
         phone = customer.get("channel_phone_number", "")
         customer_name = customer.get("traits", {}).get("name", "")
         message_text = message.get("message", "")
+
+        # Interactive reply → encode row/button id as text so the funnel can route it.
+        # Interakt delivers interactive replies with message.type == "interactive" and a nested
+        # interactive.list_reply.id / interactive.button_reply.id (mirroring WhatsApp Cloud API).
+        msg_type = (message.get("type") or "").lower()
+        interactive_block = message.get("interactive") or {}
+        if msg_type == "interactive" and interactive_block:
+            itype = (interactive_block.get("type") or "").lower()
+            if itype == "list_reply":
+                rid = (interactive_block.get("list_reply") or {}).get("id", "")
+                if rid:
+                    message_text = rid  # e.g., "div:Trauma"
+            elif itype == "button_reply":
+                bid = (interactive_block.get("button_reply") or {}).get("id", "")
+                if bid:
+                    message_text = bid  # e.g., "act:quote"
 
         if phone and message_text:
             conv = await wa_conversations_col.find_one({"phone": phone})
@@ -1063,19 +1247,21 @@ async def get_funnel_analytics(_=Depends(admin_required)):
 async def simulate_funnel(request: Request, _=Depends(admin_required)):
     """Dry-run the funnel engine for a given phone + message (no WhatsApp send).
 
-    Body: {"phone": "9198...", "message": "hi"}
-    Returns the reply(ies) the funnel would send + the resulting state.
+    Body: {"phone": "9198...", "message": "hi", "mode": "text"|"interactive"}
+    Returns the payload(s) the funnel would send + the resulting state.
     """
     from services.whatsapp_funnel import try_handle_funnel, _get_funnel_state
     body = await request.json()
     phone = body.get("phone", "")
     message = body.get("message", "")
+    mode = (body.get("mode") or os.environ.get("WHATSAPP_FUNNEL_MODE") or "text").strip().lower()
     if not phone or not message:
         raise HTTPException(400, "phone and message required")
-    replies = await try_handle_funnel(phone, message, body.get("customer_name", ""))
+    replies = await try_handle_funnel(phone, message, body.get("customer_name", ""), mode=mode)
     state = await _get_funnel_state(phone)
     return {
         "handled": replies is not None,
+        "mode": mode,
         "replies": replies or [],
         "state": state,
     }
@@ -1092,3 +1278,78 @@ async def reset_funnel(request: Request, _=Depends(admin_required)):
         {"phone": phone}, {"$unset": {"funnel": ""}}
     )
     return {"phone": phone, "reset": True}
+
+
+@router.get("/api/admin/whatsapp/funnel-config")
+async def get_funnel_config(_=Depends(admin_required)):
+    """Return current funnel runtime mode + whether interactive is available."""
+    # Config lives in MongoDB so operators can flip modes without deploys
+    from db import db as mongo_db
+    cfg = await mongo_db["app_config"].find_one({"type": "whatsapp_funnel"}, {"_id": 0})
+    mode = (cfg or {}).get("mode") or (os.environ.get("WHATSAPP_FUNNEL_MODE", "text") or "text")
+    return {
+        "mode": mode,
+        "allowed_modes": ["text", "interactive"],
+        "business_number": WHATSAPP_NUMBER,
+        "interakt_configured": bool(INTERAKT_API_KEY),
+    }
+
+
+@router.post("/api/admin/whatsapp/funnel-config")
+async def set_funnel_config(request: Request, _=Depends(admin_required)):
+    """Switch between 'text' and 'interactive' funnel modes at runtime."""
+    body = await request.json()
+    mode = (body.get("mode") or "").strip().lower()
+    if mode not in ("text", "interactive"):
+        raise HTTPException(400, "mode must be 'text' or 'interactive'")
+    from db import db as mongo_db
+    await mongo_db["app_config"].update_one(
+        {"type": "whatsapp_funnel"},
+        {"$set": {"type": "whatsapp_funnel", "mode": mode, "updated_at": datetime.now(timezone.utc).isoformat()}},
+        upsert=True,
+    )
+    # Also update process env so current pod picks it up immediately
+    os.environ["WHATSAPP_FUNNEL_MODE"] = mode
+    return {"mode": mode}
+
+
+@router.post("/api/admin/whatsapp/funnel-test-interactive")
+async def test_interactive(request: Request, _=Depends(admin_required)):
+    """Send the welcome interactive list to a test phone number for manual QA.
+
+    Requires the test recipient to have messaged the Interakt number within
+    the last 24 hours (WhatsApp session window rule).
+    """
+    body = await request.json()
+    phone = body.get("phone", "")
+    if not phone:
+        raise HTTPException(400, "phone required")
+
+    from services.whatsapp_funnel import build_welcome_list_payload, build_product_detail_buttons_payload
+    flavor = (body.get("flavor") or "list").strip().lower()
+    if flavor == "buttons":
+        # Send a sample buttons message (doesn't need a product, synthetic body)
+        r = await send_whatsapp_interactive_buttons(
+            phone,
+            body_text="This is a test of WhatsApp interactive buttons from Agile Ortho. Pick any option:",
+            buttons=[
+                {"id": "act:quote", "title": "Bulk quote"},
+                {"id": "act:brochure", "title": "Get brochure"},
+                {"id": "act:agent", "title": "Talk to agent"},
+            ],
+            header_text="Test — Agile Ortho",
+            footer_text="Interactive buttons",
+            callback_data="admin_test_buttons",
+        )
+    else:
+        p = build_welcome_list_payload()
+        r = await send_whatsapp_interactive_list(
+            phone,
+            body_text=p["body"],
+            sections=p["sections"],
+            button_label=p["button"],
+            header_text=p["header"],
+            footer_text=p["footer"],
+            callback_data="admin_test_list",
+        )
+    return r

@@ -2,34 +2,56 @@ import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import {
   MessageCircle, PlayCircle, RefreshCw, Zap,
-  Users, Target, MessageSquare, TrendingDown,
+  Users, Target, MessageSquare, TrendingDown, Send, Sparkles,
 } from "lucide-react";
 import api from "../lib/api";
 
 export default function AdminWhatsAppFunnel() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [config, setConfig] = useState(null);
   const [simPhone, setSimPhone] = useState("9199999999");
   const [simMsg, setSimMsg] = useState("hi");
+  const [simMode, setSimMode] = useState("text");
   const [simResult, setSimResult] = useState(null);
   const [simBusy, setSimBusy] = useState(false);
+  const [testPhone, setTestPhone] = useState("");
+  const [testBusy, setTestBusy] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
-    api.get("/api/admin/whatsapp/funnel-analytics")
-      .then((r) => setData(r.data))
-      .catch(() => toast.error("Failed to load funnel analytics"))
+    Promise.all([
+      api.get("/api/admin/whatsapp/funnel-analytics"),
+      api.get("/api/admin/whatsapp/funnel-config"),
+    ])
+      .then(([a, c]) => {
+        setData(a.data);
+        setConfig(c.data);
+        setSimMode(c.data.mode || "text");
+      })
+      .catch(() => toast.error("Failed to load funnel"))
       .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  const switchMode = async (newMode) => {
+    try {
+      const res = await api.post("/api/admin/whatsapp/funnel-config", { mode: newMode });
+      setConfig((c) => ({ ...(c || {}), mode: res.data.mode }));
+      setSimMode(res.data.mode);
+      toast.success(`Funnel mode: ${res.data.mode}`);
+    } catch {
+      toast.error("Mode switch failed");
+    }
+  };
 
   const runSim = async () => {
     if (!simPhone || !simMsg) return;
     setSimBusy(true);
     try {
       const res = await api.post("/api/admin/whatsapp/funnel-simulate", {
-        phone: simPhone, message: simMsg,
+        phone: simPhone, message: simMsg, mode: simMode,
       });
       setSimResult(res.data);
       load();
@@ -48,6 +70,28 @@ export default function AdminWhatsAppFunnel() {
       toast.success("Funnel state reset for " + simPhone);
     } catch {
       toast.error("Reset failed");
+    }
+  };
+
+  const sendTestInteractive = async (flavor) => {
+    if (!testPhone) {
+      toast.error("Enter the test phone number (must have messaged you within last 24h)");
+      return;
+    }
+    setTestBusy(true);
+    try {
+      const res = await api.post("/api/admin/whatsapp/funnel-test-interactive", {
+        phone: testPhone, flavor,
+      });
+      if (res.data.success) {
+        toast.success(`Interactive ${flavor} sent to ${testPhone}`);
+      } else {
+        toast.error(`Send failed: ${res.data.status_code || ""} ${res.data.error || JSON.stringify(res.data.data)?.slice(0, 120)}`);
+      }
+    } catch (err) {
+      toast.error("Test send failed: " + (err?.response?.data?.detail || err?.message || "unknown"));
+    } finally {
+      setTestBusy(false);
     }
   };
 
@@ -85,6 +129,41 @@ export default function AdminWhatsAppFunnel() {
           <RefreshCw size={14} /> Refresh
         </button>
       </div>
+
+      {/* Mode Toggle */}
+      {config && (
+        <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-sm p-4 mb-6" data-testid="funnel-mode-toggle">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded flex items-center justify-center bg-white text-emerald-600 shrink-0 border border-emerald-200">
+                <Sparkles size={16} />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-slate-900">Funnel Render Mode</p>
+                <p className="text-xs text-slate-600 mt-0.5">
+                  <b>Text</b>: numbered menus, works anytime. <b>Interactive</b>: native WhatsApp list + button UI (only inside 24h session window, falls back to text on API error).
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => switchMode("text")}
+                className={`px-3 py-1.5 rounded-sm text-sm font-semibold border transition-colors ${config.mode === "text" ? "bg-slate-900 text-white border-slate-900" : "bg-white text-slate-700 border-slate-300 hover:border-slate-400"}`}
+                data-testid="mode-text-btn"
+              >
+                Text
+              </button>
+              <button
+                onClick={() => switchMode("interactive")}
+                className={`px-3 py-1.5 rounded-sm text-sm font-semibold border transition-colors ${config.mode === "interactive" ? "bg-emerald-600 text-white border-emerald-600" : "bg-white text-slate-700 border-slate-300 hover:border-emerald-400"}`}
+                data-testid="mode-interactive-btn"
+              >
+                Interactive
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Conversion Funnel */}
       <div className="bg-white border border-slate-200 rounded-sm p-5 mb-6" data-testid="funnel-conversion">
@@ -147,7 +226,7 @@ export default function AdminWhatsAppFunnel() {
         {/* Simulator */}
         <div className="bg-white border border-slate-200 rounded-sm p-5" data-testid="funnel-simulator">
           <h3 className="text-sm font-bold text-slate-900 mb-3">Funnel Simulator</h3>
-          <p className="text-xs text-slate-500 mb-3">Dry-run a conversation without sending WhatsApp.</p>
+          <p className="text-xs text-slate-500 mb-3">Dry-run a conversation (no WhatsApp send). Use mode=interactive to preview native list/button payloads.</p>
           <div className="space-y-2">
             <input
               value={simPhone}
@@ -159,40 +238,87 @@ export default function AdminWhatsAppFunnel() {
             <input
               value={simMsg}
               onChange={(e) => setSimMsg(e.target.value)}
-              placeholder="Message (e.g. hi, 1, A, trauma)"
+              placeholder="Message (e.g. hi, 1, A, trauma, div:Trauma, act:quote)"
               className="w-full px-3 py-1.5 border border-slate-200 rounded-sm text-sm outline-none focus:border-emerald-500"
               data-testid="sim-msg-input"
             />
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2">
+              <select
+                value={simMode}
+                onChange={(e) => setSimMode(e.target.value)}
+                className="px-2.5 py-1.5 border border-slate-200 rounded-sm text-sm bg-white"
+                data-testid="sim-mode-select"
+              >
+                <option value="text">Text mode</option>
+                <option value="interactive">Interactive mode</option>
+              </select>
               <button
                 onClick={runSim}
                 disabled={simBusy}
                 className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-600 text-white rounded-sm text-sm hover:bg-emerald-700 disabled:opacity-50"
                 data-testid="sim-send-btn"
               >
-                <PlayCircle size={14} /> {simBusy ? "Sending..." : "Send"}
+                <PlayCircle size={14} /> {simBusy ? "..." : "Send"}
               </button>
               <button
                 onClick={resetSim}
                 className="inline-flex items-center gap-1.5 px-3 py-2 border border-slate-200 rounded-sm text-sm text-slate-700 hover:border-slate-300"
                 data-testid="sim-reset-btn"
               >
-                <RefreshCw size={14} /> Reset
+                <RefreshCw size={14} />
               </button>
             </div>
           </div>
           {simResult && (
             <div className="mt-4 space-y-2" data-testid="sim-result">
-              <p className="text-xs uppercase tracking-[0.1em] text-slate-500 font-bold">Bot reply</p>
-              {(simResult.replies || []).map((r, i) => (
-                <div key={i} className="text-sm whitespace-pre-wrap bg-emerald-50 border border-emerald-100 rounded-sm p-3 font-mono text-[13px]">{r}</div>
-              ))}
-              <p className="text-xs text-slate-500">
-                Next state: <span className="font-mono text-slate-700">{simResult.state?.node}</span>
-                {simResult.state?.division ? ` · ${simResult.state.division}` : ""}
+              <p className="text-xs uppercase tracking-[0.1em] text-slate-500 font-bold">
+                Bot reply · mode={simResult.mode} · next={simResult.state?.node}
               </p>
+              {(simResult.replies || []).map((r, i) => (
+                <SimReplyPreview key={i} reply={r} />
+              ))}
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Live Interactive Test */}
+      <div className="bg-white border border-slate-200 rounded-sm p-5 mt-6" data-testid="funnel-live-test">
+        <div className="flex items-start gap-3 mb-3">
+          <div className="w-8 h-8 rounded flex items-center justify-center bg-emerald-50 text-emerald-600 shrink-0">
+            <Send size={14} />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-slate-900">Send Live Interactive Test</h3>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Sends a real WhatsApp interactive message via Interakt. Recipient must have messaged your number within the last 24 hours (WhatsApp session window rule).
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <input
+            value={testPhone}
+            onChange={(e) => setTestPhone(e.target.value)}
+            placeholder="Recipient phone (e.g. 9176162350, no country code)"
+            className="flex-1 min-w-[240px] px-3 py-1.5 border border-slate-200 rounded-sm text-sm outline-none focus:border-emerald-500"
+            data-testid="test-phone-input"
+          />
+          <button
+            onClick={() => sendTestInteractive("list")}
+            disabled={testBusy}
+            className="inline-flex items-center gap-1.5 px-3 py-2 bg-emerald-600 text-white rounded-sm text-sm hover:bg-emerald-700 disabled:opacity-50"
+            data-testid="test-list-btn"
+          >
+            <Send size={14} /> Send Division List
+          </button>
+          <button
+            onClick={() => sendTestInteractive("buttons")}
+            disabled={testBusy}
+            className="inline-flex items-center gap-1.5 px-3 py-2 border border-slate-200 rounded-sm text-sm text-slate-700 hover:border-slate-300 disabled:opacity-50"
+            data-testid="test-buttons-btn"
+          >
+            <Send size={14} /> Send Reply Buttons
+          </button>
         </div>
       </div>
 
@@ -244,4 +370,53 @@ function Kpi({ label, value, icon: Icon }) {
       </div>
     </div>
   );
+}
+
+function SimReplyPreview({ reply }) {
+  const type = reply?.type || "text";
+  if (type === "text") {
+    return (
+      <div className="text-sm whitespace-pre-wrap bg-emerald-50 border border-emerald-100 rounded-sm p-3 font-mono text-[13px]">
+        {reply.text || reply.body || ""}
+      </div>
+    );
+  }
+  if (type === "interactive_list") {
+    const rows = (reply.sections || []).flatMap((s) => s.rows || []);
+    return (
+      <div className="bg-white border border-emerald-200 rounded-sm p-3 text-[13px]" data-testid="sim-preview-list">
+        {reply.header && <p className="text-[10px] font-bold uppercase text-slate-500 mb-1">{reply.header}</p>}
+        <p className="text-slate-900 mb-2">{reply.body}</p>
+        <div className="border border-dashed border-emerald-300 rounded p-2 bg-emerald-50/30">
+          <p className="text-xs text-slate-600 mb-1">🔘 Button: <b>{reply.button}</b></p>
+          <ul className="text-xs space-y-0.5">
+            {rows.map((r, i) => (
+              <li key={i} className="flex gap-1.5">
+                <span className="font-mono text-emerald-700">#{r.id}</span>
+                <span className="text-slate-900">{r.title}</span>
+                {r.description && <span className="text-slate-500">· {r.description}</span>}
+              </li>
+            ))}
+          </ul>
+        </div>
+        {reply.footer && <p className="text-[10px] text-slate-500 mt-1">{reply.footer}</p>}
+      </div>
+    );
+  }
+  if (type === "interactive_buttons") {
+    return (
+      <div className="bg-white border border-emerald-200 rounded-sm p-3 text-[13px]" data-testid="sim-preview-buttons">
+        {reply.header && <p className="text-[10px] font-bold uppercase text-slate-500 mb-1">{reply.header}</p>}
+        <p className="text-slate-900 whitespace-pre-wrap mb-2">{reply.body}</p>
+        <div className="flex gap-2 flex-wrap">
+          {(reply.buttons || []).map((b, i) => (
+            <button key={i} className="px-3 py-1.5 bg-emerald-600/10 text-emerald-700 border border-emerald-300 rounded-sm text-xs font-semibold" disabled>
+              {b.title}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+  return <pre className="text-xs bg-slate-50 p-2 rounded">{JSON.stringify(reply, null, 2)}</pre>;
 }

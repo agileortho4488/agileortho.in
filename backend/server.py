@@ -106,6 +106,16 @@ async def startup():
     except Exception as e:
         print(f"Funnel index init failed (non-critical): {e}")
 
+    # Load persisted WhatsApp funnel mode from DB into env (overrides default)
+    try:
+        from db import db as mongo_db
+        cfg = await mongo_db["app_config"].find_one({"type": "whatsapp_funnel"})
+        if cfg and cfg.get("mode"):
+            os.environ["WHATSAPP_FUNNEL_MODE"] = cfg["mode"]
+            print(f"WhatsApp funnel mode: {cfg['mode']}")
+    except Exception as e:
+        print(f"Funnel mode load failed (non-critical): {e}")
+
     # Start follow-up automation scheduler
     import asyncio
     from routes.automation import followup_scheduler

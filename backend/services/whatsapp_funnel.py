@@ -128,6 +128,79 @@ def build_welcome_menu() -> str:
     return "\n".join(lines)
 
 
+# --- Interactive builders (WhatsApp native list / button UI) ---
+
+def build_welcome_list_payload() -> dict:
+    """Native WhatsApp list with 13 divisions grouped into 2 sections."""
+    # Split divisions into two visual sections for readability
+    section_a = [
+        {"id": f"div:{d}", "title": d[:23], "description": "View top products"}
+        for d in DIVISIONS[:7]
+    ]
+    section_b = [
+        {"id": f"div:{d}", "title": d[:23], "description": "View top products"}
+        for d in DIVISIONS[7:]
+    ]
+    # WhatsApp caps at 10 total rows — keep top 10 divisions + a "Talk to specialist"
+    rows = (section_a + section_b)[:9]
+    rows.append({"id": "div:_AGENT", "title": "Talk to specialist", "description": "Connect with our team"})
+    return {
+        "type": "interactive_list",
+        "header": "Agile Ortho Catalog",
+        "body": "Tap below to explore 810+ Meril medical devices available in Telangana.",
+        "footer": "Authorized Meril distributor",
+        "button": "Divisions",
+        "sections": [{"title": "Clinical Divisions", "rows": rows}],
+    }
+
+
+def build_products_list_payload(division: str, products: list) -> dict:
+    if not products:
+        return {
+            "type": "text",
+            "content": f"We don't have live products in *{division}* right now. Reply *menu* for other divisions.",
+        }
+    rows = []
+    for i, p in enumerate(products):
+        name = p.get("product_name_display") or p.get("product_name") or ""
+        brand = p.get("brand") or p.get("semantic_brand_system") or ""
+        rows.append({
+            "id": f"prod:{p.get('slug', '')}",
+            "title": name[:23],
+            "description": (brand or "Meril")[:72],
+        })
+    return {
+        "type": "interactive_list",
+        "header": division[:60],
+        "body": f"Top picks in {division}. Tap a product for full specs and quote options.",
+        "footer": "Agile Ortho",
+        "button": "See products",
+        "sections": [{"title": "Featured", "rows": rows}],
+    }
+
+
+def build_product_detail_buttons_payload(product: dict) -> dict:
+    name = product.get("product_name_display") or product.get("product_name") or ""
+    brand = product.get("brand") or product.get("semantic_brand_system") or ""
+    cat = product.get("category") or ""
+    body_parts = [f"*{name}*"]
+    if brand:
+        body_parts.append(f"Brand: {brand}")
+    if cat:
+        body_parts.append(f"Category: {cat}")
+    body_parts.append("What would you like to do?")
+    return {
+        "type": "interactive_buttons",
+        "header": name[:60],
+        "body": "\n".join(body_parts)[:1024],
+        "buttons": [
+            {"id": "act:quote", "title": "Bulk quote"},
+            {"id": "act:brochure", "title": "Get brochure"},
+            {"id": "act:agent", "title": "Talk to agent"},
+        ],
+    }
+
+
 def build_products_menu(division: str, products: list) -> str:
     if not products:
         return (f"We don't have any live products in *{division}* right now.\n\n"
@@ -229,8 +302,13 @@ def parse_product_choice(text: str) -> Optional[int]:
 
 
 def parse_detail_action(text: str) -> Optional[str]:
-    """Return 'quote' | 'brochure' | 'agent' from a numeric reply."""
-    t = (text or "").strip()
+    """Return 'quote' | 'brochure' | 'agent' from a numeric reply or interactive ID."""
+    t = (text or "").strip().lower()
+    # Interactive button reply IDs
+    if t.startswith("act:"):
+        token = t.split(":", 1)[1]
+        if token in ("quote", "brochure", "agent"):
+            return token
     if t.startswith("1"):
         return "quote"
     if t.startswith("2"):
@@ -240,41 +318,72 @@ def parse_detail_action(text: str) -> Optional[str]:
     return None
 
 
+def parse_interactive_reply(text: str) -> Optional[dict]:
+    """Decode an interactive reply id like 'div:Trauma', 'prod:some-slug', 'act:quote'."""
+    t = (text or "").strip()
+    if ":" not in t:
+        return None
+    kind, _, value = t.partition(":")
+    kind = kind.lower()
+    if kind in ("div", "prod", "act"):
+        return {"kind": kind, "value": value}
+    return None
+
+
+def _text_reply(s: str) -> dict:
+    return {"type": "text", "text": s}
+
+
+def _pick_reply(text_variant: str, interactive_payload: Optional[dict], mode: str) -> dict:
+    """Return interactive payload if mode allows it, else plain text."""
+    if mode == "interactive" and interactive_payload:
+        return interactive_payload
+    return _text_reply(text_variant)
+
+
 # --- Core engine ---
 
 async def try_handle_funnel(
     phone: str,
     message_text: str,
     customer_name: str = "",
+    mode: str = "text",
 ) -> Optional[list]:
     """
     Attempt to advance the WhatsApp conversation through the funnel.
 
-    Returns a list of string replies to send if the funnel handled the message,
+    Returns a list of payload dicts (``{"type": "text"|"interactive_list"|"interactive_buttons", ...}``)
     or ``None`` if the caller should fall back to the AI bot.
+
+    ``mode``: ``"text"`` (default, plain numbered menus) or ``"interactive"``
+    (WhatsApp native list/button UI — only works inside the 24h session window).
     """
     state = await _get_funnel_state(phone)
     current_node = state.get("node", "root")
-    reply: Optional[str] = None
     next_state = dict(state)
-    action = ""
 
-    text_clean = (message_text or "").strip()
+    text_raw = (message_text or "").strip()
+    text_clean = text_raw
+    interactive = parse_interactive_reply(text_raw)
 
-    # Global reset: "menu"/"start"/etc. always shows the root picker
+    # Global reset: "menu"/"start"/etc. → root picker
     if is_root_trigger(text_clean):
-        reply = build_welcome_menu()
+        reply = _pick_reply(build_welcome_menu(), build_welcome_list_payload(), mode)
         next_state = {"node": "division_picker", "history": state.get("history", []) + ["root_menu"]}
         await _set_funnel_state(phone, next_state)
         await _log_event(phone, current_node, "division_picker", text_clean, "show_menu")
         return [reply]
 
-    # ROOT: first-ever message → show welcome or jump to division via keyword
+    # ROOT: first-ever message
     if current_node == "root":
         div = detect_division_from_text(text_clean)
         if div:
             products = await _top_products_for_division(div)
-            reply = build_products_menu(div, products)
+            reply = _pick_reply(
+                build_products_menu(div, products),
+                build_products_list_payload(div, products),
+                mode,
+            )
             next_state = {
                 "node": "product_picker",
                 "division": div,
@@ -285,17 +394,41 @@ async def try_handle_funnel(
             await _log_event(phone, "root", "product_picker", text_clean, f"keyword:{div}")
             return [reply]
 
-        # Default welcome menu on first contact
-        reply = build_welcome_menu()
+        reply = _pick_reply(build_welcome_menu(), build_welcome_list_payload(), mode)
         next_state = {"node": "division_picker", "history": ["root"]}
         await _set_funnel_state(phone, next_state)
         await _log_event(phone, "root", "division_picker", text_clean, "welcome")
         return [reply]
 
-    # DIVISION PICKER: expect "1".."13" or "0" for agent
+    # DIVISION PICKER: expect numeric (1..13) or interactive list row (div:Trauma) or "0"
     if current_node == "division_picker":
-        if text_clean.strip() == "0":
-            reply = build_agent_handoff()
+        # Interactive list row tapped
+        if interactive and interactive["kind"] == "div":
+            v = interactive["value"]
+            if v == "_AGENT":
+                reply = _text_reply(build_agent_handoff())
+                await _log_event(phone, "division_picker", "agent", text_clean, "agent_handoff")
+                await _set_funnel_state(phone, {"node": "agent", "history": state.get("history", []) + ["agent"]})
+                return [reply]
+            if v in DIVISIONS:
+                products = await _top_products_for_division(v)
+                reply = _pick_reply(
+                    build_products_menu(v, products),
+                    build_products_list_payload(v, products),
+                    mode,
+                )
+                next_state = {
+                    "node": "product_picker",
+                    "division": v,
+                    "products": [p.get("slug", "") for p in products],
+                    "history": state.get("history", []) + [f"division:{v}"],
+                }
+                await _set_funnel_state(phone, next_state)
+                await _log_event(phone, "division_picker", "product_picker", text_clean, f"division:{v}")
+                return [reply]
+        # Numeric text
+        if text_clean == "0":
+            reply = _text_reply(build_agent_handoff())
             await _log_event(phone, "division_picker", "agent", text_clean, "agent_handoff")
             await _set_funnel_state(phone, {"node": "agent", "history": state.get("history", []) + ["agent"]})
             return [reply]
@@ -303,7 +436,11 @@ async def try_handle_funnel(
         if idx is not None:
             div = DIVISIONS[idx - 1]
             products = await _top_products_for_division(div)
-            reply = build_products_menu(div, products)
+            reply = _pick_reply(
+                build_products_menu(div, products),
+                build_products_list_payload(div, products),
+                mode,
+            )
             next_state = {
                 "node": "product_picker",
                 "division": div,
@@ -313,31 +450,40 @@ async def try_handle_funnel(
             await _set_funnel_state(phone, next_state)
             await _log_event(phone, "division_picker", "product_picker", text_clean, f"division:{div}")
             return [reply]
-        # unrecognised — let AI handle it
         return None
 
-    # PRODUCT PICKER: expect A/B/C or "menu"
+    # PRODUCT PICKER: expect A/B/C or interactive prod:<slug>
     if current_node == "product_picker":
-        idx = parse_product_choice(text_clean)
-        if idx is not None and idx < len(state.get("products", [])):
-            slug = state["products"][idx]
-            product = await catalog_products_col.find_one({"slug": slug}, {"_id": 0})
+        chosen_slug = None
+        if interactive and interactive["kind"] == "prod":
+            chosen_slug = interactive["value"]
+        else:
+            idx = parse_product_choice(text_clean)
+            if idx is not None and idx < len(state.get("products", [])):
+                chosen_slug = state["products"][idx]
+
+        if chosen_slug:
+            product = await catalog_products_col.find_one({"slug": chosen_slug}, {"_id": 0})
             if not product:
                 return None
-            reply = build_product_detail(product)
+            reply = _pick_reply(
+                build_product_detail(product),
+                build_product_detail_buttons_payload(product),
+                mode,
+            )
             next_state = {
                 "node": "product_detail",
                 "division": state.get("division", ""),
                 "products": state.get("products", []),
-                "selected_slug": slug,
-                "history": state.get("history", []) + [f"product:{slug}"],
+                "selected_slug": chosen_slug,
+                "history": state.get("history", []) + [f"product:{chosen_slug}"],
             }
             await _set_funnel_state(phone, next_state)
-            await _log_event(phone, "product_picker", "product_detail", text_clean, f"product:{slug}")
+            await _log_event(phone, "product_picker", "product_detail", text_clean, f"product:{chosen_slug}")
             return [reply]
         return None
 
-    # PRODUCT DETAIL: expect 1/2/3
+    # PRODUCT DETAIL: expect 1/2/3 or interactive act:quote|brochure|agent
     if current_node == "product_detail":
         action = parse_detail_action(text_clean)
         slug = state.get("selected_slug", "")
@@ -345,24 +491,22 @@ async def try_handle_funnel(
 
         if action == "quote":
             await _upgrade_lead_to_quote(phone, product, customer_name)
-            reply = build_quote_confirmation(customer_name or phone)
+            reply = _text_reply(build_quote_confirmation(customer_name or phone))
             await _log_event(phone, "product_detail", "quote_requested", text_clean, "quote")
             await _set_funnel_state(phone, {"node": "quote_requested", "history": state.get("history", []) + ["quote"]})
             return [reply]
         if action == "brochure":
-            reply = build_brochure_reply(product or {})
+            reply = _text_reply(build_brochure_reply(product or {}))
             await _log_event(phone, "product_detail", "brochure_sent", text_clean, "brochure")
             await _set_funnel_state(phone, {"node": "brochure_sent", "history": state.get("history", []) + ["brochure"]})
             return [reply]
         if action == "agent":
-            reply = build_agent_handoff()
+            reply = _text_reply(build_agent_handoff())
             await _log_event(phone, "product_detail", "agent", text_clean, "agent_handoff")
             await _set_funnel_state(phone, {"node": "agent", "history": state.get("history", []) + ["agent"]})
             return [reply]
         return None
 
-    # QUOTE_REQUESTED / BROCHURE_SENT / AGENT — user can type "menu" to restart
-    # Otherwise fall through to AI bot for a human conversation.
     return None
 
 

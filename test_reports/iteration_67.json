@@ -1,0 +1,35 @@
+{
+  "summary": "Full e2e testing of WhatsApp Interactive Funnel (iter 67). Backend: 11/11 pytest cases pass (funnel-config GET/POST/validation, interactive simulate flow hi→div:Trauma→prod:<slug>→act:quote creating Hot 'Bulk Quote' lead, div:_AGENT handoff text, text-mode regression, live test endpoint returns non-500 with graceful error body). Frontend: mode toggle (text/interactive) switches config.mode and sim-mode-select; simulator preview shows interactive_list with all 10 rows (div:Trauma..div:_AGENT) and interactive_buttons (Bulk quote/Get brochure/Talk to agent); live-test Division List click surfaces Interakt 400 error via sonner toast without crashing. Mode reset back to 'text' at end.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {"flow": "Live Interactive Test", "issue": "Interakt API returned 400 'Invalid type value. Valid values are Template, Text, Interactive...' when sending to 9199999999. This is expected per task spec (no open 24h session), and the UI toast handled it gracefully. However, the error text suggests Interakt may expect type string matching their exact casing — worth confirming whether 'Interactive' (current, capitalised) is correct or if payload type needs to be lowercase / camelCase. Test with a real in-session phone to confirm.", "affected_selectors": ["test-list-btn"]}
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_whatsapp_funnel_interactive_iter67.py",
+    "/app/test_reports/pytest/pytest_results_iter67.xml"
+  ],
+  "action_items": [
+    "Confirm Interakt Interactive message 'type' casing is correct — current send uses type='Interactive'. If 400 persists with a valid in-session phone, try lowercase or consult Interakt docs.",
+    "(Carried from iter66) whatsapp_funnel._upgrade_lead_to_quote() overwrites inquiry_type/source silently on existing leads — consider merging."
+  ],
+  "critical_code_review_comments": [
+    "send_whatsapp_interactive_list/buttons swallow all exceptions and return {success:False,error:...}; caller always has a text fallback. Good defensive coding, but logs should include Interakt response body on failure for ops debugging (currently only at webhook-logs).",
+    "routes/whatsapp.py has grown to 1300+ lines mixing webhook, interactive senders, CRM sync, and funnel admin endpoints — should be split (e.g., whatsapp_funnel_admin.py, whatsapp_interakt_sync.py) for maintainability.",
+    "get_funnel_config uses os.environ.get('WHATSAPP_FUNNEL_MODE','text') as secondary source but server startup already loads into env from mongo — redundant chain; also may drift if both sources desync across workers.",
+    "build_welcome_list_payload hard-codes '810+' count in body — drift risk if catalog changes. Consider pulling from stats endpoint.",
+    "parse_interactive_reply accepts any 'div:'/'prod:'/'act:' but parse_detail_action still short-circuits on text starting with '1'/'2'/'3' — could collide if user types 'act:quote' after some edge case (works today, brittle)."
+  ],
+  "updated_files": ["/app/backend/tests/test_whatsapp_funnel_interactive_iter67.py"],
+  "success_rate": {"backend": "100% (11/11)", "frontend": "100%"},
+  "test_credentials": "Admin password AgileHealth2026admin (from /app/memory/test_credentials.md)",
+  "seed_data_creation": "Test leads created on unique phone numbers (9 + epoch-based suffix). Funnel events inserted into funnel_events_col. Mode was toggled to 'interactive' mid-test then reset to 'text' at end — app_config.whatsapp_funnel is back to {mode:'text'}. No cleanup needed for test leads (phones clearly synthetic).",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "New admin endpoints: GET/POST /api/admin/whatsapp/funnel-config {mode:text|interactive}, POST /api/admin/whatsapp/funnel-test-interactive {phone, flavor:list|buttons} — the test-interactive endpoint makes a REAL Interakt API call and often returns 400 for numbers not in active session; tests assert non-500 only. /funnel-simulate now accepts 'mode' param and returns structured payload {type:'text'|'interactive_list'|'interactive_buttons', ...}. Frontend data-testid anchors: funnel-mode-toggle, mode-text-btn, mode-interactive-btn, sim-mode-select, sim-preview-list, sim-preview-buttons, funnel-live-test, test-phone-input, test-list-btn, test-buttons-btn. All verified. IMPORTANT: slugs can contain dots (e.g., '2.4mm-lps-...') — regex for prod:<slug> must allow \\w\\.\\- not just \\w\\-.",
+  "rca of the issue": "N/A — no failing tests in this iteration."
+}
