@@ -251,23 +251,39 @@ def build_quote_confirmation(name_or_phone: str) -> str:
 def build_brochure_reply(product: dict) -> str:
     slug = product.get("slug") or ""
     name = product.get("product_name_display") or product.get("product_name") or "Product"
+    division = product.get("division_canonical") or ""
     product_url = f"https://www.agileortho.in/catalog/products/{slug}" if slug else "https://www.agileortho.in/catalog"
 
     # Real brochure PDF from object storage (when available)
     brochure_path = product.get("brochure_url") or ""
-    brochure_line = ""
     if brochure_path:
         if brochure_path.startswith("http"):
             pdf_url = brochure_path
         else:
             pdf_url = f"https://www.agileortho.in/api/files/{brochure_path.lstrip('/')}"
-        brochure_line = f"📄 Brochure PDF: {pdf_url}\n"
+        return (
+            f"📄 Full brochure PDF: {pdf_url}\n"
+            f"🔗 Product page: {product_url}\n\n"
+            f"Reply *1* for a bulk quote on {name[:40]}, or *menu* for other products."
+        )
 
-    return (
-        f"{brochure_line}"
-        f"🔗 Full specs: {product_url}\n\n"
-        f"Reply *1* for a bulk quote on {name[:40]}, or *menu* for other products."
-    )
+    # No PDF brochure — build a richer fallback that still feels useful
+    lines = [f"*{name}*"]
+    images = product.get("images") or []
+    if images:
+        img0 = images[0]
+        img_path = img0.get("storage_path") if isinstance(img0, dict) else ""
+        if img_path:
+            lines.append(f"🖼 Image: https://www.agileortho.in/api/files/{img_path.lstrip('/')}")
+    lines.append(f"🔗 Full specs + pricing enquiry: {product_url}")
+    if division:
+        div_slug = division.strip().lower().replace(" ", "-")
+        lines.append(f"📁 {division} catalog: https://www.agileortho.in/catalog/{div_slug}")
+    lines.append("")
+    lines.append(f"We've alerted our specialist to send you the detailed brochure for *{name[:40]}* within the hour.")
+    lines.append("")
+    lines.append("Reply *1* for bulk quote  |  *menu* for other products  |  *call* to speak now")
+    return "\n".join(lines)
 
 
 def build_agent_handoff() -> str:
@@ -511,6 +527,13 @@ async def try_handle_funnel(
             reply = _text_reply(build_brochure_reply(product or {}))
             await _log_event(phone, "product_detail", "brochure_sent", text_clean, "brochure")
             await _set_funnel_state(phone, {"node": "brochure_sent", "history": state.get("history", []) + ["brochure"]})
+            # Auto-alert sales when brochure is missing — they need to send PDF manually
+            if product and not (product.get("brochure_url") or "").strip():
+                try:
+                    import asyncio as _asyncio
+                    _asyncio.create_task(_alert_sales_missing_brochure(phone, product, customer_name))
+                except Exception as _e:
+                    print(f"[BROCHURE_ALERT] failed: {_e}")
             return [reply]
         if action == "agent":
             reply = _text_reply(build_agent_handoff())
@@ -520,6 +543,27 @@ async def try_handle_funnel(
         return None
 
     return None
+
+
+async def _alert_sales_missing_brochure(phone: str, product: dict, customer_name: str):
+    """Ping sales team when someone asks for a brochure we don't have."""
+    try:
+        import os as _os
+        from routes.whatsapp import send_whatsapp_message
+        sales_wa = _os.environ.get("SALES_WHATSAPP", "917416521222")
+        name = product.get("product_name_display") or product.get("product_name") or "product"
+        alert = (
+            "BROCHURE REQUEST — missing PDF\n"
+            f"From: {customer_name or 'Unknown'} ({phone})\n"
+            f"Asked for: {name}\n"
+            f"Slug: {product.get('slug','')}\n"
+            "Action: send PDF brochure manually within the hour.\n"
+            "— Agile Ortho AI"
+        )
+        await send_whatsapp_message(sales_wa, alert, callback_data="brochure_missing_alert")
+    except Exception as e:
+        print(f"[BROCHURE_ALERT] fail: {e}")
+
 
 
 async def _upgrade_lead_to_quote(phone: str, product: Optional[dict], customer_name: str):

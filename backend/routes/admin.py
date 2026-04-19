@@ -250,6 +250,55 @@ async def admin_list_leads(
     }
 
 
+@router.post("/api/admin/products/{slug}/brochure")
+async def admin_upload_product_brochure(
+    slug: str,
+    file: UploadFile = File(...),
+    _=Depends(admin_required),
+):
+    """Upload a brochure PDF for a specific product. Saves to object storage."""
+    if not file.filename.lower().endswith(".pdf"):
+        raise HTTPException(400, "Only PDF files accepted")
+    product = await catalog_products_col.find_one({"slug": slug})
+    if not product:
+        raise HTTPException(404, "Product not found")
+    content = await file.read()
+    storage_path = f"agile-ortho/brochures/{slug}.pdf"
+    put_object(storage_path, content, "application/pdf")
+    await catalog_products_col.update_one(
+        {"slug": slug},
+        {"$set": {"brochure_url": storage_path,
+                  "brochure_uploaded_at": datetime.now(timezone.utc).isoformat()}},
+    )
+    return {"ok": True, "slug": slug, "brochure_url": storage_path,
+            "public_url": f"/api/files/{storage_path}"}
+
+
+@router.get("/api/admin/products/missing-brochures")
+async def admin_list_missing_brochures(division: str = "", limit: int = 100,
+                                        _=Depends(admin_required)):
+    """Products without a brochure — prioritize uploads by division."""
+    q = {"brochure_url": {"$in": [None, ""]}, "status": {"$ne": "draft"}}
+    if division:
+        q["division_canonical"] = {"$regex": f"^{division}$", "$options": "i"}
+    rows = await catalog_products_col.find(
+        q, {"_id": 0, "slug": 1, "product_name_display": 1, "product_name": 1,
+            "division_canonical": 1, "category": 1}
+    ).sort("division_canonical", 1).limit(limit).to_list(limit)
+    total = await catalog_products_col.count_documents(q)
+    # Aggregate by division
+    pipe = [{"$match": q}, {"$group": {"_id": "$division_canonical",
+                                       "count": {"$sum": 1}}},
+            {"$sort": {"count": -1}}]
+    by_div = await catalog_products_col.aggregate(pipe).to_list(20)
+    return {
+        "products": rows,
+        "total_missing": total,
+        "by_division": [{"division": b["_id"], "count": b["count"]} for b in by_div],
+    }
+
+
+
 @router.get("/api/admin/leads/export.csv")
 async def admin_export_leads_csv(
     source: str = "",
