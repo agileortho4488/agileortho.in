@@ -1,6 +1,6 @@
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, Users, Package, LogOut, ChevronRight, BarChart3, Kanban, FileUp, MessageCircle, ClipboardCheck, Network, Zap } from "lucide-react";
+import { LayoutDashboard, Users, Package, LogOut, ChevronRight, BarChart3, Kanban, FileUp, MessageCircle, ClipboardCheck, Network, Zap, TrendingUp } from "lucide-react";
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -46,6 +46,7 @@ export const AdminLayout = () => {
     { to: "/admin/imports", icon: FileUp, label: "PDF Import" },
     { to: "/admin/whatsapp", icon: MessageCircle, label: "WhatsApp" },
     { to: "/admin/whatsapp-funnel", icon: Zap, label: "WA Funnel" },
+    { to: "/admin/market-intelligence", icon: TrendingUp, label: "Market Intel" },
     { to: "/admin/review", icon: ClipboardCheck, label: "Review" },
   ];
 

@@ -12,6 +12,7 @@ import AdminWhatsApp from "./pages/AdminWhatsApp";
 import AdminReview from "./pages/AdminReview";
 import AdminKnowledgeGraph from "./pages/AdminKnowledgeGraph";
 import AdminWhatsAppFunnel from "./pages/AdminWhatsAppFunnel";
+import AdminMarketIntelligence from "./pages/AdminMarketIntelligence";
 import "./App.css";
 
 /**
@@ -43,6 +44,7 @@ function App() {
           <Route path="/admin/review" element={<AdminReview />} />
           <Route path="/admin/knowledge-graph" element={<AdminKnowledgeGraph />} />
           <Route path="/admin/whatsapp-funnel" element={<AdminWhatsAppFunnel />} />
+          <Route path="/admin/market-intelligence" element={<AdminMarketIntelligence />} />
         </Route>
 
         <Route

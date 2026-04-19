@@ -45,6 +45,25 @@ Build a B2B medical device platform for "Agile Healthcare", a premier Meril Life
 - JWT token validation on all admin routes
 - Admin layout auth guard
 
+## Recent Changes (Apr 19, 2026 — Market Intelligence Phase 1 + Prospects Foundation)
+1. **Google Trends dashboard** at `/admin/market-intelligence` (`AdminMarketIntelligence.jsx`)
+   - 7 keyword presets (Default + 6 Meril divisions) + custom keyword input (max 5)
+   - 4 timeframes (30d / 90d / 12m / 5y), 6 geo filters (IN + 5 top states)
+   - Interest Over Time sparklines (5 colored lines)
+   - Top Regions list (Telangana highlighted with star when in top 10)
+   - Related Queries (Rising + Top) with rate-limit-aware empty state
+   - 24h cache in `market_intelligence` collection → cheap re-queries
+2. **New backend services**
+   - `services/market_intelligence.py` — `trendspy` library (pytrends replacement, urllib3 2.x compatible)
+   - `routes/intelligence.py` — `/api/admin/intelligence/trends`, `/trends/division/{division}`, `/keywords`
+3. **Prospects CRM foundation** (started before user pivoted to search-intent)
+   - `services/apify.py` + `routes/prospects.py` — Apify Google Maps Scraper integration with cost guardrails
+   - `prospects_col` + `apify_runs_col` MongoDB collections
+   - Endpoints: `/api/admin/prospects` (list/filter), `/stats`, `/scrape`, `/runs/{id}`, `/export.csv`, `/bulk-update`
+   - **NOT YET EXPOSED** in admin UI (pivoted to search-intent approach per user feedback)
+4. **WhatsApp webhook fix** — Interakt delivers interactive list/button replies as **JSON string in message body** (`{"type":"list_reply","list_reply":{"id":"div:..."}}`), not a structured `interactive` field. Parser updated to handle both shapes so interactive funnel replies route correctly.
+5. **Webhook URL guidance documented** — the production Next.js site (`www.agileortho.in`) has no backend; webhooks must point to the deployed backend (`jointsmart.emergent.host` when deployed) or the current preview URL for dev testing.
+
 ## Recent Changes (Apr 19, 2026 — Interactive Funnel Fix, live-verified)
 - **BUG FIX**: Interakt API was rejecting the interactive payload because I used `type: "Interactive"`. Correct type names are `"InteractiveList"` and `"InteractiveButton"` (separate types, revealed via Interakt's own error response).
 - **Schema fix**: The WhatsApp Cloud API interactive block must be wrapped inside `data.message`, not `data` directly.
