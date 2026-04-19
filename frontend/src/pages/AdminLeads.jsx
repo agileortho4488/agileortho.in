@@ -37,6 +37,8 @@ export default function AdminLeads() {
   const [noteText, setNoteText] = useState("");
   const [gscStatus, setGscStatus] = useState(null);
   const [gscBusy, setGscBusy] = useState(false);
+  const [gscSites, setGscSites] = useState([]);
+  const [gscSite, setGscSite] = useState("");
 
   const fetchLeads = () => {
     setLoading(true);
@@ -53,7 +55,19 @@ export default function AdminLeads() {
 
   const fetchGscStatus = () => {
     api.get("/api/admin/gsc/status")
-      .then((r) => setGscStatus(r.data))
+      .then((r) => {
+        setGscStatus(r.data);
+        if (r.data?.connected) {
+          // auto-fetch accessible sites
+          api.get("/api/admin/gsc/sites").then((s) => {
+            const sites = s.data.sites || [];
+            setGscSites(sites);
+            // Prefer agileortho.in domain property as default
+            const pref = sites.find((x) => x.includes("agileortho.in")) || sites[0] || "";
+            setGscSite(pref);
+          }).catch(() => {});
+        }
+      })
       .catch(() => setGscStatus({ connected: false, configured: false }));
   };
 
@@ -81,14 +95,15 @@ export default function AdminLeads() {
   };
 
   const importGsc = async () => {
+    if (!gscSite) { toast.error("Pick a site first"); return; }
     setGscBusy(true);
     try {
       const res = await api.post("/api/admin/gsc/import", {
-        site_url: "https://www.agileortho.in/",
+        site_url: gscSite,
         days: 28,
         top_n: 50,
       });
-      toast.success(`Imported ${res.data.leads_inserted} new + ${res.data.leads_updated} updated`);
+      toast.success(`Imported ${res.data.leads_inserted} new + ${res.data.leads_updated} updated from ${gscSite}`);
       fetchLeads();
     } catch (err) {
       toast.error(err?.response?.data?.detail || "GSC import failed");
@@ -149,9 +164,19 @@ export default function AdminLeads() {
                 <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-50 text-purple-700 border border-purple-200 rounded-sm text-xs font-semibold" data-testid="gsc-connected-badge">
                   <CheckCircle2 size={12} /> GSC Connected
                 </span>
+                {gscSites.length > 1 && (
+                  <select
+                    value={gscSite}
+                    onChange={(e) => setGscSite(e.target.value)}
+                    className="px-2 py-1 border border-slate-200 rounded-sm text-xs bg-white max-w-[200px]"
+                    data-testid="gsc-site-select"
+                  >
+                    {gscSites.map((s) => <option key={s} value={s}>{s.replace("sc-domain:", "domain: ")}</option>)}
+                  </select>
+                )}
                 <button
                   onClick={importGsc}
-                  disabled={gscBusy}
+                  disabled={gscBusy || !gscSite}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 text-white rounded-sm text-xs font-semibold hover:bg-purple-700 disabled:opacity-50"
                   data-testid="gsc-import-btn"
                 >
