@@ -11,7 +11,7 @@ import PageviewTracker from "@/components/PageviewTracker";
 const GA_MEASUREMENT_ID = "G-MXXC41JFLG";
 
 export const metadata = {
-  metadataBase: new URL("https://agileortho.in"),
+  metadataBase: new URL("https://www.agileortho.in"),
   title: {
     default: "Agile Healthcare | Meril Life Sciences Master Franchise — Telangana",
     template: "%s | Agile Healthcare",

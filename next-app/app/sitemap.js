@@ -1,7 +1,7 @@
 import { listCatalogProducts, getDivisions } from "@/lib/api";
 import { TELANGANA_DISTRICTS } from "@/lib/districts";
 
-const BASE = "https://agileortho.in";
+const BASE = "https://www.agileortho.in";
 
 export default async function sitemap() {
   const entries = [

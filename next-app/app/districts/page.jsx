@@ -15,8 +15,8 @@ export default function DistrictsIndex() {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: "https://agileortho.in" },
-      { "@type": "ListItem", position: 2, name: "Districts", item: "https://agileortho.in/districts" },
+      { "@type": "ListItem", position: 1, name: "Home", item: "https://www.agileortho.in" },
+      { "@type": "ListItem", position: 2, name: "Districts", item: "https://www.agileortho.in/districts" },
     ],
   };
 

@@ -49,8 +49,8 @@ export default async function CatalogIndexPage() {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: "https://agileortho.in" },
-      { "@type": "ListItem", position: 2, name: "Product Catalog", item: "https://agileortho.in/catalog" },
+      { "@type": "ListItem", position: 1, name: "Home", item: "https://www.agileortho.in" },
+      { "@type": "ListItem", position: 2, name: "Product Catalog", item: "https://www.agileortho.in/catalog" },
     ],
   };
 

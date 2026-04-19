@@ -36,7 +36,7 @@ export const metadata = {
     title: "Meril Medical Device Distributor in Hyderabad & Telangana | Agile Healthcare",
     description:
       "Authorized Meril Life Sciences master franchise for Telangana. 810+ verified medical devices across 13 clinical divisions, serving hospitals in all 33 districts.",
-    url: "https://agileortho.in/",
+    url: "https://www.agileortho.in/",
     type: "website",
   },
 };
@@ -56,8 +56,8 @@ export default async function Home() {
     "@type": "Organization",
     name: "Agile Healthcare",
     legalName: "AGILE ORTHOPEDICS PRIVATE LIMITED",
-    url: "https://agileortho.in",
-    logo: "https://agileortho.in/agile_healthcare_logo.png",
+    url: "https://www.agileortho.in",
+    logo: "https://www.agileortho.in/agile_healthcare_logo.png",
     description: "Authorized Meril Life Sciences master franchise distributor serving hospitals and clinics across Telangana.",
     telephone: "+917416216262",
     email: "info@agileortho.in",
@@ -74,11 +74,11 @@ export default async function Home() {
     "@context": "https://schema.org",
     "@type": "MedicalBusiness",
     name: "Agile Healthcare",
-    image: "https://agileortho.in/agile_healthcare_logo.png",
+    image: "https://www.agileortho.in/agile_healthcare_logo.png",
     telephone: "+917416216262",
     address: orgSchema.address,
     areaServed: "Telangana, India",
-    url: "https://agileortho.in",
+    url: "https://www.agileortho.in",
   };
 
   return (

@@ -1,6 +1,6 @@
 export default function robots() {
   return {
     rules: { userAgent: "*", allow: "/" },
-    sitemap: "https://agileortho.in/sitemap.xml",
+    sitemap: "https://www.agileortho.in/sitemap.xml",
   };
 }

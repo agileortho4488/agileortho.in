@@ -65,7 +65,7 @@ export async function generateMetadata({ params }) {
     openGraph: {
       title,
       description,
-      url: `https://agileortho.in/catalog/products/${slug}`,
+      url: `https://www.agileortho.in/catalog/products/${slug}`,
       type: "website",
       images: imageUrl ? [{ url: imageUrl }] : [],
     },

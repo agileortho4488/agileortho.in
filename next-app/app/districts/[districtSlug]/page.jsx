@@ -25,7 +25,7 @@ export async function generateMetadata({ params }) {
     openGraph: {
       title: `Medical Device Distributor in ${d.name} | Agile Ortho`,
       description: d.description,
-      url: `https://agileortho.in/districts/${districtSlug}`,
+      url: `https://www.agileortho.in/districts/${districtSlug}`,
       type: "website",
     },
   };
@@ -49,7 +49,7 @@ export default async function DistrictPage({ params }) {
     parentOrganization: {
       "@type": "Organization",
       name: "Agile Orthopedics Private Limited",
-      url: "https://agileortho.in",
+      url: "https://www.agileortho.in",
     },
     telephone: COMPANY.phone,
     email: COMPANY.email,
@@ -58,9 +58,9 @@ export default async function DistrictPage({ params }) {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: "https://agileortho.in" },
-      { "@type": "ListItem", position: 2, name: "Districts", item: "https://agileortho.in/districts" },
-      { "@type": "ListItem", position: 3, name: d.name, item: `https://agileortho.in/districts/${districtSlug}` },
+      { "@type": "ListItem", position: 1, name: "Home", item: "https://www.agileortho.in" },
+      { "@type": "ListItem", position: 2, name: "Districts", item: "https://www.agileortho.in/districts" },
+      { "@type": "ListItem", position: 3, name: d.name, item: `https://www.agileortho.in/districts/${districtSlug}` },
     ],
   };
 
