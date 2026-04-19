@@ -200,6 +200,27 @@ async def chat_endpoint(msg: ChatMessage):
     if any(kw in lower_text for kw in ["my name is", "i am dr", "hospital", "clinic", "my number", "my phone", "whatsapp"]):
         lead_captured = True
 
+    # AI Lead Handler — classify intent + update lead record (reply is already sent)
+    try:
+        from services.ai_lead_handler import handle_message as ai_handle
+        ai_out = await ai_handle(
+            message=user_text,
+            channel="web",
+            phone="",
+            session_id=session_id,
+        )
+        if ai_out and not ai_out.get("skipped"):
+            return {
+                "response": response,
+                "session_id": session_id,
+                "products_referenced": len(relevant_products),
+                "lead_signal": lead_captured,
+                "ai_intent": ai_out.get("intent"),
+                "ai_confidence": ai_out.get("confidence"),
+            }
+    except Exception as e:
+        print(f"[AI_HANDLER web] non-fatal: {e}")
+
     return {
         "response": response,
         "session_id": session_id,

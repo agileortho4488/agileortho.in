@@ -452,6 +452,57 @@ async def handle_wa_incoming(phone: str, message_text: str, customer_name: str =
     # NOTE: Welcome message removed — Interakt's own auto-reply handles greeting.
     # Our bot only sends ONE contextual AI reply per incoming message.
 
+    # --- 2) AI Lead Handler (intent classification + smart reply + auto lead update) ---
+    try:
+        from services.ai_lead_handler import handle_message as ai_handle
+        ai_out = await ai_handle(
+            message=message_text,
+            channel="whatsapp",
+            phone=phone,
+            session_id="",
+        )
+        if ai_out and not ai_out.get("skipped"):
+            intent = ai_out.get("intent")
+            reply_txt = (ai_out.get("reply") or "").strip()
+
+            # SPAM / IRRELEVANT → silent (don't reply, already logged)
+            if intent in ("SPAM", "IRRELEVANT"):
+                return ""
+
+            if reply_txt:
+                # Ensure lead row exists for fresh inbound contacts
+                if not conv.get("lead_created"):
+                    await _ensure_wa_lead(phone, customer_name, message_text)
+                    await wa_conversations_col.update_one(
+                        {"phone": phone}, {"$set": {"lead_created": True}}
+                    )
+
+                chunks = chunk_message(reply_txt)
+                for i, chunk in enumerate(chunks):
+                    await send_whatsapp_message(phone, chunk, callback_data=f"ai_handler_{i}")
+                    if i < len(chunks) - 1:
+                        await asyncio.sleep(1.5)
+
+                await wa_conversations_col.update_one(
+                    {"phone": phone},
+                    {
+                        "$push": {"messages": {
+                            "role": "assistant",
+                            "content": reply_txt,
+                            "timestamp": datetime.now(timezone.utc).isoformat(),
+                            "channel": "whatsapp",
+                            "source": "ai_lead_handler",
+                            "intent": intent,
+                            "confidence": ai_out.get("confidence"),
+                        }},
+                        "$set": {"updated_at": datetime.now(timezone.utc).isoformat()},
+                    },
+                )
+                return reply_txt
+    except Exception as e:
+        print(f"[AI_HANDLER] non-fatal fallthrough: {e}")
+
+    # --- 3) Legacy product-aware Claude fallback (when AI handler skipped or errored) ---
     # Product search + shorter WhatsApp prompt
     relevant_products = await search_relevant_products(message_text)
     product_context = format_product_context(relevant_products)

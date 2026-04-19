@@ -146,6 +146,14 @@ async def startup():
     except Exception as e:
         print(f"Outbound engine init failed (non-critical): {e}")
 
+    # AI Lead Handler indexes
+    try:
+        from services.ai_lead_handler import ensure_indexes as ai_ensure
+        await ai_ensure()
+        print("AI lead handler indexes initialized")
+    except Exception as e:
+        print(f"AI lead handler init failed (non-critical): {e}")
+
     # Start follow-up automation scheduler
     import asyncio
     from routes.automation import followup_scheduler

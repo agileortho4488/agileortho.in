@@ -1,5 +1,24 @@
 # Agile Healthcare - B2B Medical Device Platform PRD
 
+## Recent Changes (Feb 2026 — AI Lead Handler (Angle B))
+1. **New `services/ai_lead_handler.py`** — unified intelligence layer for inbound messages.
+   Classifies every WhatsApp reply + website chatbot message into:
+   `PRICING / BULK_QUOTE / MEETING / PRODUCT_SPEC / CATALOG_REQUEST / SPAM / IRRELEVANT / GENERAL`
+   Uses Claude Sonnet (via Emergent LLM Key) with strict JSON output schema.
+2. **Auto lead updates**: each reply refreshes `score`, `score_value`, `status`, `product_interest`, `last_ai_intent`, `last_ai_reasoning`, and appends to `intent_history[]`.
+3. **Rules (never overridden by Claude)**:
+   - No price quotes ever (AI asks for GST + volume + location, promises exact quote within 1 working day)
+   - No stock claims beyond "usually in stock in Hyderabad, 24h delivery"
+   - Responds in same language as user (English / Hindi / Telugu)
+   - 40-80 word replies, no markdown
+4. **Hot-lead sales alert**: on `BULK_QUOTE` intent, fires a native WhatsApp ping to `sales_whatsapp` (configurable via `app_config.type=ai_handler_config`).
+5. **Spam handling**: `SPAM` / `IRRELEVANT` → silent (no reply sent, lead flagged `status=junk`).
+6. **Hooked into**:
+   - `routes/whatsapp.py` — after funnel miss, before legacy product chat (priority)
+   - `routes/chat.py` — runs in parallel with website chatbot for lead tracking
+7. **New collection** `ai_interactions_col` — every classification logged (inbound / intent / confidence / reasoning / reply) for analytics.
+8. **Tested end-to-end**: 5 real-world scenarios classified correctly at ≥0.60 confidence, lead record auto-upgraded to Warm/Hot with `intent_history` growing.
+
 ## Recent Changes (Feb 2026 — Autopilot Bulk Scrape)
 1. **Daily auto-scraper** (`services/apify.py`) — fires 6 AM IST every day, scrapes 6 medical query types × 20 Telangana districts × 10 results (up to 1,200 clinics/day).
 2. **Queries expanded**: orthopedic hospital, multi-specialty, trauma center, joint replacement clinic, spine surgery clinic, endoscopy center.
