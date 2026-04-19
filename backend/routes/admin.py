@@ -60,11 +60,22 @@ async def admin_stats(_=Depends(admin_required)):
     total_products = await catalog_products_col.count_documents(live_filter)
     total_catalog = await catalog_products_col.count_documents({})
     total_enriched = await catalog_products_col.count_documents({"semantic_brand_system": {"$nin": [None, ""]}})
+    review_pending = await catalog_products_col.count_documents({"review_required": True, "status": {"$ne": "draft"}})
     total_leads = await leads_col.count_documents({})
     hot_leads = await leads_col.count_documents({"score": {"$in": ["hot", "Hot"]}})
     warm_leads = await leads_col.count_documents({"score": {"$in": ["warm", "Warm"]}})
     cold_leads = await leads_col.count_documents({"score": {"$in": ["cold", "Cold"]}})
     new_leads = await leads_col.count_documents({"status": "new"})
+
+    # Today / 7-day / 30-day lead counts (helps spot traffic spikes)
+    from datetime import datetime, timedelta, timezone
+    now = datetime.now(timezone.utc)
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+    week_start = (now - timedelta(days=7)).isoformat()
+    month_start = (now - timedelta(days=30)).isoformat()
+    leads_today = await leads_col.count_documents({"created_at": {"$gte": today_start}})
+    leads_7d = await leads_col.count_documents({"created_at": {"$gte": week_start}})
+    leads_30d = await leads_col.count_documents({"created_at": {"$gte": month_start}})
 
     pipeline = [
         {"$match": live_filter},
@@ -90,11 +101,15 @@ async def admin_stats(_=Depends(admin_required)):
         "total_products": total_products,
         "total_catalog": total_catalog,
         "total_enriched": total_enriched,
+        "review_pending": review_pending,
         "total_leads": total_leads,
         "hot_leads": hot_leads,
         "warm_leads": warm_leads,
         "cold_leads": cold_leads,
         "new_leads": new_leads,
+        "leads_today": leads_today,
+        "leads_7d": leads_7d,
+        "leads_30d": leads_30d,
         "products_by_division": [{"division": d["_id"], "count": d["count"]} for d in division_counts],
         "leads_by_inquiry": [{"type": d["_id"], "count": d["count"]} for d in inquiry_counts],
         "leads_by_district": [{"district": d["_id"] or "Unknown", "count": d["count"]} for d in district_counts],
