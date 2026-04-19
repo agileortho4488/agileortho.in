@@ -45,6 +45,21 @@ Build a B2B medical device platform for "Agile Healthcare", a premier Meril Life
 - JWT token validation on all admin routes
 - Admin layout auth guard
 
+## Recent Changes (Apr 19, 2026 — Interactive Funnel Upgrade, iteration_67)
+1. **WhatsApp Funnel now supports native Interactive List + Reply Button UI** via Interakt session messages
+   - `send_whatsapp_interactive_list()` and `send_whatsapp_interactive_buttons()` hit the same `/v1/public/message/` endpoint with `type: "Interactive"` (verified correct casing)
+   - `try_handle_funnel()` now accepts `mode="text"|"interactive"` and returns structured payload dicts (`type: "text" | "interactive_list" | "interactive_buttons"`)
+   - Welcome menu renders as a native list with 10 clinical division rows + "Talk to specialist"; product picker as native list of 3 products; product detail as 3 reply buttons (Bulk quote, Get brochure, Talk to agent)
+   - Graceful fallback: if Interakt API returns error (e.g., session window expired), the funnel auto-sends plain text
+2. **Inbound webhook parses interactive replies** — `interactive.list_reply.id` and `interactive.button_reply.id` are encoded as message text (`div:Trauma`, `prod:<slug>`, `act:quote`) so the funnel engine routes them identically to typed replies
+3. **Runtime mode toggle** persisted in `app_config` collection + loaded on startup
+4. **New admin endpoints** — `/api/admin/whatsapp/funnel-config` (GET/POST), `/funnel-test-interactive`
+5. **Admin UI upgrades** (`AdminWhatsAppFunnel.jsx`)
+   - Text ↔ Interactive mode toggle at top of page
+   - Simulator has mode dropdown + rich preview: `SimReplyPreview` component renders interactive_list as bulleted rows with #id tokens + button label; interactive_buttons as 3 disabled pill buttons (visual preview of what recipient will see)
+   - "Send Live Interactive Test" panel for real-phone QA
+6. Tests: 11/11 backend pytest + 100% frontend coverage (iteration_67)
+
 ## Recent Changes (Apr 19, 2026 — WhatsApp Deep-links on Public Site)
 1. **Pre-filled WhatsApp CTAs on every product card** — `/app/next-app/components/WhatsAppCTA.jsx` (new reusable client component)
    - `buildWhatsAppLink()` — generates `wa.me/{phone}?text=...` with product name, brand, slug ref
