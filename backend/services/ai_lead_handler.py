@@ -197,6 +197,15 @@ async def handle_message(
     if not message or not message.strip():
         return {"skipped": True, "reason": "empty"}
 
+    # Detect business auto-replies and stay silent to prevent bot-to-bot loops
+    try:
+        from services.whatsapp_funnel import is_business_auto_reply
+        if is_business_auto_reply(message):
+            return {"skipped": True, "reason": "auto_reply_detected",
+                    "intent": "SPAM", "reply": ""}
+    except Exception:
+        pass
+
     lead_ctx = await _load_lead_context(phone=phone, session_id=session_id)
     history = await _recent_conversation(phone=phone, session_id=session_id, channel=channel)
 

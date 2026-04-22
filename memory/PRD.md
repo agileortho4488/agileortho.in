@@ -1,5 +1,12 @@
 # Agile Healthcare - B2B Medical Device Platform PRD
 
+## Recent Changes (Feb 2026 — Auto-Reply Shield + Smarter Division Matcher)
+1. **Auto-reply detection** (`services/whatsapp_funnel.is_business_auto_reply`) — regex patterns catch "thank you for your message", "we're unavailable", "please wait", "greetings from", "welcome to", "assalamu alaikum", etc.
+2. **WhatsApp webhook silent on auto-replies** — prevents bot-to-bot loops that hurt Meta quality rating. Flags thread `status=auto_reply_skipped`.
+3. **AI Lead Handler** also checks auto-reply pattern before classifying — returns `intent=SPAM, reply=""` silently.
+4. **Division matcher bug fixed** — keywords ≤4 chars now require word boundaries. "ent" no longer matches "center", "hip" no longer matches "shipping". Was causing DIAGNOSTIC CENTERS to be routed to ENT division.
+5. **Retroactive flag sweep** — existing conversations scanned, auto-reply threads marked so bot ignores further messages from those numbers.
+
 ## Recent Changes (Feb 2026 — AI Brochure Enrichment + Admin Control Panel)
 1. **AI handler now enriches every reply** with real links from `catalog_products.brochure_url` + division catalog URLs. No more bare "Catalog: https://www" truncated replies.
 2. **Division-aware**: AI picks division_hint (Trauma/JR/Spine/…); system auto-appends matching catalog + up to 2 brochure PDFs.

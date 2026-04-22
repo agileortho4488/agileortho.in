@@ -299,10 +299,30 @@ def build_agent_handoff() -> str:
 # --- Keyword routing ---
 
 def detect_division_from_text(text: str) -> Optional[str]:
+    """Match keywords with word boundaries so short keywords (ent, hip) don't
+    trigger on substrings inside longer words (center, relationship, shipping)."""
     low = (text or "").lower()
+    # Guard: messages under 8 chars (likely buttons/digits) or > 400 chars
+    # (likely business cards / long auto-texts) should not trigger division detection
+    # beyond exact-word matches
+    if len(low) > 400:
+        # Only match the stronger keywords (length >= 5) to avoid noise
+        for div, keywords in DIVISION_KEYWORDS.items():
+            for kw in keywords:
+                if len(kw) >= 5 and re.search(rf"\b{re.escape(kw)}", low):
+                    return div
+        return None
     for div, keywords in DIVISION_KEYWORDS.items():
-        if any(kw in low for kw in keywords):
-            return div
+        for kw in keywords:
+            # Word-boundary on both sides for any keyword ≤ 4 chars to prevent
+            # "ent" matching inside "center", "hip" inside "shipping", etc.
+            if len(kw) <= 4:
+                if re.search(rf"\b{re.escape(kw)}\b", low):
+                    return div
+            else:
+                # Left-boundary only for longer roots like "diagnost", "analy"
+                if re.search(rf"\b{re.escape(kw)}", low):
+                    return div
     return None
 
 
@@ -543,6 +563,54 @@ async def try_handle_funnel(
         return None
 
     return None
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# AUTO-REPLY DETECTION — prevent bot-to-bot conversations
+# ═══════════════════════════════════════════════════════════════════════════
+_AUTO_REPLY_PATTERNS = [
+    r"(?i)thank(s)?\s+you\s+for\s+(your\s+)?(message|contact)",
+    r"(?i)we(?:'re|'ve|\s+are)\s+(currently\s+)?(unavailable|out\s+of\s+office|closed|busy)",
+    r"(?i)please\s+wait\s+(for\s+one\s+of\s+our\s+)?(operator|agent|representative|team)",
+    r"(?i)will\s+(respond|reply|get\s+back)\s+(to\s+you\s+)?(as\s+soon\s+as|shortly|soon)",
+    r"(?i)(we\s+)?look\s+forward\s+to\s+(serving|hearing)",
+    r"(?i)greetings\s+from\s+",
+    r"(?i)welcome\s+to\s+.{3,60}(hospital|clinic|diagnostic|centre|center|lab|care|hotel|restaurant)",
+    r"(?i)(we\s+are\s+)?not\s+open\s+right\s+now",
+    r"(?i)our\s+(office|business|store)\s+hours",
+    r"(?i)automated\s+(message|reply|response)",
+    r"(?i)this\s+is\s+an?\s+auto(-|\s)?(reply|generated)",
+    r"(?i)assalamu?\s*alaikum.{0,60}(thank|messag|unavailable|respond|contact)",
+    r"(?i)dhanyavaad.*message",
+    r"(?i)sampark.*aabhaar",
+]
+
+_BUSINESS_INDICATORS = [
+    r"(?i)\bcustomer\s+care\b",
+    r"(?i)\bsupport\s+team\b",
+    r"(?i)\bhelp(desk|\s+line)\b",
+    r"(?i)\boperating\s+hours\b",
+]
+
+
+def is_business_auto_reply(text: str, customer_name: str = "") -> bool:
+    """Detect WhatsApp business auto-replies so we don't engage in bot-to-bot
+    loops that hurt Meta quality rating."""
+    if not text:
+        return False
+    t = text.strip()
+    if len(t) < 20:
+        return False
+    for pat in _AUTO_REPLY_PATTERNS:
+        if re.search(pat, t):
+            return True
+    if t.startswith("`") and t.endswith("`") and len(t) > 40:
+        return True
+    indicator_hits = sum(1 for pat in _BUSINESS_INDICATORS if re.search(pat, t))
+    if indicator_hits >= 2:
+        return True
+    return False
+
 
 
 async def _alert_sales_missing_brochure(phone: str, product: dict, customer_name: str):

@@ -382,6 +382,18 @@ async def handle_wa_incoming(phone: str, message_text: str, customer_name: str =
         }
     )
 
+    # --- 0) Bail out on business auto-replies (prevent bot-to-bot loops) ---
+    from services.whatsapp_funnel import is_business_auto_reply
+    if is_business_auto_reply(message_text, customer_name):
+        await wa_conversations_col.update_one(
+            {"phone": phone},
+            {"$set": {"auto_reply_flagged": True,
+                      "auto_reply_flagged_at": datetime.now(timezone.utc).isoformat(),
+                      "status": "auto_reply_skipped"}},
+        )
+        print(f"[WA] auto-reply detected from {phone} — staying silent to protect Meta quality rating")
+        return ""
+
     # --- 1) Try the Conversational Funnel first ---
     funnel_mode = (os.environ.get("WHATSAPP_FUNNEL_MODE", "text") or "text").strip().lower()
     funnel_replies = await try_handle_funnel(phone, message_text, customer_name or "", mode=funnel_mode)
