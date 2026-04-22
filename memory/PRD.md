@@ -1,5 +1,20 @@
 # Agile Healthcare - B2B Medical Device Platform PRD
 
+
+## Recent Changes (Feb 2026 — Vercel Bot Shield / Edge Request Mitigation)
+1. **`next-app/app/robots.js` rewritten** — explicit Disallow for GPTBot, ClaudeBot, anthropic-ai, CCBot, Google-Extended, PerplexityBot, Bytespider, Amazonbot, FacebookBot, Meta-ExternalAgent/Fetcher, Applebot-Extended, Diffbot, Omgilibot, AhrefsBot, SemrushBot, DataForSeoBot, MJ12bot, etc. Googlebot/Bingbot/DuckDuckBot/Yandex/Baiduspider explicitly allowed.
+2. **`next-app/middleware.js` (new)** — edge middleware returns 403 early for non-compliant scrapers (Bytespider, AhrefsBot, python-requests, Scrapy, HeadlessChrome, etc.) so the page function never runs. Matcher skips `_next/static`, `_next/image`, images, fonts, robots, sitemap so static asset serving stays cheap.
+3. **`next-app/next.config.mjs` headers()**:
+   - `/_next/static/*` → `public, max-age=31536000, immutable`
+   - images → `public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800`
+   - robots/sitemap → `public, max-age=3600, s-maxage=3600`
+   - all pages → `public, max-age=0, s-maxage=3600, stale-while-revalidate=86400` (CDN absorbs the load)
+   - Security headers: X-Content-Type-Options, X-Frame-Options, Referrer-Policy.
+4. **Full ISR audit confirmed** — no `force-dynamic`, all routes use `revalidate` (home/catalog/product=1h, districts=24h). Build output: 865 pages SSG.
+5. **Local verification** (curl on production build): Bytespider/GPTBot/ClaudeBot/AhrefsBot → **403**; Googlebot + real browser → **200**. `robots.txt` serves full block-list correctly.
+6. **User next-step**: redeploy to Vercel with "Use existing Build Cache" **unchecked** so the new `middleware.js` ships; monitor Vercel Analytics for edge-request reduction over 24h.
+
+
 ## Recent Changes (Feb 2026 — Auto-Reply Shield + Smarter Division Matcher)
 1. **Auto-reply detection** (`services/whatsapp_funnel.is_business_auto_reply`) — regex patterns catch "thank you for your message", "we're unavailable", "please wait", "greetings from", "welcome to", "assalamu alaikum", etc.
 2. **WhatsApp webhook silent on auto-replies** — prevents bot-to-bot loops that hurt Meta quality rating. Flags thread `status=auto_reply_skipped`.
