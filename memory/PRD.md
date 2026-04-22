@@ -12,7 +12,11 @@
    - Security headers: X-Content-Type-Options, X-Frame-Options, Referrer-Policy.
 4. **Full ISR audit confirmed** — no `force-dynamic`, all routes use `revalidate` (home/catalog/product=1h, districts=24h). Build output: 865 pages SSG.
 5. **Local verification** (curl on production build): Bytespider/GPTBot/ClaudeBot/AhrefsBot → **403**; Googlebot + real browser → **200**. `robots.txt` serves full block-list correctly.
-6. **User next-step**: redeploy to Vercel with "Use existing Build Cache" **unchecked** so the new `middleware.js` ships; monitor Vercel Analytics for edge-request reduction over 24h.
+6. **Follow-up cleanup after first Vercel deploy**:
+   - Renamed `middleware.js` → `proxy.js` (Next.js 16 convention; `export function proxy()`). Removed deprecation warning.
+   - Removed redundant `Cache-Control` override for `/_next/static/:path*` (Next.js sets `immutable` automatically). Removed build warning.
+   - Build rerun: clean, 865 SSG pages, Proxy compiled, bot blocks still verified (Bytespider/AhrefsBot → 403, Googlebot/browser → 200).
+7. **User next-step**: redeploy to Vercel ("Use existing Build Cache" unchecked once more for the rename); monitor Vercel Analytics for edge-request reduction over 24h.
 
 
 ## Recent Changes (Feb 2026 — Auto-Reply Shield + Smarter Division Matcher)

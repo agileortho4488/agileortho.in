@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 
-// Edge middleware: block the non-compliant scrapers that were responsible for
-// Vercel edge request overages. Compliant bots are handled via robots.txt.
+// Edge proxy (Next.js 16+): block the non-compliant scrapers that were responsible
+// for Vercel edge request overages. Compliant bots are handled via robots.txt.
 // Returning 403 early prevents downstream page/data function invocations.
 //
 // Matcher excludes _next static assets, favicon, and images so CDN-cached assets
-// are never billed through this middleware.
+// are never billed through this proxy.
 
 const BLOCKED_UA_REGEX = new RegExp(
   [
@@ -42,7 +42,7 @@ const BLOCKED_UA_REGEX = new RegExp(
   "i"
 );
 
-export function middleware(request) {
+export function proxy(request) {
   const ua = request.headers.get("user-agent") || "";
 
   if (ua && BLOCKED_UA_REGEX.test(ua)) {

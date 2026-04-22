@@ -28,14 +28,8 @@ const nextConfig = {
   async headers() {
     return [
       {
-        // Static assets — cache forever, they carry content-hashes.
-        source: "/_next/static/:path*",
-        headers: [
-          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
-        ],
-      },
-      {
         // Public images in /public — cache 1 day, allow stale revalidation.
+        // (Next.js auto-sets immutable headers on /_next/static, so we skip that.)
         source: "/:path*.(png|jpg|jpeg|webp|svg|gif|ico)",
         headers: [
           { key: "Cache-Control", value: "public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800" },
