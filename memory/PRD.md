@@ -1,6 +1,18 @@
 # Agile Healthcare - B2B Medical Device Platform PRD
 
 
+## Recent Changes (Feb 2026 — Bulk Brochure Import (ZIP + Manifest))
+1. **New `routes/brochures.py`**:
+   - `GET /api/admin/brochures/summary` — coverage stats (total / with / missing / by_division + percent).
+   - `GET /api/admin/brochures/manifest-template` — downloadable starter CSV listing every 0%-covered division and every missing product_family (pre-filled `scope_type=division|product_family`).
+   - `POST /api/admin/brochures/bulk-import` — accepts ONE `.zip` containing `manifest.csv` + PDFs. Extracts in-memory, uploads each PDF to object storage at `agile-ortho/brochures/<slugified>.pdf`, then applies every manifest row (`filename,scope_type,scope_value` with scope_type ∈ product_slug|product_family|division). Returns per-row report: matched/updated counts + error per row.
+2. **Safety**: `product_family` and `division` scopes only write to products that currently have no brochure (never overwrites manual uploads). `product_slug` scope is an explicit override.
+3. **New admin page** `/admin/brochures` (AdminBrochures.jsx): 4 coverage stat cards, drag-and-drop ZIP uploader with progress spinner, download-manifest-template button, live coverage table per division with progress bars, and a detailed per-row import report post-upload.
+4. **Routed & navigated**: added to `App.js` routes and `AdminLayout.jsx` sidebar ("Brochures" with FileText icon).
+5. **E2E verified**: 3-PDF + 3-row manifest ZIP processed in <1s, 525 products updated (Diagnostics 199 + Endo Surgery 170 + Infection Prevention 156), coverage jumped 18% → 61.5% in one call. Test data rolled back afterward.
+
+
+
 ## Recent Changes (Feb 2026 — Vercel Bot Shield / Edge Request Mitigation)
 1. **`next-app/app/robots.js` rewritten** — explicit Disallow for GPTBot, ClaudeBot, anthropic-ai, CCBot, Google-Extended, PerplexityBot, Bytespider, Amazonbot, FacebookBot, Meta-ExternalAgent/Fetcher, Applebot-Extended, Diffbot, Omgilibot, AhrefsBot, SemrushBot, DataForSeoBot, MJ12bot, etc. Googlebot/Bingbot/DuckDuckBot/Yandex/Baiduspider explicitly allowed.
 2. **`next-app/middleware.js` (new)** — edge middleware returns 403 early for non-compliant scrapers (Bytespider, AhrefsBot, python-requests, Scrapy, HeadlessChrome, etc.) so the page function never runs. Matcher skips `_next/static`, `_next/image`, images, fonts, robots, sitemap so static asset serving stays cheap.

@@ -15,6 +15,7 @@ import AdminWhatsAppFunnel from "./pages/AdminWhatsAppFunnel";
 import AdminMarketIntelligence from "./pages/AdminMarketIntelligence";
 import AdminOutbound from "./pages/AdminOutbound";
 import AdminAIHandler from "./pages/AdminAIHandler";
+import AdminBrochures from "./pages/AdminBrochures";
 import "./App.css";
 
 /**
@@ -49,6 +50,7 @@ function App() {
           <Route path="/admin/market-intelligence" element={<AdminMarketIntelligence />} />
           <Route path="/admin/outbound" element={<AdminOutbound />} />
           <Route path="/admin/ai" element={<AdminAIHandler />} />
+          <Route path="/admin/brochures" element={<AdminBrochures />} />
         </Route>
 
         <Route

@@ -29,6 +29,7 @@ from routes.indexnow import router as indexnow_router
 from routes.prospects import router as prospects_router
 from routes.intelligence import router as intelligence_router
 from routes.outbound import router as outbound_router
+from routes.brochures import router as brochures_router
 
 app = FastAPI(title="Agile Ortho API")
 
@@ -61,6 +62,7 @@ app.include_router(indexnow_router)
 app.include_router(prospects_router)
 app.include_router(intelligence_router)
 app.include_router(outbound_router)
+app.include_router(brochures_router)
 
 
 @app.on_event("startup")

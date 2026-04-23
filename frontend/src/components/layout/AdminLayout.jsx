@@ -1,6 +1,6 @@
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, Users, Package, LogOut, ChevronRight, BarChart3, Kanban, FileUp, MessageCircle, ClipboardCheck, Network, Zap, TrendingUp, Send, Brain } from "lucide-react";
+import { LayoutDashboard, Users, Package, LogOut, ChevronRight, BarChart3, Kanban, FileUp, MessageCircle, ClipboardCheck, Network, Zap, TrendingUp, Send, Brain, FileText } from "lucide-react";
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -49,6 +49,7 @@ export const AdminLayout = () => {
     { to: "/admin/market-intelligence", icon: TrendingUp, label: "Market Intel" },
     { to: "/admin/outbound", icon: Send, label: "Outbound" },
     { to: "/admin/ai", icon: Brain, label: "AI Handler" },
+    { to: "/admin/brochures", icon: FileText, label: "Brochures" },
     { to: "/admin/review", icon: ClipboardCheck, label: "Review" },
   ];
 
