@@ -1,6 +1,30 @@
 # Agile Healthcare - B2B Medical Device Platform PRD
 
 
+## Recent Changes (Feb 2026 — Programmatic Landing Pages: 30 High-Intent Buy URLs)
+1. **`next-app/lib/buyPages.js` (new)** — config of 30 curated high-commercial-intent landing pages, grouped:
+   - **Category A (10)**: Procedure × City — `knee-replacement-implants-hyderabad`, `hip-replacement-implants-hyderabad`, `trauma-implants-hyderabad`, `cardiac-stents-hyderabad`, `orthopedic-implants-hyderabad`, `orthopedic-implants-telangana`, `spine-implants-hyderabad`, `sports-medicine-implants-hyderabad`, plus Telangana variants.
+   - **Category B (10)**: Real product family × Hyderabad — `freedom-knee-hyderabad`, `destiknee-hyderabad`, `daapro-hip-hyderabad`, `biomime-stent-hyderabad`, `variabilis-locking-plates-hyderabad`, `im-nailing-system-hyderabad`, `ket-nailing-system-hyderabad`, `rotafix-anchors-hyderabad`, `latitud-acetabular-cup-hyderabad`, `mirus-endocutter-hyderabad`.
+   - **Category C (10)**: Division × India — `orthopedic-implants-distributor-india`, `joint-replacement-distributor-india`, `cardiovascular-stents-supplier-india`, `spine-implants-distributor-india`, `diagnostics-equipment-supplier-india`, `endo-surgery-instruments-india`, `sports-medicine-implants-india`, `urology-devices-supplier-india`, `ent-medical-devices-india`, `critical-care-devices-supplier-india`, `infection-prevention-supplier-india`.
+   - Each entry has slug, h1, metaTitle (<60 char), description (<160 char), 4–5 keywords, intro paragraph, catalog filters (division/search), city/areaServed, and 4 custom FAQs (3 shared standard + 1 page-unique).
+2. **`next-app/app/buy/[slug]/page.jsx` (new)** — SSG page with `generateStaticParams` over all 30 entries:
+   - Hero with H1, location badge, intro, 4 trust badges + dynamic stock count.
+   - 3 primary CTAs (WhatsApp pre-filled with H1, phone, browse catalog).
+   - Live product grid (12 SKUs from `searchCatalogProducts(filters)` server-side).
+   - Visible FAQ section mirrored to `FAQPage` schema (featured-snippet eligible).
+   - Internal-link cluster of 6 related buy pages (same city or same division).
+   - District callout (12 districts) on Hyderabad/Telangana pages.
+   - 4× JSON-LD: BreadcrumbList, ItemList of products, FAQPage, multi-type LocalBusiness+MedicalEquipmentSupplier with parentOrganization @id linkback.
+3. **`next-app/app/buy/page.jsx` (new)** — Index page listing all 30 by category (Hyderabad / Telangana / India).
+4. **Home page** — added "Popular searches" section with 9 internal links to top buy pages, placed before the FAQ section. Boosts internal PageRank flow + lets visitors discover the new pages.
+5. **Sitemap** — `app/sitemap.js` now includes `/buy` index + all 30 `/buy/[slug]` entries with `priority=0.85, changeFrequency=weekly`.
+6. **Build verified** — 897 SSG pages total (was 865; +32 for buy pages + index + 1 internal). Zero warnings, lint clean.
+7. **Smoke-tested**: `/buy/knee-replacement-implants-hyderabad` → correct title, 12 products, 4 FAQ items, 4 schema types (BreadcrumbList/FAQPage/ItemList/LocalBusiness multi-type) all present.
+
+**Expected impact**: programmatic landing pages typically 3–5× organic impressions for B2B catalog sites within 60 days because they exactly match buyer search syntax ("buy {product family} {city}"). Combined with the previous SEO push (Org schema, FAQ on home/division/district, full Product+Offer schema), this gives Google ~900 highly-targeted indexable pages.
+
+
+
 ## Recent Changes (Feb 2026 — SEO Growth Push: Keywords + Schema Stack)
 **Goal**: drive organic impressions on agileortho.in by aligning copy, metadata, and schema with high-volume B2B medical-device buyer intent.
 

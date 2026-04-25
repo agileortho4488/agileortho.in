@@ -1,5 +1,6 @@
 import { listCatalogProducts, getDivisions } from "@/lib/api";
 import { TELANGANA_DISTRICTS } from "@/lib/districts";
+import { BUY_PAGES } from "@/lib/buyPages";
 
 const BASE = "https://www.agileortho.in";
 
@@ -8,9 +9,20 @@ export default async function sitemap() {
     { url: `${BASE}/`, lastModified: new Date(), changeFrequency: "daily", priority: 1 },
     { url: `${BASE}/catalog`, lastModified: new Date(), changeFrequency: "daily", priority: 0.9 },
     { url: `${BASE}/districts`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.9 },
+    { url: `${BASE}/buy`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.9 },
     { url: `${BASE}/about`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.6 },
     { url: `${BASE}/contact`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.6 },
   ];
+
+  // Programmatic /buy/[slug] landing pages — high commercial intent
+  for (const p of BUY_PAGES) {
+    entries.push({
+      url: `${BASE}/buy/${p.slug}`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.85,
+    });
+  }
 
   // Division pages
   const divs = (await getDivisions())?.divisions || [];
