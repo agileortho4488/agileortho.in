@@ -18,13 +18,24 @@ export async function generateMetadata({ params }) {
   const { districtSlug } = await params;
   const d = getDistrictBySlug(districtSlug);
   if (!d) return { title: "District Not Found" };
+  const focus = (d.medicalFocus || []).slice(0, 3).join(", ");
+  const title = `Orthopedic Implants & Medical Device Distributor in ${d.name}, Telangana — Meril Authorized`;
+  const description = `Buy Meril orthopedic implants, trauma plates, knee & hip replacement systems and 810+ CDSCO-approved medical devices in ${d.name}, Telangana. Authorized master franchise — ${focus} and more. Same-day delivery for ${d.name} hospitals.`;
   return {
-    title: `Medical Device Distributor in ${d.name}, Telangana — Agile Ortho`,
-    description: `Authorized Meril Life Sciences medical device distributor serving hospitals in ${d.name} — ${d.tagline}. ${(d.medicalFocus || []).slice(0, 3).join(", ")} and more. Fast delivery across Telangana.`,
+    title,
+    description,
+    keywords: [
+      `medical device distributor ${d.name}`,
+      `orthopedic implants ${d.name}`,
+      `Meril distributor ${d.name} Telangana`,
+      `hospital supplies ${d.name}`,
+      `surgical instruments ${d.name}`,
+      ...(d.medicalFocus || []).slice(0, 3),
+    ],
     alternates: { canonical: `/districts/${districtSlug}` },
     openGraph: {
-      title: `Medical Device Distributor in ${d.name} | Agile Ortho`,
-      description: d.description,
+      title,
+      description,
       url: `https://www.agileortho.in/districts/${districtSlug}`,
       type: "website",
     },
@@ -36,23 +47,52 @@ export default async function DistrictPage({ params }) {
   const d = getDistrictBySlug(districtSlug);
   if (!d) notFound();
 
-  // JSON-LD: LocalBusiness scoped to this district for local SEO
+  // JSON-LD: LocalBusiness scoped to this district for local SEO. Linked
+  // to the sitewide Organization @id so Google ties them together.
   const localBiz = {
     "@context": "https://schema.org",
-    "@type": "MedicalBusiness",
-    name: `Agile Ortho — ${d.name}`,
-    description: d.description,
+    "@type": ["MedicalBusiness", "MedicalEquipmentSupplier"],
+    name: `Agile Healthcare — Medical Device Distributor in ${d.name}`,
+    description:
+      `Authorized Meril Life Sciences medical device distributor for ${d.name}, Telangana — ${d.description}`,
+    url: `https://www.agileortho.in/districts/${districtSlug}`,
+    image: "https://www.agileortho.in/agile_healthcare_logo.png",
     areaServed: {
       "@type": "AdministrativeArea",
       name: `${d.name}, Telangana, India`,
     },
-    parentOrganization: {
-      "@type": "Organization",
-      name: "Agile Orthopedics Private Limited",
-      url: "https://www.agileortho.in",
-    },
+    parentOrganization: { "@id": "https://www.agileortho.in/#organization" },
     telephone: COMPANY.phone,
     email: COMPANY.email,
+    priceRange: "₹₹",
+    currenciesAccepted: "INR",
+    openingHours: "Mo-Sa 09:00-19:00",
+    knowsAbout: d.medicalFocus || [],
+  };
+  // FAQ schema scoped to this district — captures geo-intent featured snippets.
+  const districtFaq = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: `Where can hospitals in ${d.name} buy Meril orthopedic implants?`,
+        acceptedAnswer: { "@type": "Answer",
+          text: `Agile Healthcare is the authorized Meril Life Sciences master franchise serving ${d.name} and the rest of Telangana. We supply 810+ CDSCO-approved medical devices including trauma plates, knee/hip replacement systems and cardiovascular stents. WhatsApp +91 74165 21222 for quotes.` },
+      },
+      {
+        "@type": "Question",
+        name: `How fast can implants be delivered to ${d.name} hospitals?`,
+        acceptedAnswer: { "@type": "Answer",
+          text: `Most products are usually in stock at our Hyderabad warehouse. Delivery to ${d.name} typically takes 24–48 hours; same-day dispatch is available for emergency surgical cases.` },
+      },
+      {
+        "@type": "Question",
+        name: `Which medical specialities do you serve in ${d.name}?`,
+        acceptedAnswer: { "@type": "Answer",
+          text: `We supply across 13 Meril divisions covering ${(d.medicalFocus || []).join(", ")} and more. Brochures and surgical-technique PDFs are available on WhatsApp request.` },
+      },
+    ],
   };
   const breadcrumbs = {
     "@context": "https://schema.org",
@@ -72,6 +112,7 @@ export default async function DistrictPage({ params }) {
   return (
     <div className="min-h-screen bg-[#0A0A0A]" data-testid="district-page">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(localBiz) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(districtFaq) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbs) }} />
 
       {/* Hero */}

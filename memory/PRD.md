@@ -1,6 +1,48 @@
 # Agile Healthcare - B2B Medical Device Platform PRD
 
 
+## Recent Changes (Feb 2026 — SEO Growth Push: Keywords + Schema Stack)
+**Goal**: drive organic impressions on agileortho.in by aligning copy, metadata, and schema with high-volume B2B medical-device buyer intent.
+
+1. **Sitewide schema graph** in `next-app/app/layout.jsx`:
+   - `WebSite` with `SearchAction` (sitelinks search box eligibility).
+   - `Organization` + `MedicalEquipmentSupplier` + `LocalBusiness` (multi-type) with `@id` for entity linking, GeoCoordinates, openingHours, currenciesAccepted (INR), paymentAccepted, areaServed (Telangana + 5 cities), 2× contactPoint (Sales + WhatsApp), sameAs links, knowsAbout list, makesOffer.
+   - Sitewide metadata: high-intent default title ("Orthopedic Implants & Medical Devices Distributor in Hyderabad — Meril Telangana"), expanded description, 13-keyword array, robots googleBot config (max-image-preview=large, max-snippet=-1).
+
+2. **Home page** (`app/page.jsx`):
+   - New title: "Orthopedic Implants Distributor in Hyderabad — Meril Medical Devices Telangana".
+   - Description rewritten with high-volume terms (orthopedic implants, trauma plates, knee/hip replacement, cardiovascular stents, CDSCO, B2B bulk).
+   - Removed duplicated Org/LocalBiz schema (now sitewide).
+   - **New `FAQPage` schema** with 7 buyer-intent questions (where to buy, CDSCO approval, divisions, delivery time, bulk pricing, knee/hip portfolio, catalog request).
+   - **New visible FAQ section** mirroring the schema (Google requires visible content for FAQ rich results) with `data-testid="faq-section"` + per-item testids.
+   - `BreadcrumbList` schema.
+
+3. **Product pages** (`catalog/products/[slug]/page.jsx`):
+   - New title pattern: "{Product} — Buy in Hyderabad | {Brand} {Division} | Agile Healthcare".
+   - Description: includes "buy", "Hyderabad", "Telangana", "CDSCO-approved", WhatsApp CTA.
+   - 7-keyword auto-generated array per product (slug + city + state + distributor + price + buy + brand-division).
+   - **Enhanced Product schema** with full `Offer`: priceCurrency=INR, availability=InStock, itemCondition=NewCondition, businessFunction=Sell, areaServed=Telangana, seller=@organization, PriceSpecification, sku, mpn, isRelatedTo product_family.
+   - **`BreadcrumbList`** schema (Home → Catalog → Division → Product).
+
+4. **Division pages** (`catalog/[divisionSlug]/page.jsx`):
+   - Title: "Buy {Division} Implants in Hyderabad — Meril {Division} Distributor Telangana".
+   - 6-keyword array (division+city, division+state, Meril+division, buy verb, supplier-India, top categories).
+   - **`CollectionPage` schema** with `ItemList` of top 10 products (linkable in SERP).
+   - **Division-specific `FAQPage`** (4 questions) for featured-snippet capture.
+   - Existing `BreadcrumbList` retained.
+
+5. **District pages** (`districts/[districtSlug]/page.jsx`):
+   - Title: "Orthopedic Implants & Medical Device Distributor in {District}, Telangana — Meril Authorized".
+   - Keywords array per district (medical-device-distributor + city, orthopedic-implants + city, etc.).
+   - LocalBusiness schema upgraded to multi-type (`MedicalBusiness` + `MedicalEquipmentSupplier`), linked to sitewide Org via parentOrganization @id, includes openingHours, priceRange, currenciesAccepted, knowsAbout from district medicalFocus.
+   - **District-specific `FAQPage`** (3 questions) for geo-intent featured snippets.
+
+6. **Build verified clean** — 865 SSG pages, lint passes everywhere, all schema types present in rendered HTML (FAQPage / BreadcrumbList / CollectionPage / Product+Offer / MedicalEquipmentSupplier).
+
+**User next-step**: redeploy to Vercel (build cache unchecked). Submit refreshed sitemap in GSC → expect impressions to climb over 2–4 weeks as Google reindexes 865 pages with new metadata + rich schema. Watch GSC "Performance > Queries" for new long-tail captures and "Enhancements > FAQ / Breadcrumbs / Products" for rich-result eligibility growth.
+
+
+
 ## Recent Changes (Feb 2026 — Bulk Brochure Import (ZIP + Manifest))
 1. **New `routes/brochures.py`**:
    - `GET /api/admin/brochures/summary` — coverage stats (total / with / missing / by_division + percent).

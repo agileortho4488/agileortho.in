@@ -48,20 +48,36 @@ export async function generateMetadata({ params }) {
   const product = await getCatalogProduct(slug);
   if (!product) return { title: "Product Not Found" };
 
+  const productName = product.product_name_display || product.product_name;
+  const division = product.division_canonical || "Medical Device";
+  const brand = product.brand || "Meril";
+
   const title =
     product.seo_meta_title ||
-    `${product.product_name_display || product.product_name} | Meril Authorized Distributor`;
+    `${productName} — Buy in Hyderabad | ${brand} ${division} | Agile Healthcare`;
   const description =
     product.seo_meta_description ||
-    `${product.product_name_display} — authorized Meril Life Sciences medical device. Available across Telangana via Agile Healthcare.`;
+    `Buy ${productName} (${brand}) in Hyderabad and across Telangana. Authorized Meril Life Sciences distributor — CDSCO-approved ${division.toLowerCase()} device, fast hospital delivery, B2B bulk pricing. WhatsApp +91 74165 21222 for quote.`;
 
   const imageUrl = product.images?.[0]?.storage_path
     ? backendFileUrl(product.images[0].storage_path)
     : null;
 
+  const keywords = [
+    productName,
+    `${productName} Hyderabad`,
+    `${productName} Telangana`,
+    `${productName} distributor`,
+    `${productName} price India`,
+    `buy ${productName}`,
+    `${brand} ${division}`,
+    product.product_family,
+  ].filter(Boolean);
+
   return {
     title,
     description,
+    keywords,
     alternates: { canonical: `/catalog/products/${slug}` },
     openGraph: {
       title,
@@ -90,22 +106,65 @@ export default async function ProductPage({ params }) {
     ? backendFileUrl(product.images[0].storage_path)
     : null;
 
-  // JSON-LD Product schema (critical for Google Rich Results)
+  // JSON-LD Product schema with Offer (Google Rich Results require offers).
+  // priceCurrency=INR + availability=InStock + seller link = full Shopping eligibility.
+  const productCanonicalUrl = `https://www.agileortho.in/catalog/products/${product.slug}`;
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
+    "@id": `${productCanonicalUrl}#product`,
     name: product.product_name_display || product.product_name,
-    description: product.seo_meta_description || product.description_live || "",
-    brand: {
-      "@type": "Brand",
-      name: product.brand || "Meril",
-    },
+    description:
+      product.seo_meta_description ||
+      product.description_live ||
+      `${product.product_name_display || product.product_name} — authorized Meril Life Sciences medical device, distributed across Telangana by Agile Healthcare.`,
+    sku: product.slug,
+    mpn: product.product_family || product.slug,
+    brand: { "@type": "Brand", name: product.brand || "Meril" },
     category: product.category || product.division_canonical || "Medical Device",
     ...(imageUrl ? { image: imageUrl } : {}),
     manufacturer: {
       "@type": "Organization",
       name: product.manufacturer || "Meril Life Sciences",
     },
+    offers: {
+      "@type": "Offer",
+      url: productCanonicalUrl,
+      priceCurrency: "INR",
+      availability: "https://schema.org/InStock",
+      itemCondition: "https://schema.org/NewCondition",
+      businessFunction: "https://schema.org/Sell",
+      areaServed: { "@type": "State", name: "Telangana" },
+      seller: { "@id": "https://www.agileortho.in/#organization" },
+      priceSpecification: {
+        "@type": "PriceSpecification",
+        priceCurrency: "INR",
+        valueAddedTaxIncluded: false,
+      },
+    },
+    isRelatedTo: product.product_family
+      ? { "@type": "Product", name: product.product_family_display || product.product_family }
+      : undefined,
+  };
+
+  // BreadcrumbList — drives Google's breadcrumb display in SERP.
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home",
+        item: "https://www.agileortho.in/" },
+      { "@type": "ListItem", position: 2, name: "Catalog",
+        item: "https://www.agileortho.in/catalog" },
+      ...(product.division_canonical ? [{
+        "@type": "ListItem", position: 3, name: product.division_canonical,
+        item: `https://www.agileortho.in/catalog/${(product.division_canonical || "").toLowerCase().replace(/\s+/g, "-")}`,
+      }] : []),
+      { "@type": "ListItem",
+        position: product.division_canonical ? 4 : 3,
+        name: product.product_name_display || product.product_name,
+        item: productCanonicalUrl },
+    ],
   };
 
   return (
@@ -113,6 +172,10 @@ export default async function ProductPage({ params }) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
 
       {/* ═══ HERO ═══ */}

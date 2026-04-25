@@ -28,14 +28,14 @@ const DIVISION_ICONS = {
 };
 
 export const metadata = {
-  title: "Meril Medical Device Distributor in Hyderabad & Telangana",
+  title: "Orthopedic Implants Distributor in Hyderabad — Meril Medical Devices Telangana",
   description:
-    "Agile Healthcare is the authorized Meril Life Sciences master franchise for Telangana. Browse 810+ verified medical devices across 13 clinical divisions — Trauma, Cardiovascular, Joint Replacement, Diagnostics and more.",
+    "Buy Meril orthopedic implants, trauma plates, knee & hip replacement, cardiovascular stents and 810+ CDSCO-approved medical devices in Hyderabad. Authorized Meril Life Sciences master franchise serving hospitals across all 33 Telangana districts. Fast B2B delivery, bulk pricing.",
   alternates: { canonical: "/" },
   openGraph: {
-    title: "Meril Medical Device Distributor in Hyderabad & Telangana | Agile Healthcare",
+    title: "Orthopedic Implants Distributor Hyderabad | Meril Telangana — Agile Healthcare",
     description:
-      "Authorized Meril Life Sciences master franchise for Telangana. 810+ verified medical devices across 13 clinical divisions, serving hospitals in all 33 districts.",
+      "810+ Meril medical devices across 13 clinical divisions. Authorized master franchise distributor for hospitals across Telangana — orthopedic, trauma, cardio, joint replacement, diagnostics & more.",
     url: "https://www.agileortho.in/",
     type: "website",
   },
@@ -50,41 +50,92 @@ export default async function Home() {
   const featuredProducts = productsRes?.products || [];
   const totalProducts = divisions.reduce((s, d) => s + (d.product_count || 0), 0) || 810;
 
-  // Organization + LocalBusiness JSON-LD
-  const orgSchema = {
+  // Page-level schema: FAQPage (captures featured snippets) + BreadcrumbList.
+  // Sitewide Organization/LocalBusiness/WebSite live in layout.jsx so they
+  // appear on every page without duplication.
+  const faqSchema = {
     "@context": "https://schema.org",
-    "@type": "Organization",
-    name: "Agile Healthcare",
-    legalName: "AGILE ORTHOPEDICS PRIVATE LIMITED",
-    url: "https://www.agileortho.in",
-    logo: "https://www.agileortho.in/agile_healthcare_logo.png",
-    description: "Authorized Meril Life Sciences master franchise distributor serving hospitals and clinics across Telangana.",
-    telephone: "+917416216262",
-    email: "info@agileortho.in",
-    address: {
-      "@type": "PostalAddress",
-      streetAddress: "Hayathnagar",
-      addressLocality: "Hyderabad",
-      addressRegion: "Telangana",
-      postalCode: "500074",
-      addressCountry: "IN",
-    },
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "Where can I buy Meril orthopedic implants in Hyderabad?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text:
+            "Agile Healthcare is the authorized Meril Life Sciences master franchise for Telangana, supplying orthopedic implants, trauma plates, knee and hip replacement systems and 810+ medical devices to hospitals across Hyderabad and all 33 districts. Call +91 74162 16262 or WhatsApp for bulk hospital quotes.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Are Meril implants CDSCO approved and ISO 13485 certified?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text:
+            "Yes. All Meril Life Sciences medical devices supplied by Agile Healthcare are CDSCO-registered and manufactured at ISO 13485-certified facilities. We provide regulatory documents, GST invoices and lot traceability with every order.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Which medical device divisions does Agile Healthcare cover?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text:
+            "13 Meril divisions: Trauma, Joint Replacement, Cardiovascular, Diagnostics, Endo Surgery, Infection Prevention, Sports Medicine, ENT, Urology, Critical Care, Peripheral Intervention, Spine and Robotics — 810+ products in total.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "What is the typical delivery time for orthopedic implants in Telangana?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text:
+            "Most products are usually in stock at our Hyderabad warehouse with 24-hour delivery to hospitals in Hyderabad, Secunderabad, Warangal, Karimnagar, Nizamabad and Khammam. Other Telangana districts typically receive within 24–48 hours.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Do you offer bulk pricing for hospitals and surgical centres?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text:
+            "Yes. Hospitals, surgical centres and group purchasing organisations get tiered B2B pricing on bulk orders. Send a list with quantity, GST and delivery location and we provide an exact quote within one working day.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Are knee and hip replacement implants available?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text:
+            "Yes. The full Meril joint replacement portfolio is available — Freedom Knee, DAAPRO hip stem, Destiknee, Hinge Knee System and more. Brochures, sizing charts and surgical-technique PDFs are sent on WhatsApp request.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Can I get the complete Meril product catalog PDF?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text:
+            "Yes. WhatsApp 'CATALOG' to +91 74165 21222 and we share division-wise catalogs and brochures instantly. You can also browse all 810+ products at agileortho.in/catalog.",
+        },
+      },
+    ],
   };
-  const localBizSchema = {
+
+  const breadcrumbSchema = {
     "@context": "https://schema.org",
-    "@type": "MedicalBusiness",
-    name: "Agile Healthcare",
-    image: "https://www.agileortho.in/agile_healthcare_logo.png",
-    telephone: "+917416216262",
-    address: orgSchema.address,
-    areaServed: "Telangana, India",
-    url: "https://www.agileortho.in",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home",
+        item: "https://www.agileortho.in/" },
+    ],
   };
 
   return (
     <div className="bg-[#0A0A0A]">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgSchema) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(localBizSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
 
       {/* HERO (client component for animations & search) */}
       <HomeHero totalProducts={totalProducts} divisionCount={divisions.length || 13} />
@@ -221,6 +272,40 @@ export default async function Home() {
           </div>
         </section>
       )}
+
+      {/* FAQ — high-intent buyer questions, mirrored in JSON-LD for featured snippets */}
+      <section className="py-20 sm:py-24 bg-[#0D0D0D] border-t border-white/[0.06]" data-testid="faq-section" id="faq">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6">
+          <FadeUp>
+            <div className="text-center mb-12">
+              <span className="text-xs font-semibold text-[#2DD4BF] uppercase tracking-widest">Frequently asked</span>
+              <h2 className="mt-3 text-3xl sm:text-4xl font-light tracking-tight text-white" style={{ fontFamily: "Outfit" }}>
+                Ordering Meril medical devices in Hyderabad
+              </h2>
+              <p className="mt-3 text-sm text-white/55">
+                Quick answers for hospital procurement teams and surgeons across Telangana.
+              </p>
+            </div>
+          </FadeUp>
+          <div className="space-y-3">
+            {faqSchema.mainEntity.map((q, i) => (
+              <details
+                key={q.name}
+                className="group bg-[#111] border border-white/[0.06] rounded-sm overflow-hidden"
+                data-testid={`faq-item-${i}`}
+              >
+                <summary className="cursor-pointer px-6 py-4 flex items-center justify-between gap-4 text-left text-white font-medium text-sm sm:text-base hover:bg-white/[0.03] transition-colors">
+                  <span>{q.name}</span>
+                  <ArrowRight size={16} className="text-[#D4AF37] flex-shrink-0 transition-transform group-open:rotate-90" />
+                </summary>
+                <div className="px-6 pb-5 pt-1 text-sm text-white/65 leading-relaxed">
+                  {q.acceptedAnswer.text}
+                </div>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* CTA */}
       <section className="py-20 sm:py-28 bg-[#111]" data-testid="cta-section">

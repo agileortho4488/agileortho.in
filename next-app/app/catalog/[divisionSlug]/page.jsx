@@ -21,10 +21,26 @@ export async function generateMetadata({ params }) {
   const div = await getCatalogDivision(divisionSlug);
   if (!div) return { title: "Division Not Found" };
   const cats = (div.categories || []).slice(0, 5).join(", ");
+  const title = `Buy ${div.name} Implants in Hyderabad — Meril ${div.name} Distributor Telangana`;
+  const description = `${div.product_count}+ Meril ${div.name.toLowerCase()} medical devices available in Hyderabad and across Telangana. CDSCO-approved, ISO 13485 certified — fast hospital delivery, B2B bulk pricing. Categories: ${cats}${(div.categories || []).length > 5 ? " and more" : ""}.`;
   return {
-    title: `${div.name} Medical Devices — Meril Authorized`,
-    description: `Browse ${div.product_count} verified ${div.name} medical devices from Meril Life Sciences. Categories include ${cats}${(div.categories || []).length > 5 ? " and more" : ""}. Authorized distributor for Telangana hospitals.`,
+    title,
+    description,
+    keywords: [
+      `${div.name} implants Hyderabad`,
+      `${div.name} distributor Telangana`,
+      `Meril ${div.name}`,
+      `buy ${div.name} medical devices`,
+      `${div.name} supplier India`,
+      ...(div.categories || []).slice(0, 5),
+    ],
     alternates: { canonical: `/catalog/${divisionSlug}` },
+    openGraph: {
+      title,
+      description,
+      url: `https://www.agileortho.in/catalog/${divisionSlug}`,
+      type: "website",
+    },
   };
 }
 
@@ -51,9 +67,62 @@ export default async function DivisionPage({ params }) {
     ],
   };
 
+  // CollectionPage + FAQ schema for division-specific featured-snippet eligibility.
+  const collectionSchema = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: `${div.name} Medical Devices — Meril Distributor Hyderabad`,
+    url: `https://www.agileortho.in/catalog/${divisionSlug}`,
+    isPartOf: { "@id": "https://www.agileortho.in/#website" },
+    about: { "@type": "Thing", name: div.name },
+    mainEntity: {
+      "@type": "ItemList",
+      numberOfItems: total,
+      itemListElement: products.slice(0, 10).map((p, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        url: `https://www.agileortho.in/catalog/products/${p.slug}`,
+        name: p.product_name_display || p.product_name,
+      })),
+    },
+  };
+
+  const divFaqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: `Where can I buy Meril ${div.name.toLowerCase()} devices in Hyderabad?`,
+        acceptedAnswer: { "@type": "Answer",
+          text: `Agile Healthcare is the authorized Meril Life Sciences master franchise for Telangana, supplying ${div.product_count}+ ${div.name.toLowerCase()} medical devices to hospitals across Hyderabad and all 33 districts. Call +91 74162 16262 or WhatsApp for same-day quotes.` },
+      },
+      {
+        "@type": "Question",
+        name: `Are Meril ${div.name.toLowerCase()} implants CDSCO approved?`,
+        acceptedAnswer: { "@type": "Answer",
+          text: `Yes. All Meril ${div.name.toLowerCase()} medical devices supplied by Agile Healthcare are CDSCO-registered and manufactured at ISO 13485-certified facilities. Lot numbers, GST invoices and regulatory documents are issued with every order.` },
+      },
+      {
+        "@type": "Question",
+        name: `What categories of ${div.name.toLowerCase()} products are available?`,
+        acceptedAnswer: { "@type": "Answer",
+          text: `${div.product_count}+ products across categories including ${(div.categories || []).slice(0, 6).join(", ")}. Browse the full list on this page or WhatsApp 'CATALOG' to +91 74165 21222 for the division brochure PDF.` },
+      },
+      {
+        "@type": "Question",
+        name: `What is the typical delivery time for ${div.name.toLowerCase()} orders in Telangana?`,
+        acceptedAnswer: { "@type": "Answer",
+          text: `Most ${div.name.toLowerCase()} products are usually in stock at our Hyderabad warehouse with 24-hour delivery to Hyderabad, Secunderabad, Warangal, Karimnagar, Nizamabad and Khammam. Other Telangana districts typically receive within 24–48 hours.` },
+      },
+    ],
+  };
+
   return (
     <div className="min-h-screen bg-[#0A0A0A]" data-testid="catalog-division-page">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbs) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(divFaqSchema) }} />
 
       <section className="bg-[#0D0D0D] border-b border-white/[0.06]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
