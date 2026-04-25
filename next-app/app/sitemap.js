@@ -1,6 +1,7 @@
 import { listCatalogProducts, getDivisions } from "@/lib/api";
 import { TELANGANA_DISTRICTS } from "@/lib/districts";
 import { BUY_PAGES } from "@/lib/buyPages";
+import { GUIDES } from "@/lib/guides";
 
 const BASE = "https://www.agileortho.in";
 
@@ -10,6 +11,7 @@ export default async function sitemap() {
     { url: `${BASE}/catalog`, lastModified: new Date(), changeFrequency: "daily", priority: 0.9 },
     { url: `${BASE}/districts`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.9 },
     { url: `${BASE}/buy`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.9 },
+    { url: `${BASE}/guides`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.9 },
     { url: `${BASE}/about`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.6 },
     { url: `${BASE}/contact`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.6 },
   ];
@@ -21,6 +23,16 @@ export default async function sitemap() {
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 0.85,
+    });
+  }
+
+  // Buying guides — long-form research content
+  for (const g of GUIDES) {
+    entries.push({
+      url: `${BASE}/guides/${g.slug}`,
+      lastModified: new Date(g.dateModified),
+      changeFrequency: "monthly",
+      priority: 0.8,
     });
   }
 

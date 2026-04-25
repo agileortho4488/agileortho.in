@@ -161,6 +161,9 @@ export default function SiteHeader() {
             <Link href="/districts" className="text-sm font-medium tracking-wide text-white/80 hover:text-white transition-colors">
               For Hospitals
             </Link>
+            <Link href="/guides" className="text-sm font-medium tracking-wide text-white/80 hover:text-white transition-colors" data-testid="nav-guides">
+              Guides
+            </Link>
             <Link href="/about" className="text-sm font-medium tracking-wide text-white/80 hover:text-white transition-colors">
               About
             </Link>
@@ -218,6 +221,7 @@ export default function SiteHeader() {
                 </div>
               )}
               <Link href="/districts" onClick={closeMobile} className="px-3 py-3 text-sm font-medium text-white/80">For Hospitals</Link>
+              <Link href="/guides" onClick={closeMobile} className="px-3 py-3 text-sm font-medium text-white/80">Guides</Link>
               <Link href="/about" onClick={closeMobile} className="px-3 py-3 text-sm font-medium text-white/80">About</Link>
               <Link href="/contact" onClick={closeMobile} className="px-3 py-3 text-sm font-medium text-white/80">Contact</Link>
 

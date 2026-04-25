@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { getDivisions, listCatalogProducts, backendFileUrl } from "@/lib/api";
 import { BUY_PAGES } from "@/lib/buyPages";
+import { GUIDES } from "@/lib/guides";
 import { FadeUp, StaggerContainer, StaggerItem, ScaleIn } from "@/components/Motion";
 import HomeHero from "@/components/HomeHero";
 
@@ -307,6 +308,45 @@ export default async function Home() {
                   </h3>
                 </div>
                 <ArrowRight size={14} className="text-white/35 group-hover:text-[#D4AF37] mt-1 flex-shrink-0" />
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* BUYING GUIDES — top-of-funnel research content */}
+      <section className="py-16 sm:py-20 bg-[#0D0D0D] border-t border-white/[0.06]" data-testid="guides-section">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+          <FadeUp>
+            <div className="flex items-end justify-between flex-wrap gap-4 mb-8">
+              <div>
+                <span className="text-xs font-semibold text-[#2DD4BF] uppercase tracking-widest">Resources</span>
+                <h2 className="mt-3 text-2xl sm:text-3xl font-light text-white tracking-tight" style={{ fontFamily: "Outfit" }}>
+                  Buying guides for surgeons & hospital procurement
+                </h2>
+              </div>
+              <Link href="/guides" className="text-sm text-[#D4AF37] hover:text-[#F2C94C] font-medium inline-flex items-center gap-1">
+                All guides <ArrowRight size={14} />
+              </Link>
+            </div>
+          </FadeUp>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {GUIDES.slice(0, 6).map((g) => (
+              <Link
+                key={g.slug}
+                href={`/guides/${g.slug}`}
+                className="group flex flex-col bg-[#111] hover:bg-white/[0.04] border border-white/[0.06] hover:border-[#D4AF37]/30 px-5 py-4 rounded-sm transition-all"
+                data-testid={`home-guide-${g.slug}`}
+              >
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[#2DD4BF]/70">{g.category}</span>
+                <h3 className="mt-2 text-sm font-medium text-white group-hover:text-[#D4AF37] leading-snug" style={{ fontFamily: "Outfit" }}>
+                  {g.title}
+                </h3>
+                <p className="mt-2 text-xs text-white/45 line-clamp-2 leading-relaxed">{g.summary}</p>
+                <div className="mt-3 flex items-center gap-2 text-xs text-white/40">
+                  <span>{g.readMinutes} min read</span>
+                  <ArrowRight size={12} className="text-white/35 group-hover:text-[#D4AF37] ml-auto" />
+                </div>
               </Link>
             ))}
           </div>

@@ -1,6 +1,44 @@
 # Agile Healthcare - B2B Medical Device Platform PRD
 
 
+## Recent Changes (Feb 2026 — Buying-Guide Articles: 6 Long-Form Pages)
+1. **`next-app/lib/guides.js` (new)** — config of 6 long-form research articles (1000–1500 words each), each with structured `body` array of typed sections (p, h2, h3, ul, ol, table, callout, cta, quote) so content can be edited without touching renderer.
+
+   **Articles shipped**:
+   - `/guides/freedom-knee-vs-destiknee` (8 min) — Joint Replacement
+   - `/guides/meril-vs-zimmer-biomet-orthopedic-implants` (7 min) — Joint Replacement
+   - `/guides/daapro-uncemented-vs-cemented-hip-stems` (6 min) — Joint Replacement
+   - `/guides/biomime-drug-eluting-stent-guide-india` (7 min) — Cardiovascular
+   - `/guides/cdsco-approved-orthopedic-implants-procurement-guide` (8 min) — Procurement
+   - `/guides/variabilis-2-4mm-vs-2-7mm-locking-plates` (6 min) — Trauma
+
+   Each entry has: title, metaTitle, description, 5-keyword array, summary, datePublished, dateModified, author, body sections (with comparison tables where relevant), 5 FAQs, and `relatedBuy` slugs that link into the existing /buy landing pages.
+
+2. **`next-app/app/guides/[slug]/page.jsx` (new)** — SSG renderer:
+   - Hero with category pill, H1, summary, read-time, last-updated date, author byline.
+   - Body renderer that handles 9 section types (paragraphs, h2/h3, bulleted/ordered lists, comparison tables, info/warning/success callouts, inline CTAs, quotes).
+   - FAQ section with collapsible items (visible content + FAQPage schema).
+   - "Ready to procure?" cards linking to 3 related /buy pages.
+   - "More {category} guides" cross-link block.
+   - Bottom CTA bar (WhatsApp + phone + all-guides).
+   - 3× JSON-LD: Article schema (with publisher @id pointing to sitewide Organization, datePublished/dateModified, articleSection, keywords, inLanguage=en-IN), BreadcrumbList, FAQPage.
+
+3. **`next-app/app/guides/page.jsx` (new)** — Index grouped by category (Joint Replacement / Cardiovascular / Procurement / Trauma).
+
+4. **Site header** — added "Guides" nav link (desktop + mobile menu) for discoverability.
+
+5. **Home page** — added "Buying guides" 6-card block right before the FAQ section, internal-linking to all guides.
+
+6. **Sitemap** — `/guides` index + 6 guide URLs added (priority 0.8, changeFrequency monthly, lastModified=dateModified).
+
+7. **Build verified** — 904 SSG pages total (was 897; +7 for guides + index). Smoke tests pass:
+   - `/guides/freedom-knee-vs-destiknee` → 9 h2 sections, 1 comparison table, 5 FAQ items, 3 related buy links, all 3 JSON-LD schemas (Article/BreadcrumbList/FAQPage) present.
+   - Lint clean across all touched files.
+
+**Expected impact**: top-of-funnel research traffic (queries like "Meril vs Zimmer", "knee replacement guide India", "DAAPRO uncemented") usually starts surfacing within 2–4 weeks. Comparison-table content is highly featured-snippet-eligible and tends to capture position 0 results. Each guide also internal-links to 2–3 /buy pages, accelerating PageRank flow into the high-commercial-intent landing pages.
+
+
+
 ## Recent Changes (Feb 2026 — Programmatic Landing Pages: 30 High-Intent Buy URLs)
 1. **`next-app/lib/buyPages.js` (new)** — config of 30 curated high-commercial-intent landing pages, grouped:
    - **Category A (10)**: Procedure × City — `knee-replacement-implants-hyderabad`, `hip-replacement-implants-hyderabad`, `trauma-implants-hyderabad`, `cardiac-stents-hyderabad`, `orthopedic-implants-hyderabad`, `orthopedic-implants-telangana`, `spine-implants-hyderabad`, `sports-medicine-implants-hyderabad`, plus Telangana variants.
